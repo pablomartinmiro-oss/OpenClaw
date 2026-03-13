@@ -2,8 +2,11 @@ import { z } from "zod";
 
 const envSchema = z.object({
   // App
-  NEXTAUTH_URL: z.string().url(),
-  NEXTAUTH_SECRET: z.string().min(32),
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
+  AUTH_URL: z.string().url().optional(),
+  AUTH_SECRET: z.string().min(32).optional(),
+  AUTH_TRUST_HOST: z.enum(["true", "false"]).default("true"),
 
   // Database
   DATABASE_URL: z.string().startsWith("postgresql://"),

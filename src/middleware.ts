@@ -29,7 +29,7 @@ export async function middleware(req: NextRequest) {
   // Check JWT token (edge-compatible, no DB access)
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   });
 
   // Not authenticated → redirect to login

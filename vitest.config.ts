@@ -10,6 +10,9 @@ export default defineConfig({
     env: {
       NEXTAUTH_URL: "http://localhost:3000",
       NEXTAUTH_SECRET: "test-secret-that-is-at-least-32-characters-long",
+      AUTH_URL: "http://localhost:3000",
+      AUTH_SECRET: "test-secret-that-is-at-least-32-characters-long",
+      AUTH_TRUST_HOST: "true",
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/ghl_dashboard_test",
       REDIS_URL: "redis://localhost:6379",
       GHL_CLIENT_ID: "test-client-id",

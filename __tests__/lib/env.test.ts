@@ -3,8 +3,11 @@ import { z } from "zod";
 
 // Re-create the schema here to test independently without triggering parse at import
 const envSchema = z.object({
-  NEXTAUTH_URL: z.string().url(),
-  NEXTAUTH_SECRET: z.string().min(32),
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
+  AUTH_URL: z.string().url().optional(),
+  AUTH_SECRET: z.string().min(32).optional(),
+  AUTH_TRUST_HOST: z.enum(["true", "false"]).default("true"),
   DATABASE_URL: z.string().startsWith("postgresql://"),
   REDIS_URL: z.string().startsWith("redis"),
   GHL_CLIENT_ID: z.string().min(1),
@@ -43,18 +46,18 @@ describe("env validation", () => {
     expect(result.NODE_ENV).toBe("development");
   });
 
-  it("fails if NEXTAUTH_URL is not a valid URL", () => {
+  it("fails if AUTH_URL is not a valid URL", () => {
     const result = envSchema.safeParse({
       ...VALID_ENV,
-      NEXTAUTH_URL: "not-a-url",
+      AUTH_URL: "not-a-url",
     });
     expect(result.success).toBe(false);
   });
 
-  it("fails if NEXTAUTH_SECRET is too short", () => {
+  it("fails if AUTH_SECRET is too short", () => {
     const result = envSchema.safeParse({
       ...VALID_ENV,
-      NEXTAUTH_SECRET: "short",
+      AUTH_SECRET: "short",
     });
     expect(result.success).toBe(false);
   });
