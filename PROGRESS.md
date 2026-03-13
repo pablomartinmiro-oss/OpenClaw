@@ -62,7 +62,7 @@
     - API routes: `/api/settings/tenant` (GET), `/api/settings/team` (GET), `/api/settings/team/[userId]/role` (PATCH)
     - Hook: `useSettings.ts` — useTenantSettings, useTeam, useUpdateUserRole
 21. ✅ Team management — team table with role dropdown (permission-gated), member list
-22. ✅ GHL webhooks — `/api/ghl/webhooks` POST receiver with HMAC-SHA256 signature verification, cache invalidation by event type, WebhookLog persistence
+22. ✅ GHL webhooks — `/api/crm/webhooks` POST receiver with HMAC-SHA256 signature verification, cache invalidation by event type, WebhookLog persistence
 23. ✅ Error boundaries — `error.tsx` files for comms, contacts, pipeline, settings (per-route error UI with retry)
 24. ✅ Loading states — `loading.tsx` files with route-specific skeletons, optimistic updates for sendMessage and addNote
 25. ✅ Final audit — all checks pass, PROGRESS.md + ARCHITECTURE.md updated

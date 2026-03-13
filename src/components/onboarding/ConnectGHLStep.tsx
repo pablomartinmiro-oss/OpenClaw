@@ -15,7 +15,7 @@ export function ConnectGHLStep({ isConnected }: ConnectGHLStepProps) {
 
   function handleConnect() {
     setConnecting(true);
-    window.location.href = "/api/ghl/oauth/authorize";
+    window.location.href = "/api/crm/oauth/authorize";
   }
 
   if (isConnected) {

@@ -98,7 +98,7 @@ export function GHLConnectionCard({
               variant="outline"
               size="sm"
               onClick={() => {
-                window.location.href = "/api/ghl/oauth/authorize";
+                window.location.href = "/api/crm/oauth/authorize";
               }}
             >
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function GHLConnectionCard({
         ) : (
           <Button
             onClick={() => {
-              window.location.href = "/api/ghl/oauth/authorize";
+              window.location.href = "/api/crm/oauth/authorize";
             }}
           >
             Connect GoHighLevel

@@ -29,7 +29,7 @@ async function fetchJSON<T>(url: string): Promise<T> {
 export function useConversations() {
   return useQuery<GHLConversationsResponse>({
     queryKey: ["conversations"],
-    queryFn: () => fetchJSON("/api/ghl/conversations"),
+    queryFn: () => fetchJSON("/api/crm/conversations"),
   });
 }
 
@@ -37,7 +37,7 @@ export function useMessages(conversationId: string | null) {
   return useQuery<GHLMessagesResponse>({
     queryKey: ["messages", conversationId],
     queryFn: () =>
-      fetchJSON(`/api/ghl/conversations/${conversationId}/messages`),
+      fetchJSON(`/api/crm/conversations/${conversationId}/messages`),
     enabled: !!conversationId,
   });
 }
@@ -48,7 +48,7 @@ export function useSendMessage(conversationId: string) {
   return useMutation({
     mutationFn: async (message: string) => {
       const res = await fetch(
-        `/api/ghl/conversations/${conversationId}/messages`,
+        `/api/crm/conversations/${conversationId}/messages`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -114,14 +114,14 @@ export function useSendMessage(conversationId: string) {
 export function useContacts() {
   return useQuery<GHLContactsResponse>({
     queryKey: ["contacts"],
-    queryFn: () => fetchJSON("/api/ghl/contacts"),
+    queryFn: () => fetchJSON("/api/crm/contacts"),
   });
 }
 
 export function useContact(contactId: string | null) {
   return useQuery<{ contact: GHLContact }>({
     queryKey: ["contact", contactId],
-    queryFn: () => fetchJSON(`/api/ghl/contacts/${contactId}`),
+    queryFn: () => fetchJSON(`/api/crm/contacts/${contactId}`),
     enabled: !!contactId,
   });
 }
@@ -129,7 +129,7 @@ export function useContact(contactId: string | null) {
 export function useContactNotes(contactId: string | null) {
   return useQuery<GHLNotesResponse>({
     queryKey: ["contact-notes", contactId],
-    queryFn: () => fetchJSON(`/api/ghl/contacts/${contactId}/notes`),
+    queryFn: () => fetchJSON(`/api/crm/contacts/${contactId}/notes`),
     enabled: !!contactId,
   });
 }
@@ -139,7 +139,7 @@ export function useAddNote(contactId: string) {
 
   return useMutation({
     mutationFn: async (body: string) => {
-      const res = await fetch(`/api/ghl/contacts/${contactId}/notes`, {
+      const res = await fetch(`/api/crm/contacts/${contactId}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body }),
@@ -195,7 +195,7 @@ export function useAddNote(contactId: string) {
 export function usePipelines() {
   return useQuery<GHLPipelinesResponse>({
     queryKey: ["pipelines"],
-    queryFn: () => fetchJSON("/api/ghl/pipelines"),
+    queryFn: () => fetchJSON("/api/crm/pipelines"),
   });
 }
 
@@ -203,7 +203,7 @@ export function useOpportunities(pipelineId: string | null) {
   return useQuery<GHLOpportunitiesResponse>({
     queryKey: ["opportunities", pipelineId],
     queryFn: () =>
-      fetchJSON(`/api/ghl/opportunities?pipelineId=${pipelineId}`),
+      fetchJSON(`/api/crm/opportunities?pipelineId=${pipelineId}`),
     enabled: !!pipelineId,
   });
 }

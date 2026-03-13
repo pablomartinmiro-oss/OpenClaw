@@ -26,7 +26,7 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const log = logger.child({ path: "/api/ghl/webhooks" });
+  const log = logger.child({ path: "/api/crm/webhooks" });
 
   // Read raw body for signature verification
   const rawBody = await req.text();

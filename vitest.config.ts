@@ -14,7 +14,7 @@ export default defineConfig({
       REDIS_URL: "redis://localhost:6379",
       GHL_CLIENT_ID: "test-client-id",
       GHL_CLIENT_SECRET: "test-client-secret",
-      GHL_REDIRECT_URI: "http://localhost:3000/api/ghl/oauth/callback",
+      GHL_REDIRECT_URI: "http://localhost:3000/api/crm/oauth/callback",
       ENCRYPTION_KEY: "a".repeat(64),
       ENABLE_MOCK_GHL: "true",
       NODE_ENV: "test",

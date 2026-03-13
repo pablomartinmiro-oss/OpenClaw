@@ -6,39 +6,43 @@ import { CacheKeys, CacheTTL } from "@/lib/cache/keys";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { PermissionKey } from "@/types/auth";
-import type { GHLContactsResponse } from "@/lib/ghl/types";
+import type { GHLOpportunitiesResponse } from "@/lib/ghl/types";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const permissions = session.user.permissions as PermissionKey[];
-  if (!hasPermission(permissions, "contacts:view")) {
+  if (!hasPermission(permissions, "pipelines:view")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { tenantId } = session.user;
-  const log = logger.child({ tenantId, path: "/api/ghl/contacts" });
+  const url = new URL(req.url);
+  const pipelineId = url.searchParams.get("pipelineId") ?? "";
+  const log = logger.child({ tenantId, path: "/api/crm/opportunities" });
 
   try {
-    const data = await getCachedOrFetch<GHLContactsResponse>(
-      CacheKeys.contacts(tenantId),
-      CacheTTL.contacts,
+    const data = await getCachedOrFetch<GHLOpportunitiesResponse>(
+      CacheKeys.opportunities(tenantId, pipelineId),
+      CacheTTL.opportunities,
       async () => {
         const client = await createGHLClient(tenantId);
-        const res = await client.get("/contacts/");
-        return res.data as GHLContactsResponse;
+        const res = await client.get("/opportunities/search", {
+          params: { pipeline_id: pipelineId },
+        });
+        return res.data as GHLOpportunitiesResponse;
       }
     );
 
-    log.info({ count: data.contacts.length }, "Contacts fetched");
+    log.info({ count: data.opportunities.length }, "Opportunities fetched");
     return NextResponse.json(data);
   } catch (error) {
-    log.error({ error }, "Failed to fetch contacts");
+    log.error({ error }, "Failed to fetch opportunities");
     return NextResponse.json(
-      { error: "Failed to fetch contacts", code: "GHL_ERROR" },
+      { error: "Failed to fetch opportunities", code: "GHL_ERROR" },
       { status: 500 }
     );
   }

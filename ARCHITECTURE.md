@@ -52,7 +52,7 @@
 ## Middleware
 - `src/middleware.ts` — uses `getToken()` from `next-auth/jwt` (edge-compatible)
 - Does NOT import `@/lib/auth/config` (would pull in Prisma → node:path → edge crash)
-- Public routes: `/login`, `/api/auth`, `/api/health`, `/api/ghl/webhooks`, `/api/ghl/oauth`
+- Public routes: `/login`, `/api/auth`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth`
 - Unauthenticated users redirected to `/login`
 - Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding` (unless already there or on API route)
 
@@ -62,7 +62,7 @@
 - Real client: axios with rate limiting (80/10s), token refresh on 401, retry with backoff on 429/5xx
 - Mock server: `src/lib/ghl/mock-server.ts` — 20 contacts, 10 conversations, 15 opportunities, 4 messages, 3 notes
 - OAuth helpers: `src/lib/ghl/oauth.ts` — `getAuthorizeUrl()` and `exchangeCodeForTokens()`
-- OAuth routes: `/api/ghl/oauth/authorize` (requires auth) and `/api/ghl/oauth/callback` (public, receives GHL redirect)
+- OAuth routes: `/api/crm/oauth/authorize` (requires auth) and `/api/crm/oauth/callback` (public, receives GHL redirect)
 - GHL types: `src/lib/ghl/types.ts`
 
 ## UI Components
@@ -99,7 +99,7 @@
 - On completion, sets `tenant.onboardingComplete = true` and forces full page reload to refresh JWT
 
 ## GHL API Routes (Pattern)
-- All at `src/app/api/ghl/` — conversations, contacts, pipelines, opportunities
+- All at `src/app/api/crm/` — conversations, contacts, pipelines, opportunities
 - Every route: `auth()` check → permission check via `hasPermission()` → cache-aside via `getCachedOrFetch()` → GHL client call
 - Error handling returns `{ error, code: "GHL_ERROR" }` shape
 - Uses `logger.child()` for structured request logging
@@ -142,7 +142,7 @@
 - Team table shows role dropdown for users with `settings:team` permission
 
 ## GHL Webhooks
-- Endpoint: `POST /api/ghl/webhooks` (public, verified via HMAC-SHA256 signature)
+- Endpoint: `POST /api/crm/webhooks` (public, verified via HMAC-SHA256 signature)
 - Signature verification: `x-ghl-signature` header checked against `GHL_WEBHOOK_SECRET` env var
 - Events trigger cache invalidation: Contact*, Conversation*, InboundMessage, OutboundMessage, Opportunity*
 - All webhooks logged to `WebhookLog` table with status tracking (received → processed | failed)

@@ -23,7 +23,7 @@ export function GHLStatusBanner() {
         size="sm"
         className="h-7 gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-100"
         onClick={() => {
-          window.location.href = "/api/ghl/oauth/authorize";
+          window.location.href = "/api/crm/oauth/authorize";
         }}
       >
         <RefreshCw className="h-3 w-3" />

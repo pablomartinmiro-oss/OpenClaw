@@ -6,7 +6,7 @@ import { CacheKeys, CacheTTL } from "@/lib/cache/keys";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { PermissionKey } from "@/types/auth";
-import type { GHLConversationsResponse } from "@/lib/ghl/types";
+import type { GHLPipelinesResponse } from "@/lib/ghl/types";
 
 export async function GET() {
   const session = await auth();
@@ -15,30 +15,30 @@ export async function GET() {
   }
 
   const permissions = session.user.permissions as PermissionKey[];
-  if (!hasPermission(permissions, "comms:view")) {
+  if (!hasPermission(permissions, "pipelines:view")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { tenantId } = session.user;
-  const log = logger.child({ tenantId, path: "/api/ghl/conversations" });
+  const log = logger.child({ tenantId, path: "/api/crm/pipelines" });
 
   try {
-    const data = await getCachedOrFetch<GHLConversationsResponse>(
-      CacheKeys.conversations(tenantId),
-      CacheTTL.conversations,
+    const data = await getCachedOrFetch<GHLPipelinesResponse>(
+      CacheKeys.pipelines(tenantId),
+      CacheTTL.pipelines,
       async () => {
         const client = await createGHLClient(tenantId);
-        const res = await client.get("/conversations/search");
-        return res.data as GHLConversationsResponse;
+        const res = await client.get("/opportunities/pipelines");
+        return res.data as GHLPipelinesResponse;
       }
     );
 
-    log.info({ count: data.conversations.length }, "Conversations fetched");
+    log.info({ count: data.pipelines.length }, "Pipelines fetched");
     return NextResponse.json(data);
   } catch (error) {
-    log.error({ error }, "Failed to fetch conversations");
+    log.error({ error }, "Failed to fetch pipelines");
     return NextResponse.json(
-      { error: "Failed to fetch conversations", code: "GHL_ERROR" },
+      { error: "Failed to fetch pipelines", code: "GHL_ERROR" },
       { status: 500 }
     );
   }

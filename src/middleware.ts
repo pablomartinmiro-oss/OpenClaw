@@ -5,8 +5,8 @@ const PUBLIC_ROUTES = [
   "/login",
   "/api/auth",
   "/api/health",
-  "/api/ghl/webhooks",
-  "/api/ghl/oauth",
+  "/api/crm/webhooks",
+  "/api/crm/oauth",
 ];
 
 export async function middleware(req: NextRequest) {
