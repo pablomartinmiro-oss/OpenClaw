@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== TENANT ====================
+model Tenant {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+
+  // GHL Connection
+  ghlLocationId   String?   @unique
+  ghlAccessToken  String?   // AES-256-GCM encrypted
+  ghlRefreshToken String?   // AES-256-GCM encrypted
+  ghlTokenExpiry  DateTime?
+  ghlConnectedAt  DateTime?
+  ghlAppId        String?   // Marketplace app ID
+
+  // Onboarding
+  onboardingComplete Boolean @default(false)
+
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  users           User[]
+  roles           Role[]
+  moduleConfigs   ModuleConfig[]
+  notifications   Notification[]
+}
+
+// ==================== USER ====================
+model User {
+  id            String    @id @default(cuid())
+  email         String
+  name          String?
+  passwordHash  String?
+  avatarUrl     String?
+  tenantId      String
+  roleId        String
+  ghlUserId     String?   // Maps to GHL user ID
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role          Role      @relation(fields: [roleId], references: [id])
+  notifications Notification[]
+
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([ghlUserId])
+}
+
+// ==================== RBAC ====================
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  tenantId    String
+  isSystem    Boolean  @default(false)  // System roles can't be deleted
+  permissions Json     // String array of permission keys
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users       User[]
+
+  @@unique([name, tenantId])
+  @@index([tenantId])
+}
+
+// ==================== MODULE CONFIG ====================
+model ModuleConfig {
+  id          String   @id @default(cuid())
+  tenantId    String
+  module      String   // "comms", "pipelines", "analytics", "contacts"
+  isEnabled   Boolean  @default(true)
+  config      Json?    @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, module])
+  @@index([tenantId])
+}
+
+// ==================== NOTIFICATIONS ====================
+model Notification {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String   // Target user
+  type        String   // "new_message", "deal_moved", "contact_created", etc.
+  title       String
+  body        String?
+  data        Json?    // Arbitrary payload (contactId, conversationId, etc.)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([tenantId, createdAt])
+}
+
+// ==================== WEBHOOK LOG ====================
+model WebhookLog {
+  id          String    @id @default(cuid())
+  tenantId    String?
+  event       String    // GHL event type
+  payload     Json      // Raw webhook payload
+  status      String    @default("received") // received, processed, failed
+  error       String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([tenantId, event])
+  @@index([createdAt])
+}
