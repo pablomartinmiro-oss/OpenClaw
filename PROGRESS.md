@@ -1,9 +1,10 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** ALL PHASES COMPLETE (A-E, Steps 1-25)
-- **Step:** 25/25 — Final audit passed
-- **Next:** Deploy to Railway, run migrations, seed demo data
+- **Phase:** DEPLOYED & LIVE
+- **Step:** 25/25 — All build phases complete + deployment fixes shipped
+- **Live URL:** https://crm-dash-prod.up.railway.app
+- **Next:** Connect real GHL sub-account via OAuth flow → Get Comms/SMS working with real data
 - **Date:** 2026-03-13
 
 ## Completed Steps
@@ -57,6 +58,14 @@
 - **base-ui Select `onValueChange`** passes `string | null` — must null-check before setting state
 - **ESLint `react-hooks/set-state-in-effect`**: Next.js 16 lint rule; use `useSearchParams` instead of reading `window.location.search` in useEffect
 
+### Railway Deployment Decisions
+- **Prisma generate in postinstall** — Railway runs `npm install` then `npm run build`; Prisma client must be generated before build
+- **Migrations in start, not build** — `prisma migrate deploy` needs DATABASE_URL at runtime; Railway injects it at start time, not build time
+- **tsx as production dep** — seed runs via `npx tsx prisma/seed.ts`; must be available in production node_modules
+- **Seed in prisma.config.ts** — Prisma v7 ignores `package.json` seed config; must export `seed()` from `prisma.config.ts`
+- **Explicit cookie config for Auth.js behind proxy** — when deploying Auth.js v5 behind TLS-terminating proxies (Railway, Vercel, etc.), always explicitly set `cookies.sessionToken.name` and pass matching `cookieName`/`secureCookie` to `getToken()` in middleware; the auto-detection logic checks different sources (AUTH_URL vs request protocol) and they disagree behind proxies
+- **All GHL routes under `/api/crm/`** — cleaner than `/api/ghl/`, matches the product domain language
+
 ### Phase E: Polish (Steps 20-25) ✅
 20. ✅ Settings page — tenant info card, GHL connection status/reconnect, team table with role management
     - API routes: `/api/settings/tenant` (GET), `/api/settings/team` (GET), `/api/settings/team/[userId]/role` (PATCH)
@@ -67,9 +76,29 @@
 24. ✅ Loading states — `loading.tsx` files with route-specific skeletons, optimistic updates for sendMessage and addNote
 25. ✅ Final audit — all checks pass, PROGRESS.md + ARCHITECTURE.md updated
 
+### Phase F: Railway Deployment (2026-03-13) ✅
+26. ✅ Prisma postinstall — added `prisma generate` to postinstall script so Railway generates the Prisma client during `npm install`
+27. ✅ Route rename `/api/ghl/*` → `/api/crm/*` — all GHL API routes moved under `/api/crm/` for cleaner naming; updated all frontend hooks to match
+28. ✅ Auth.js v5 trustHost — added `trustHost: true` to NextAuth config to resolve `UntrustedHost` error behind Railway's reverse proxy
+29. ✅ AUTH_URL + AUTH_SECRET env vars — Auth.js v5 requires `AUTH_URL` (not `NEXTAUTH_URL`) and `AUTH_SECRET`; added both to Railway env vars and Zod validation
+30. ✅ Prisma migrate in start script — moved `prisma migrate deploy` from build to start script so it runs with DATABASE_URL available at runtime
+31. ✅ PrismaPg adapter in seed — seed script was failing because it used bare `PrismaClient` instead of the adapter pattern; added `@prisma/adapter-pg` + `pg` Pool to seed.ts
+32. ✅ tsx production dependency — moved `tsx` from devDependencies to dependencies so `prisma db seed` works in Railway's production build (seed runs via `tsx prisma/seed.ts`)
+33. ✅ prisma.config.ts seed location — Prisma v7 requires seed command in `prisma.config.ts` (not `package.json`); added `seed: () => execSync('npx tsx prisma/seed.ts')` to config
+34. ✅ Session cookie fix — Auth.js v5 uses `__Secure-` prefixed cookie names when AUTH_URL is HTTPS, but `getToken()` in middleware inferred cookie name from internal HTTP request (behind Railway's TLS proxy), causing a name mismatch; explicitly configured cookie names in NextAuth config and passed matching `cookieName`/`secureCookie` to `getToken()`
+
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before running migrations
 - `prisma migrate dev --name init` needs to be run before seed works
+
+## Deployment Info
+- **Platform:** Railway (Docker)
+- **Live URL:** https://crm-dash-prod.up.railway.app
+- **Services:** Next.js app + Postgres + Redis (all on Railway)
+- **Env vars:** AUTH_URL, AUTH_SECRET, DATABASE_URL, REDIS_URL, ENCRYPTION_KEY, GHL_CLIENT_ID, GHL_CLIENT_SECRET, GHL_REDIRECT_URI, ENABLE_MOCK_GHL
+- **Build:** `npm install` (triggers postinstall → prisma generate) → `npm run build` (next build)
+- **Start:** `npm start` (runs prisma migrate deploy → prisma db seed → next start)
+- **Demo login:** admin@demo.com / demo1234 (Owner), sales@demo.com / demo1234 (Sales Rep)
 
 ## Auto-Audit Results
 ### Phase A Final Audit

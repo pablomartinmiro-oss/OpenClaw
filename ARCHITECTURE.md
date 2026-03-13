@@ -35,11 +35,12 @@
 
 ## Authentication
 - NextAuth v5 beta with credentials provider + JWT strategy
-- Config in `src/lib/auth/config.ts` — exports `handlers`, `auth`, `signIn`, `signOut`
+- Config in `src/lib/auth/config.ts` — exports `handlers`, `auth`, `signIn`, `signOut`, `SESSION_COOKIE_NAME`
 - Session includes: `id`, `email`, `name`, `tenantId`, `roleId`, `roleName`, `permissions`, `onboardingComplete`
 - JWT callbacks populate custom fields from user object
 - Type declarations for Session and JWT in the config file
 - API route handler at `src/app/api/auth/[...nextauth]/route.ts`
+- **Cookie config:** Explicit `cookies.sessionToken` with name derived from AUTH_URL protocol (`__Secure-authjs.session-token` for HTTPS, `authjs.session-token` for HTTP). Critical for deployments behind TLS-terminating proxies (Railway, Vercel, etc.)
 
 ## RBAC
 - 15 permission keys defined in `src/lib/auth/permissions.ts`
@@ -55,6 +56,7 @@
 - Public routes: `/login`, `/api/auth`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth`
 - Unauthenticated users redirected to `/login`
 - Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding` (unless already there or on API route)
+- **Cookie name sync:** Derives `SESSION_COOKIE_NAME` from `AUTH_URL` using same logic as auth config; passes `cookieName` and `secureCookie` explicitly to `getToken()` to avoid mismatch behind TLS proxies
 
 ## GHL Integration
 - Client factory: `createGHLClient(tenantId)` from `@/lib/ghl/client.ts`
@@ -156,3 +158,11 @@
 - `useSendMessage`: appends outbound message immediately, rolls back on error
 - `useAddNote`: prepends note immediately, rolls back on error
 - Pattern: `onMutate` (cancel + snapshot + optimistic set) → `onError` (rollback) → `onSettled` (refetch)
+
+## Railway Deployment
+- **Build pipeline:** `npm install` → postinstall (`prisma generate`) → `npm run build` (`next build`)
+- **Start pipeline:** `npm start` → `prisma migrate deploy` → `prisma db seed` → `next start`
+- **Key constraint:** `prisma migrate deploy` must run at start (not build) because Railway injects DATABASE_URL at runtime
+- **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool (matching the app's Prisma v7 adapter pattern), invoked via `tsx` (production dependency)
+- **Prisma config** (`prisma.config.ts`): defines seed command — Prisma v7 ignores `package.json` seed config
+- **Env vars required:** AUTH_URL (must match live URL exactly including `https://`), AUTH_SECRET, DATABASE_URL, REDIS_URL, ENCRYPTION_KEY, GHL_CLIENT_ID, GHL_CLIENT_SECRET, GHL_REDIRECT_URI
