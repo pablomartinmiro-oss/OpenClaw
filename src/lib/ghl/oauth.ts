@@ -16,7 +16,6 @@ const SCOPES = [
   "opportunities.readonly",
   "opportunities.write",
   "locations.readonly",
-  "locations/customFields.readonly",
   "users.readonly",
 ].join(" ");
 
