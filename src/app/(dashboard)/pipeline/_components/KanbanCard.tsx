@@ -8,9 +8,9 @@ interface KanbanCardProps {
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("es-ES", {
     style: "currency",
-    currency: "USD",
+    currency: "EUR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -29,7 +29,7 @@ export function KanbanCard({ opportunity }: KanbanCardProps) {
         {opportunity.assignedTo && (
           <div className="flex items-center gap-1 text-[10px] text-text-secondary">
             <User className="h-3 w-3" />
-            Assigned
+            Asignado
           </div>
         )}
       </div>

@@ -38,7 +38,7 @@ export function MessageThread({ messages, loading }: MessageThreadProps) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        No messages yet
+        No hay mensajes aún
       </div>
     );
   }
@@ -69,8 +69,8 @@ export function MessageThread({ messages, loading }: MessageThreadProps) {
             >
               <p className="whitespace-pre-wrap">{msg.body}</p>
               <p className="mt-1 text-[10px] text-text-secondary">
-                {new Date(msg.dateAdded).toLocaleTimeString("en-US", {
-                  hour: "numeric",
+                {new Date(msg.dateAdded).toLocaleTimeString("es-ES", {
+                  hour: "2-digit",
                   minute: "2-digit",
                 })}
               </p>

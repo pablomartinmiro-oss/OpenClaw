@@ -18,8 +18,8 @@ interface AssignDropdownProps {
 // In production, team members would be fetched from the API.
 // For now, use placeholder team members from mock data.
 const TEAM_MEMBERS = [
-  { id: "mock-user-1", name: "Alex (Sales)" },
-  { id: "mock-user-2", name: "Jordan (Support)" },
+  { id: "mock-user-1", name: "Carlos (Ventas)" },
+  { id: "mock-user-2", name: "María (Soporte)" },
 ];
 
 export function AssignDropdown({
@@ -37,11 +37,11 @@ export function AssignDropdown({
         render={<Button variant="ghost" size="sm" disabled={disabled} className="h-7 gap-1.5 text-xs" />}
       >
         <UserPlus className="h-3.5 w-3.5" />
-        {assigneeName ?? "Unassigned"}
+        {assigneeName ?? "Sin asignar"}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => onAssign(null)}>
-          Unassigned
+          Sin asignar
         </DropdownMenuItem>
         {TEAM_MEMBERS.map((member) => (
           <DropdownMenuItem

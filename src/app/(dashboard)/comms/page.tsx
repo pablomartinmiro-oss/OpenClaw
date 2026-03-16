@@ -11,6 +11,7 @@ import { MessageThread } from "./_components/MessageThread";
 import { MessageInput } from "./_components/MessageInput";
 import { ContactSidebar } from "./_components/ContactSidebar";
 import { AssignDropdown } from "./_components/AssignDropdown";
+import { ChannelBadge } from "./_components/ChannelBadge";
 import { toast } from "sonner";
 import type { GHLContact } from "@/lib/ghl/types";
 
@@ -50,7 +51,7 @@ export default function CommsPage() {
   function handleSend(message: string) {
     sendMessage.mutate(message, {
       onError: () => {
-        toast.error("Failed to send message. Please try again.");
+        toast.error("Error al enviar el mensaje. Inténtalo de nuevo.");
       },
     });
   }
@@ -73,14 +74,19 @@ export default function CommsPage() {
         <div className="flex flex-1 flex-col">
           {/* Thread header */}
           <div className="flex items-center justify-between border-b border-border bg-white px-4 py-2.5">
-            <h2 className="text-sm font-semibold text-text-primary">
-              {selectedConvo?.contactName ?? "Conversation"}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-text-primary">
+                {selectedConvo?.contactName ?? "Conversación"}
+              </h2>
+              {selectedConvo && (
+                <ChannelBadge type={selectedConvo.type} size="md" />
+              )}
+            </div>
             {can("comms:assign") && (
               <AssignDropdown
                 currentAssignee={selectedConvo?.assignedTo ?? null}
                 onAssign={() => {
-                  toast.info("Assignment updated");
+                  toast.info("Asignación actualizada");
                 }}
               />
             )}
@@ -98,8 +104,8 @@ export default function CommsPage() {
         <div className="flex flex-1 items-center justify-center bg-surface">
           <EmptyState
             icon={MessageSquare}
-            title="Select a conversation"
-            description="Choose a conversation from the list to view messages"
+            title="Selecciona una conversación"
+            description="Elige una conversación de la lista para ver los mensajes"
           />
         </div>
       )}

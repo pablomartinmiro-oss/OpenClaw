@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ConversationListSkeleton } from "@/components/shared/LoadingSkeleton";
-import { ConversationFilters, type FilterTab } from "./ConversationFilters";
+import { ConversationFilters, type FilterTab, type ChannelFilter } from "./ConversationFilters";
+import { ChannelBadge } from "./ChannelBadge";
 import type { GHLConversation } from "@/lib/ghl/types";
 
 interface ConversationListProps {
@@ -25,6 +26,7 @@ export function ConversationList({
   onSelect,
 }: ConversationListProps) {
   const [filter, setFilter] = useState<FilterTab>("all");
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -43,6 +45,11 @@ export function ConversationList({
         break;
     }
 
+    // Apply channel filter
+    if (channelFilter !== "all") {
+      list = list.filter((c) => c.type === channelFilter);
+    }
+
     // Apply search
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -55,7 +62,7 @@ export function ConversationList({
         new Date(b.lastMessageDate).getTime() -
         new Date(a.lastMessageDate).getTime()
     );
-  }, [conversations, filter, search, currentUserId]);
+  }, [conversations, filter, channelFilter, search, currentUserId]);
 
   return (
     <div className="flex h-full flex-col border-r border-border bg-white">
@@ -64,7 +71,7 @@ export function ConversationList({
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Buscar conversaciones..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 rounded-lg border-border bg-surface pl-8 text-sm placeholder:text-text-secondary"
@@ -73,7 +80,12 @@ export function ConversationList({
       </div>
 
       {/* Filters */}
-      <ConversationFilters activeTab={filter} onTabChange={setFilter} />
+      <ConversationFilters
+        activeTab={filter}
+        onTabChange={setFilter}
+        activeChannel={channelFilter}
+        onChannelChange={setChannelFilter}
+      />
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">
@@ -81,7 +93,7 @@ export function ConversationList({
           <ConversationListSkeleton />
         ) : filtered.length === 0 ? (
           <p className="p-4 text-center text-sm text-text-secondary">
-            No conversations found
+            No se encontraron conversaciones
           </p>
         ) : (
           filtered.map((conv) => (
@@ -93,12 +105,15 @@ export function ConversationList({
                 selectedId === conv.id && "bg-cyan-light/50 border-l-2 border-l-cyan"
               )}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-light text-sm font-semibold text-cyan">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-light text-sm font-semibold text-cyan">
                 {conv.contactName
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
                   .slice(0, 2)}
+                <div className="absolute -bottom-1 -right-1">
+                  <ChannelBadge type={conv.type} size="sm" />
+                </div>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
@@ -135,11 +150,11 @@ function formatRelativeTime(dateString: string): string {
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
 
-  if (diffMins < 1) return "now";
+  if (diffMins < 1) return "ahora";
   if (diffMins < 60) return `${diffMins}m`;
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) return `${diffHours}h`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}d`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("es-ES", { month: "short", day: "numeric" });
 }

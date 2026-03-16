@@ -54,14 +54,14 @@ export default function PipelinePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">Pipeline</h1>
-          <p className="text-sm text-text-secondary">Manage your deals across stages</p>
+          <p className="text-sm text-text-secondary">Gestiona tus oportunidades por etapa</p>
         </div>
         {!loading && (
           <span className="text-sm text-text-secondary">
-            {opportunities.length} deals &middot;{" "}
-            {new Intl.NumberFormat("en-US", {
+            {opportunities.length} oportunidades &middot;{" "}
+            {new Intl.NumberFormat("es-ES", {
               style: "currency",
-              currency: "USD",
+              currency: "EUR",
               minimumFractionDigits: 0,
             }).format(totalValue)}
           </span>
@@ -79,8 +79,8 @@ export default function PipelinePage() {
       ) : stages.length === 0 ? (
         <EmptyState
           icon={Kanban}
-          title="No pipeline stages"
-          description="Pipeline stages will appear here once synced from GHL"
+          title="Sin etapas de pipeline"
+          description="Las etapas aparecerán aquí una vez sincronizadas desde GHL"
         />
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-4">

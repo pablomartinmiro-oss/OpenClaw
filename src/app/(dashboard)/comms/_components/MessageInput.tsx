@@ -43,7 +43,7 @@ export function MessageInput({
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            disabled ? "You don't have permission to send messages" : "Type a message..."
+            disabled ? "No tienes permiso para enviar mensajes" : "Escribe un mensaje..."
           }
           disabled={disabled || sending}
           rows={2}
@@ -60,8 +60,7 @@ export function MessageInput({
       </div>
       {message.length > 0 && (
         <p className="mt-1 text-xs text-text-secondary">
-          {message.length} chars &middot; {segments} SMS segment
-          {segments !== 1 ? "s" : ""}
+          {message.length} caracteres &middot; {segments} segmento{segments !== 1 ? "s" : ""} SMS
         </p>
       )}
     </div>

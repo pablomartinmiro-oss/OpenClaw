@@ -49,7 +49,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
       <div className="space-y-3">
         {contact.phone && (
           <div>
-            <p className="text-xs font-medium text-text-secondary">Phone</p>
+            <p className="text-xs font-medium text-text-secondary">Teléfono</p>
             <p className="text-sm text-text-primary">{contact.phone}</p>
           </div>
         )}
@@ -61,7 +61,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
         )}
         {contact.source && (
           <div>
-            <p className="text-xs font-medium text-text-secondary">Source</p>
+            <p className="text-xs font-medium text-text-secondary">Origen</p>
             <p className="text-sm text-text-primary">{contact.source}</p>
           </div>
         )}
@@ -70,7 +70,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
         {contact.tags.length > 0 && (
           <div>
             <p className="mb-1 text-xs font-medium text-text-secondary">
-              Tags
+              Etiquetas
             </p>
             <div className="flex flex-wrap gap-1">
               {contact.tags.map((tag) => (
@@ -90,7 +90,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
           className="flex items-center gap-2 text-xs font-medium text-cyan hover:underline"
         >
           <ExternalLink className="h-3 w-3" />
-          View full profile
+          Ver perfil completo
         </Link>
       </div>
     </div>
