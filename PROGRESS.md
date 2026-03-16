@@ -1,8 +1,8 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE Q COMPLETE — All Features Built + Permission Fix + Deployed
-- **Step:** All phases A-Q complete. App is feature-complete and deployed.
+- **Phase:** PHASE R — Complete Product Catalog Seeded
+- **Step:** All phases A-Q complete + full 2025/2026 Skicenter catalog (93 products, 7 season periods)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** fc2e8d0 (2026-03-16)
 - **Next:** Connect real GHL sub-account, set up Railway cron, test webhooks
@@ -132,6 +132,15 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Auth is now session + tenant only (no granular RBAC at API level)
 - Deployed to Railway: commit fc2e8d0
 
+### Phase R: Complete Product Catalog (2026-03-16) ✅
+- 93 products across 10 categories: alquiler (33), locker (4), escuela (6), clase_particular (5), forfait (10), menu (2), snowcamp (9), apreski (12), taxi (4), pack (8)
+- Full 2025/2026 season calendar with 7 periods (3 alta + 4 media)
+- New categories: menu, snowcamp, taxi, pack (bundle)
+- Age brackets + skill levels constants at `src/lib/constants/skicenter.ts`
+- Seed endpoint: POST `/api/admin/seed-products`
+- La Pinilla products capped at 5 days, Baqueira has separate Sector Baqueira/Beret
+- Bundle packs store component references for dynamic price calculation
+
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
 2. `20260316100000_phase2_auth_voucher_datamode` — Auth fields, voucher fields, dataMode, GrouponProductMapping
@@ -150,7 +159,7 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **Set up Railway cron** for `/api/cron/sync` (every 5 minutes)
 - **Test webhook delivery** — register webhook URL in GHL marketplace app settings
 - **Email/WhatsApp delivery** — integrate Resend (email) + Twilio (WhatsApp) for real notifications
-- **Seed real product prices** — import from PRODUCTOS_TARIFAS_SKCIENTER_25_26.xlsx spreadsheet
+- ~~**Seed real product prices**~~ — DONE: 93 products seeded via POST /api/admin/seed-products
 
 ## Key Decisions
 - **Prisma v7** requires adapter pattern — `@prisma/adapter-pg`

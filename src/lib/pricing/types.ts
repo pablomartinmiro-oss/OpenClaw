@@ -66,7 +66,11 @@ export const PRODUCT_CATEGORIES = {
   clase_particular: "Clases Particulares",
   forfait: "Forfaits",
   locker: "Lockers / Guardaropa",
-  apreski: "Après-ski",
+  apreski: "Après-ski / Actividades",
+  menu: "Menú / Restauración",
+  snowcamp: "SnowCamp / Guardería",
+  taxi: "Transfers / Taxi",
+  pack: "Packs All-in-One",
 } as const;
 
 export const STATIONS = {
