@@ -1,5 +1,72 @@
 # GHL Dashboard — Architecture Patterns
 
+## System Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        RAILWAY PLATFORM                         │
+│                                                                 │
+│  ┌─────────────┐    ┌──────────────┐    ┌──────────────────┐   │
+│  │  Next.js 16  │───▶│  PostgreSQL   │    │      Redis       │   │
+│  │  App Router  │    │  (Prisma v7)  │    │  (Cache-aside)   │   │
+│  │              │───▶│              │    │                  │   │
+│  └──────┬───────┘    └──────────────┘    └──────────────────┘   │
+│         │                                                       │
+└─────────┼───────────────────────────────────────────────────────┘
+          │
+          │ HTTPS
+          │
+    ┌─────┴──────────────────────────────────┐
+    │           EXTERNAL SERVICES             │
+    │                                         │
+    │  ┌───────────────┐  ┌───────────────┐  │
+    │  │  GoHighLevel   │  │  Claude API   │  │
+    │  │  API v2        │  │  (Anthropic)  │  │
+    │  │  - Contacts    │  │  - Voucher    │  │
+    │  │  - Convos      │  │    image OCR  │  │
+    │  │  - Pipelines   │  │              │  │
+    │  │  - OAuth       │  │              │  │
+    │  └───────────────┘  └───────────────┘  │
+    └─────────────────────────────────────────┘
+```
+
+## Request Flow
+
+```
+Browser → Middleware (JWT check) → Next.js Route
+  │
+  ├── (auth) routes: /login, /register — no auth required
+  │
+  ├── (dashboard) routes: /, /reservas, /settings, etc.
+  │   └── Layout wraps with SessionProvider + QueryClientProvider
+  │
+  └── API routes:
+      ├── /api/auth/*           — NextAuth handlers
+      ├── /api/crm/*            — GHL bridge (auth + permissions + cache-aside + GHL client)
+      ├── /api/reservations/*   — Local DB CRUD (auth + tenant scope)
+      ├── /api/voucher/read     — Claude API (auth + image → structured JSON)
+      ├── /api/settings/*       — Tenant + team + mappings (auth + permissions)
+      └── /api/health           — Public health check
+```
+
+## Multi-Tenant Architecture
+
+```
+Tenant (company)
+  ├── Users (team members, each with Role)
+  ├── Roles (Owner, Manager, Sales Rep, VA/Admin — with permissions array)
+  ├── ModuleConfigs (per-module settings)
+  ├── Reservations (with voucher tracking fields)
+  ├── Quotes + QuoteItems
+  ├── Products (catalog)
+  ├── GrouponProductMappings (regex → services mapping)
+  ├── StationCapacity (per station/date)
+  ├── Notifications
+  └── GHL Connection (encrypted OAuth tokens, locationId)
+```
+
+**Every query includes `WHERE tenantId = ?`** — enforced at the API route level.
+
 ## Database Access
 - Import `prisma` from `@/lib/db`
 - Uses Prisma v7 with `@prisma/adapter-pg` (not direct URL)
@@ -27,6 +94,7 @@
 ## Environment
 - Bootstrap modules (logger, db, redis, encryption) read `process.env` directly
 - All application code imports `env` from `@/lib/env` for validated access
+- Exception: `ANTHROPIC_API_KEY` read via `process.env` (per spec requirement)
 
 ## Testing
 - Tests in `__tests__/` directory, mirroring `src/` structure
@@ -34,13 +102,23 @@
 - Run with `npx vitest run`
 
 ## Authentication
-- NextAuth v5 beta with credentials provider + JWT strategy
+
+### NextAuth v5 Setup
 - Config in `src/lib/auth/config.ts` — exports `handlers`, `auth`, `signIn`, `signOut`, `SESSION_COOKIE_NAME`
+- Credentials provider with bcrypt password verification
+- JWT strategy — session data embedded in token
 - Session includes: `id`, `email`, `name`, `tenantId`, `roleId`, `roleName`, `permissions`, `onboardingComplete`
-- JWT callbacks populate custom fields from user object
-- Type declarations for Session and JWT in the config file
-- API route handler at `src/app/api/auth/[...nextauth]/route.ts`
-- **Cookie config:** Explicit `cookies.sessionToken` with name derived from AUTH_URL protocol (`__Secure-authjs.session-token` for HTTPS, `authjs.session-token` for HTTP). Critical for deployments behind TLS-terminating proxies (Railway, Vercel, etc.)
+
+### Registration Flow
+- `POST /api/auth/register` — two paths:
+  - **New tenant**: creates Tenant + 4 Roles + User (Owner) + ModuleConfigs in transaction
+  - **Invite join**: validates invite token, updates placeholder user, assigns Sales Rep role
+- After registration: auto-login via `signIn("credentials")` → redirect
+
+### Cookie Configuration
+- Explicit `cookies.sessionToken` with name derived from AUTH_URL protocol
+- `__Secure-authjs.session-token` for HTTPS, `authjs.session-token` for HTTP
+- Critical for deployments behind TLS-terminating proxies (Railway)
 
 ## RBAC
 - 15 permission keys defined in `src/lib/auth/permissions.ts`
@@ -53,19 +131,48 @@
 ## Middleware
 - `src/middleware.ts` — uses `getToken()` from `next-auth/jwt` (edge-compatible)
 - Does NOT import `@/lib/auth/config` (would pull in Prisma → node:path → edge crash)
-- Public routes: `/login`, `/api/auth`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth`
+- Public routes: `/login`, `/register`, `/api/auth`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth`
 - Unauthenticated users redirected to `/login`
-- Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding` (unless already there or on API route)
-- **Cookie name sync:** Derives `SESSION_COOKIE_NAME` from `AUTH_URL` using same logic as auth config; passes `cookieName` and `secureCookie` explicitly to `getToken()` to avoid mismatch behind TLS proxies
+- Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding`
 
 ## GHL Integration
 - Client factory: `createGHLClient(tenantId)` from `@/lib/ghl/client.ts`
 - Returns mock client when `ENABLE_MOCK_GHL=true`
 - Real client: axios with rate limiting (80/10s), token refresh on 401, retry with backoff on 429/5xx
-- Mock server: `src/lib/ghl/mock-server.ts` — 20 contacts, 10 conversations, 15 opportunities, 4 messages, 3 notes
-- OAuth helpers: `src/lib/ghl/oauth.ts` — `getAuthorizeUrl()` and `exchangeCodeForTokens()`
-- OAuth routes: `/api/crm/oauth/authorize` (requires auth) and `/api/crm/oauth/callback` (public, receives GHL redirect)
-- GHL types: `src/lib/ghl/types.ts`
+- Mock server: `src/lib/ghl/mock-server.ts` — 20 contacts, 10 conversations, 15 opportunities
+- OAuth: `src/lib/ghl/oauth.ts` — `getAuthorizeUrl()` and `exchangeCodeForTokens()`
+- OAuth routes: `/api/crm/oauth/authorize` (requires auth) and `/api/crm/oauth/callback` (public)
+
+## Mock/Real Data Mode
+- Tenant model has `dataMode` field: "mock" (default) or "live"
+- `getDataMode(tenantId)` utility in `src/lib/data/getDataMode.ts`
+- Toggle in Settings UI → DataModeCard component
+- Cannot switch to live without valid GHL OAuth tokens
+- Mock = local DB queries. Live = GHL API calls via bridge routes.
+
+## Voucher System (AI-Powered)
+
+### Reader Flow
+```
+Image upload → POST /api/voucher/read → Claude API (claude-sonnet-4-20250514)
+  → Structured JSON extraction → Auto-fill form fields
+```
+
+### Data Flow
+```
+VoucherSection (drop zone / manual) → ReservationForm state → POST /api/reservations
+  → Reservation record with voucher fields in DB
+```
+
+### Tracking
+- VoucherStats component queries `/api/reservations/voucher-stats`
+- Aggregates: pendientes, canjeados, ingresos, caducan semana/mes
+- Yellow alert banner for vouchers expiring within 7 days
+
+### Groupon Product Mapping
+- GrouponProductMapping model in DB (tenantId, grouponDesc, regex pattern, services JSON)
+- CRUD API at `/api/settings/groupon-mappings`
+- Editor UI in Settings page (GrouponMappingCard component)
 
 ## UI Components
 - shadcn/ui components in `src/components/ui/`
@@ -74,85 +181,36 @@
 - shadcn/ui v4 uses base-ui (not Radix) — `render` prop instead of `asChild`
 
 ## Layout
-- Route groups: `(dashboard)` for authenticated pages, `(auth)` for login/onboarding
+- Route groups: `(dashboard)` for authenticated pages, `(auth)` for login/register/onboarding
 - Dashboard layout (`src/app/(dashboard)/layout.tsx`) wraps with `SessionProvider` + `QueryClientProvider`
-- `Sidebar` (`src/components/layout/Sidebar.tsx`) — role-aware nav, collapsible, unread badge on Comms
-- `Topbar` (`src/components/layout/Topbar.tsx`) — search input, notification bell, user dropdown menu
-- `MobileNav` (`src/components/layout/MobileNav.tsx`) — Sheet-based nav for mobile, hidden on md+
-- Design: Inter font, sidebar dark (slate-900), content area light (slate-50)
-
-## Shared Components
-- `ErrorBoundary` (`src/components/shared/ErrorBoundary.tsx`) — class component, retry button, dev error display
-- `GHLStatusBanner` (`src/components/shared/GHLStatusBanner.tsx`) — dismissible warning banner + reconnect button
-- `EmptyState` (`src/components/shared/EmptyState.tsx`) — icon + title + description + optional CTA
-- `LoadingSkeleton` (`src/components/shared/LoadingSkeleton.tsx`) — exports: `PageSkeleton`, `CardSkeleton`, `TableSkeleton`, `ConversationListSkeleton`, `KanbanSkeleton`
-- `RoleGate` (`src/components/shared/RoleGate.tsx`) — permission-gated UI wrapper
-
-## Login
-- Login page at `src/app/(auth)/login/page.tsx`
-- Uses `signIn("credentials", { redirect: false })` for client-side auth
-- `useSearchParams` wrapped in `<Suspense>` for Next.js static generation
-
-## Onboarding
-- 4-step wizard at `src/app/(auth)/onboarding/` — Connect GHL → Invite Team → Assign Roles → Done
-- Step components in `src/components/onboarding/` — `StepIndicator`, `ConnectGHLStep`, `InviteTeamStep`, `AssignRolesStep`
-- API routes: `/api/onboarding/invite` (POST), `/api/onboarding/team` (GET), `/api/onboarding/roles` (POST), `/api/onboarding/complete` (POST)
-- `onboardingComplete` boolean in JWT/session drives middleware redirects
-- On completion, sets `tenant.onboardingComplete = true` and forces full page reload to refresh JWT
-
-## GHL API Routes (Pattern)
-- All at `src/app/api/crm/` — conversations, contacts, pipelines, opportunities
-- Every route: `auth()` check → permission check via `hasPermission()` → cache-aside via `getCachedOrFetch()` → GHL client call
-- Error handling returns `{ error, code: "GHL_ERROR" }` shape
-- Uses `logger.child()` for structured request logging
+- Sidebar, Topbar, MobileNav in `src/components/layout/`
 
 ## React Query Hooks
-- `src/hooks/useGHL.ts` — all GHL data fetching hooks
-- `useConversations()`, `useMessages(conversationId)`, `useSendMessage(conversationId)`
-- `useContacts()`, `useContact(id)`, `useContactNotes(id)`
-- `usePipelines()`, `useOpportunities(pipelineId)`
+- `src/hooks/useGHL.ts` — GHL data fetching (conversations, contacts, pipelines)
+- `src/hooks/useReservations.ts` — reservation CRUD + stats + capacity
+- `src/hooks/useSettings.ts` — tenant settings, team, data mode, invites
+- `src/hooks/useVoucher.ts` — voucher AI reader mutation
 - All use `fetchJSON<T>()` helper that throws on non-ok responses
 
-## Comms Module
-- Three-panel layout: ConversationList (left 320px) | MessageThread + MessageInput (center) | ContactSidebar (right 288px, hidden on <lg)
-- Components in `src/app/(dashboard)/comms/_components/`
-- AssignDropdown uses `render` prop (base-ui), NOT `asChild` (Radix)
-
-## Contacts Module
-- List page at `/contacts` — searchable table with source filter badges
-- Detail page at `/contacts/[id]` — two-column: ContactInfo card + Notes list with AddNoteForm
-- Components in `src/app/(dashboard)/contacts/_components/` and `contacts/[id]/_components/`
-- `useAddNote(contactId)` mutation hook in `useGHL.ts`
-
-## Pipeline Module
-- Kanban board at `/pipeline` — horizontal scrolling columns per stage
-- Components in `src/app/(dashboard)/pipeline/_components/`: KanbanCard, KanbanColumn, PipelineSelector
-- Pipeline selection: derived state (not useEffect setState) — `userSelectedId ?? pipelines[0]?.id`
-- Stage columns show opportunity count badge + total value
-
-## Dashboard Home
-- Stat cards: unread messages, total contacts, open deals, pipeline value
-- Widgets: RecentConversations (top 5), TopOpportunities (top 5 by value)
-- Components in `src/app/(dashboard)/_components/`: StatCard, RecentConversations, TopOpportunities
+## Reservations Module
+- Two-panel layout: ReservationList (35%) + ReservationForm (65%)
+- Source selection: Groupon / Caja / Presupuesto
+- Groupon source shows VoucherSection (image reader + manual fields + Groupon validation)
+- VoucherStats widget above main layout (collapsible)
+- Keyboard shortcuts: F1=New, F2=Confirm, F3=No availability, F4=Duplicate, Ctrl+Enter=Confirm
 
 ## Settings Module
-- Settings page at `/settings` — tenant info, GHL connection, team management
-- API routes: `/api/settings/tenant` (GET), `/api/settings/team` (GET), `/api/settings/team/[userId]/role` (PATCH)
-- All routes require `settings:tenant` or `settings:team` permission + tenant scoping
-- Hooks in `src/hooks/useSettings.ts`: useTenantSettings, useTeam, useUpdateUserRole
-- Components in `src/app/(dashboard)/settings/_components/`: GHLConnectionCard, TenantInfoCard, TeamTable
-- Team table shows role dropdown for users with `settings:team` permission
+- DataModeCard — mock/live toggle (requires Owner + GHL connected for live)
+- TenantInfoCard — company name, slug, created date
+- GHLConnectionCard — connection status, reconnect button
+- GrouponMappingCard — CRUD table for Groupon product → Skicenter service mappings
+- TeamInviteCard — email input + invite button, shows invite URL with copy
+- TeamTable — role dropdown per user (permission-gated)
 
 ## GHL Webhooks
-- Endpoint: `POST /api/crm/webhooks` (public, verified via HMAC-SHA256 signature)
-- Signature verification: `x-ghl-signature` header checked against `GHL_WEBHOOK_SECRET` env var
-- Events trigger cache invalidation: Contact*, Conversation*, InboundMessage, OutboundMessage, Opportunity*
-- All webhooks logged to `WebhookLog` table with status tracking (received → processed | failed)
-
-## Error Handling
-- Per-route `error.tsx` files in comms, contacts, pipeline, settings
-- ErrorBoundary class component available for component-level wrapping
-- Route-level `loading.tsx` files with module-specific skeletons
+- Endpoint: `POST /api/crm/webhooks` (public, verified via HMAC-SHA256)
+- Events trigger cache invalidation by type
+- All webhooks logged to `WebhookLog` table
 
 ## Optimistic Updates
 - `useSendMessage`: appends outbound message immediately, rolls back on error
@@ -160,9 +218,8 @@
 - Pattern: `onMutate` (cancel + snapshot + optimistic set) → `onError` (rollback) → `onSettled` (refetch)
 
 ## Railway Deployment
-- **Build pipeline:** `npm install` → postinstall (`prisma generate`) → `npm run build` (`next build`)
-- **Start pipeline:** `npm start` → `prisma migrate deploy` → `prisma db seed` → `next start`
+- **Build:** `npm install` → postinstall (`prisma generate`) → `npm run build` (`next build`)
+- **Start:** `npm start` → `prisma migrate deploy` → `prisma db seed` → `next start`
 - **Key constraint:** `prisma migrate deploy` must run at start (not build) because Railway injects DATABASE_URL at runtime
-- **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool (matching the app's Prisma v7 adapter pattern), invoked via `tsx` (production dependency)
+- **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool
 - **Prisma config** (`prisma.config.ts`): defines seed command — Prisma v7 ignores `package.json` seed config
-- **Env vars required:** AUTH_URL (must match live URL exactly including `https://`), AUTH_SECRET, DATABASE_URL, REDIS_URL, ENCRYPTION_KEY, GHL_CLIENT_ID, GHL_CLIENT_SECRET, GHL_REDIRECT_URI
