@@ -63,7 +63,7 @@ export function MessageThread({ messages, loading }: MessageThreadProps) {
               className={cn(
                 "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm",
                 msg.direction === "outbound"
-                  ? "bg-cyan-light text-text-primary"
+                  ? "bg-coral-light text-text-primary"
                   : "bg-white text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
               )}
             >

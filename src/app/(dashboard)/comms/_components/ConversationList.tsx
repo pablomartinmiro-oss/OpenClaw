@@ -101,11 +101,11 @@ export function ConversationList({
               key={conv.id}
               onClick={() => onSelect(conv.id)}
               className={cn(
-                "flex w-full items-start gap-3 border-b border-border/50 p-3 text-left transition-colors hover:bg-cyan-light/30",
-                selectedId === conv.id && "bg-cyan-light/50 border-l-2 border-l-cyan"
+                "flex w-full items-start gap-3 border-b border-warm-border/50 p-3 text-left transition-colors hover:bg-warm-muted/50",
+                selectedId === conv.id && "bg-warm-muted border-l-[3px] border-l-coral"
               )}
             >
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-light text-sm font-semibold text-cyan">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-coral-light text-sm font-semibold text-coral">
                 {conv.contactName
                   .split(" ")
                   .map((n) => n[0])

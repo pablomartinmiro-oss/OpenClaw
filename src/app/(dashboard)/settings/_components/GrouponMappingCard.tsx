@@ -112,7 +112,7 @@ export function GrouponMappingCard() {
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-lg border border-cyan/30 bg-cyan-light/20 p-4 space-y-3">
+        <div className="rounded-2xl border border-coral/30 bg-coral-light/20 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Nuevo mapeo</h3>
             <button onClick={resetForm} className="text-text-secondary hover:text-text-primary">
@@ -228,7 +228,7 @@ export function GrouponMappingCard() {
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
                       {(m.services as Array<{ type: string; days?: number }>).map((s, i) => (
-                        <span key={i} className="rounded-full bg-cyan-light px-2 py-0.5 text-xs text-cyan">
+                        <span key={i} className="rounded-full bg-coral-light px-2 py-0.5 text-xs text-coral">
                           {s.type} {s.days ? `${s.days}d` : ""}
                         </span>
                       ))}

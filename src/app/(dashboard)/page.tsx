@@ -22,10 +22,10 @@ const DESTINATION_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  nuevo: "bg-blue-500",
-  en_proceso: "bg-yellow-500",
-  enviado: "bg-green-500",
-  aceptado: "bg-purple",
+  nuevo: "bg-soft-blue",
+  en_proceso: "bg-gold",
+  enviado: "bg-sage",
+  aceptado: "bg-coral",
 };
 
 export default function DashboardHome() {
@@ -89,8 +89,8 @@ export default function DashboardHome() {
           description={`${allQuotes.length} total`}
           icon={FileText}
           loading={isLoading}
-          iconColor="text-cyan"
-          iconBg="bg-cyan-light"
+          iconColor="text-coral"
+          iconBg="bg-coral-light"
         />
         <StatCard
           title="Presupuestos Enviados"
@@ -98,8 +98,8 @@ export default function DashboardHome() {
           description={`${byStatus.nuevo} pendientes`}
           icon={Send}
           loading={isLoading}
-          iconColor="text-purple"
-          iconBg="bg-purple-light"
+          iconColor="text-soft-blue"
+          iconBg="bg-soft-blue-light"
         />
         <StatCard
           title="Tasa de Conversión"
@@ -107,8 +107,8 @@ export default function DashboardHome() {
           description={`${accepted.length} aceptados`}
           icon={TrendingUp}
           loading={isLoading}
-          iconColor="text-success"
-          iconBg="bg-success/10"
+          iconColor="text-sage"
+          iconBg="bg-sage-light"
         />
         <StatCard
           title="Valor Medio"
@@ -116,15 +116,15 @@ export default function DashboardHome() {
           description="por presupuesto"
           icon={Euro}
           loading={isLoading}
-          iconColor="text-warning"
-          iconBg="bg-warning/10"
+          iconColor="text-gold"
+          iconBg="bg-gold-light"
         />
       </div>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Weekly volume */}
-        <div className="rounded-[14px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">Volumen Semanal</h2>
             <span className="text-xs text-text-secondary">Últimos 7 días</span>
@@ -133,7 +133,7 @@ export default function DashboardHome() {
             {weeklyData.map((val, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
                 <div
-                  className="w-full rounded-t-lg bg-gradient-to-t from-cyan to-cyan/40 transition-all"
+                  className="w-full rounded-t-lg bg-gradient-to-t from-coral to-coral/40 transition-all"
                   style={{ height: `${(val / 8) * 100}%` }}
                 />
                 <span className="text-[10px] text-text-secondary">
@@ -145,7 +145,7 @@ export default function DashboardHome() {
         </div>
 
         {/* By destination */}
-        <div className="rounded-[14px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">Por Destino</h2>
             <span className="text-xs text-text-secondary">{allQuotes.length} presupuestos</span>
@@ -153,7 +153,7 @@ export default function DashboardHome() {
           <div className="space-y-3">
             {byDestination.map(([dest, count], i) => {
               const pct = (count / maxDestCount) * 100;
-              const colors = ["bg-cyan", "bg-purple", "bg-success", "bg-warning", "bg-danger"];
+              const colors = ["bg-coral", "bg-sage", "bg-gold", "bg-soft-blue", "bg-muted-red"];
               return (
                 <div key={dest}>
                   <div className="mb-1 flex items-center justify-between">
@@ -179,7 +179,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Recent Activity */}
-      <div className="rounded-[14px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+      <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-text-primary">Actividad Reciente</h2>
         </div>

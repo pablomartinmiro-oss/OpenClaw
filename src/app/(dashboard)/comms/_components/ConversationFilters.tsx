@@ -46,8 +46,8 @@ export function ConversationFilters({
             className={cn(
               "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
               activeTab === tab.value
-                ? "bg-cyan-light text-cyan"
-                : "text-text-secondary hover:bg-muted hover:text-text-primary"
+                ? "bg-coral-light text-coral"
+                : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
             )}
           >
             {tab.label}
@@ -61,10 +61,10 @@ export function ConversationFilters({
             key={ch.value}
             onClick={() => onChannelChange(ch.value)}
             className={cn(
-              "flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] font-medium transition-colors",
+              "flex items-center gap-1 whitespace-nowrap rounded-[6px] px-2 py-1 text-[11px] font-medium transition-colors",
               activeChannel === ch.value
-                ? "bg-cyan-light text-cyan"
-                : "text-text-secondary hover:bg-muted hover:text-text-primary"
+                ? "bg-coral-light text-coral"
+                : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
             )}
           >
             <span>{ch.icon}</span>

@@ -28,10 +28,10 @@ export function TopOpportunities({
     .slice(0, 5);
 
   return (
-    <div className="rounded-[14px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+    <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-base font-semibold text-text-primary">Top Opportunities</h2>
-        <Link href="/pipeline" className="text-xs text-cyan hover:underline">
+        <Link href="/pipeline" className="text-xs text-coral hover:underline">
           View all
         </Link>
       </div>
@@ -68,7 +68,7 @@ export function TopOpportunities({
                 opp.status === "won"
                   ? "bg-success/10 text-success"
                   : opp.status === "open"
-                    ? "bg-cyan-light text-cyan"
+                    ? "bg-coral-light text-coral"
                     : "bg-muted text-text-secondary"
               }`}>
                 {opp.status}

@@ -56,7 +56,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-[14px] bg-white shadow-xl">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-lg font-semibold text-text-primary">
             {product ? "Editar Producto" : "Nuevo Producto"}
@@ -78,7 +78,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               >
                 {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -92,7 +92,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               <select
                 value={form.destination}
                 onChange={(e) => setForm({ ...form, destination: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               >
                 <option value="">Todos los destinos</option>
                 {Object.entries(DESTINATION_LABELS).map(([key, label]) => (
@@ -110,7 +110,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               required
             />
           </div>
@@ -123,7 +123,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               type="text"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
             />
           </div>
 
@@ -138,7 +138,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
                 min="0"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
                 required
               />
             </div>
@@ -149,7 +149,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               <select
                 value={form.priceType}
                 onChange={(e) => setForm({ ...form, priceType: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               >
                 {Object.entries(PRICE_TYPE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -164,7 +164,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               id="isActive"
               checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="h-4 w-4 rounded border-border text-cyan focus:ring-cyan"
+              className="h-4 w-4 rounded border-border text-coral focus:ring-coral"
             />
             <label htmlFor="isActive" className="text-sm text-text-primary">
               Producto activo
@@ -181,7 +181,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-cyan px-4 py-2 text-sm font-medium text-white hover:bg-cyan/90 transition-colors"
+              className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
             >
               {product ? "Guardar Cambios" : "Crear Producto"}
             </button>

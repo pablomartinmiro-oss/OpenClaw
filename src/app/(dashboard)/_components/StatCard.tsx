@@ -18,11 +18,11 @@ export function StatCard({
   description,
   icon: Icon,
   loading,
-  iconColor = "text-cyan",
-  iconBg = "bg-cyan-light",
+  iconColor = "text-coral",
+  iconBg = "bg-coral-light",
 }: StatCardProps) {
   return (
-    <div className="rounded-[14px] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+    <div className="rounded-2xl bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
       <div className="flex items-center gap-4">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
           <Icon className={`h-5 w-5 ${iconColor}`} />

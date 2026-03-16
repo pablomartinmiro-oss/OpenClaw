@@ -84,8 +84,8 @@ export function MobileNav() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-cyan-light text-cyan"
-                    : "text-text-secondary hover:bg-cyan-light/50 hover:text-cyan"
+                    ? "border-l-[3px] border-coral bg-warm-muted text-text-primary"
+                    : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
                 )}
               >
                 <Icon className="h-5 w-5" />

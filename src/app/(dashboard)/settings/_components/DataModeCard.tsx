@@ -30,11 +30,11 @@ export function DataModeCard({ dataMode, ghlConnected, loading, onToggle, isPend
           <h2 className="text-lg font-semibold text-text-primary">Modo de datos</h2>
           <div className="mt-1 flex items-center gap-2">
             {isMock ? (
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+              <span className="inline-flex items-center rounded-full bg-sage-light px-2.5 py-0.5 text-xs font-medium text-sage">
                 Modo demo activo
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+              <span className="inline-flex items-center rounded-full bg-soft-blue-light px-2.5 py-0.5 text-xs font-medium text-soft-blue">
                 Conectado a GHL
               </span>
             )}
@@ -45,7 +45,7 @@ export function DataModeCard({ dataMode, ghlConnected, loading, onToggle, isPend
               : "Los datos se obtienen de tu cuenta de GoHighLevel en tiempo real."}
           </p>
           {!isMock && !ghlConnected && (
-            <p className="mt-1 text-sm font-medium text-red-600">
+            <p className="mt-1 text-sm font-medium text-muted-red">
               Conecta tu cuenta de GoHighLevel primero
             </p>
           )}

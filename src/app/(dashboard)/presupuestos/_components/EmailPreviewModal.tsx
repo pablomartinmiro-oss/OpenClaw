@@ -49,7 +49,7 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
           <div
             className="px-8 py-6 text-center"
             style={{
-              background: "linear-gradient(135deg, #00d2ff 0%, #7b2ff7 100%)",
+              background: "linear-gradient(135deg, #E87B5A 0%, #D4A853 100%)",
             }}
           >
             <h1 className="text-2xl font-bold text-white tracking-wide">SKICENTER</h1>
@@ -150,9 +150,9 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
               </table>
 
               {/* Total */}
-              <div className="mt-3 flex justify-between items-center border-t-2 border-cyan pt-3">
+              <div className="mt-3 flex justify-between items-center border-t-2 border-coral pt-3">
                 <span className="text-base font-bold text-text-primary">TOTAL</span>
-                <span className="text-xl font-bold text-cyan">{formatCurrency(totalAmount)}</span>
+                <span className="text-xl font-bold text-coral">{formatCurrency(totalAmount)}</span>
               </div>
             </div>
 
@@ -169,9 +169,9 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
 
             {/* Footer */}
             <div
-              className="rounded-lg px-6 py-4 text-center text-white text-xs"
+              className="rounded-2xl px-6 py-4 text-center text-white text-xs"
               style={{
-                background: "linear-gradient(135deg, #00d2ff 0%, #7b2ff7 100%)",
+                background: "linear-gradient(135deg, #E87B5A 0%, #D4A853 100%)",
               }}
             >
               <p className="font-semibold">Skicenter Spain</p>

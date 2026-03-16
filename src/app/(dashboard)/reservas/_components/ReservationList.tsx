@@ -119,7 +119,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar reservas..."
-            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-cyan"
+            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-coral"
           />
         </div>
       </div>
@@ -133,8 +133,8 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
             className={cn(
               "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
               dateFilter === f.value
-                ? "bg-cyan text-white"
-                : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                ? "bg-coral text-white"
+                : "bg-warm-muted text-text-secondary hover:bg-warm-border"
             )}
           >
             {f.label}
@@ -151,8 +151,8 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
             className={cn(
               "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
               statusFilter === f.value
-                ? "bg-cyan text-white"
-                : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+                ? "bg-coral text-white"
+                : "bg-warm-muted text-text-secondary hover:bg-warm-border"
             )}
           >
             {f.label}
@@ -192,8 +192,8 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
                   className={cn(
                     "w-full rounded-lg border p-3 text-left transition-colors",
                     selectedId === r.id
-                      ? "border-cyan bg-cyan-light"
-                      : "border-transparent bg-white hover:bg-gray-50"
+                      ? "border-coral bg-coral-light"
+                      : "border-transparent bg-white hover:bg-warm-muted/50"
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -220,7 +220,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
                     </div>
                   </div>
                   {r.quoteId && r.quote && (
-                    <div className="mt-1 text-[10px] text-cyan">
+                    <div className="mt-1 text-[10px] text-coral">
                       Presupuesto #{r.quote.id.slice(-4).toUpperCase()}
                     </div>
                   )}

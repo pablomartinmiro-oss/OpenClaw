@@ -21,10 +21,10 @@ export const LANGUAGES = [
 ] as const;
 
 export const STATUS_CONFIG = {
-  pendiente: { label: "Pendiente", color: "bg-yellow-100 text-yellow-800" },
-  confirmada: { label: "Confirmada", color: "bg-green-100 text-green-800" },
-  sin_disponibilidad: { label: "Sin Disponibilidad", color: "bg-red-100 text-red-800" },
-  cancelada: { label: "Cancelada", color: "bg-gray-100 text-gray-600" },
+  pendiente: { label: "Pendiente", color: "bg-gold-light text-gold" },
+  confirmada: { label: "Confirmada", color: "bg-sage-light text-sage" },
+  sin_disponibilidad: { label: "Sin Disponibilidad", color: "bg-muted-red-light text-muted-red" },
+  cancelada: { label: "Cancelada", color: "bg-warm-muted text-text-secondary" },
 } as const;
 
 export const SOURCE_CONFIG = {

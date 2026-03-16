@@ -243,7 +243,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
           </div>
           <button
             onClick={handleAutoGenerate}
-            className="flex items-center gap-2 rounded-lg border border-purple bg-purple-light px-3 py-2 text-sm font-medium text-purple hover:bg-purple/10 transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-coral bg-coral-light px-3 py-2 text-sm font-medium text-coral hover:bg-coral-light transition-colors"
           >
             <Sparkles className="h-4 w-4" />
             Auto-generar
@@ -262,15 +262,15 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
         <h3 className="text-sm font-semibold text-text-primary mb-2">Resumen de solicitud</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-cyan" />
+            <MapPin className="h-4 w-4 text-coral" />
             <span>{DESTINATION_LABELS[quote.destination] || quote.destination}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-cyan" />
+            <Calendar className="h-4 w-4 text-coral" />
             <span>{formatDate(quote.checkIn)} — {formatDate(quote.checkOut)} ({nights} noches)</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Users className="h-4 w-4 text-cyan" />
+            <Users className="h-4 w-4 text-coral" />
             <span>{quote.adults} adultos{quote.children > 0 ? `, ${quote.children} niños` : ""}</span>
           </div>
         </div>
@@ -340,7 +340,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
                       min="1"
                       value={item.quantity}
                       onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                      className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-cyan focus:outline-none"
+                      className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-coral focus:outline-none"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -350,7 +350,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
                       step="0.01"
                       value={item.unitPrice}
                       onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                      className="w-full rounded border border-border px-2 py-1 text-right text-sm focus:border-cyan focus:outline-none"
+                      className="w-full rounded border border-border px-2 py-1 text-right text-sm focus:border-coral focus:outline-none"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -360,7 +360,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
                       max="100"
                       value={item.discount}
                       onChange={(e) => updateItem(index, "discount", parseFloat(e.target.value) || 0)}
-                      className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-cyan focus:outline-none"
+                      className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-coral focus:outline-none"
                     />
                   </td>
                   <td className="px-4 py-3 text-right text-sm font-semibold text-text-primary">
@@ -382,7 +382,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
           {/* Total */}
           <div className="border-t border-border bg-surface/50 px-4 py-3 flex justify-between items-center">
             <span className="text-sm font-semibold text-text-primary">TOTAL</span>
-            <span className="text-lg font-bold text-cyan">
+            <span className="text-lg font-bold text-coral">
               {totalAmount.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
             </span>
           </div>
@@ -399,9 +399,9 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
                 <button
                   key={upsell.product.id}
                   onClick={() => addUpsell(upsell)}
-                  className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm hover:border-cyan hover:bg-cyan-light/30 transition-colors"
+                  className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm hover:border-coral hover:bg-coral-light/30 transition-colors"
                 >
-                  <Plus className="h-3.5 w-3.5 text-cyan" />
+                  <Plus className="h-3.5 w-3.5 text-coral" />
                   <span className="text-text-primary">{upsell.product.name}</span>
                   <span className="text-text-secondary">
                     {upsell.product.price.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
@@ -425,7 +425,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
         </button>
         <button
           onClick={() => onPreviewEmail(quote, items)}
-          className="flex items-center gap-2 rounded-lg border border-cyan px-4 py-2.5 text-sm font-medium text-cyan hover:bg-cyan-light transition-colors"
+          className="flex items-center gap-2 rounded-lg border border-coral px-4 py-2.5 text-sm font-medium text-coral hover:bg-coral-light transition-colors"
         >
           <Eye className="h-4 w-4" />
           Vista Previa Email
@@ -433,7 +433,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
         <button
           onClick={handleSendQuote}
           disabled={updateQuote.isPending || items.length === 0}
-          className="flex items-center gap-2 rounded-lg bg-cyan px-4 py-2.5 text-sm font-medium text-white hover:bg-cyan/90 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           Enviar Presupuesto
@@ -445,7 +445,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
 
 function ServiceBadge({ label }: { label: string }) {
   return (
-    <span className="rounded-full bg-cyan-light px-2.5 py-0.5 text-xs font-medium text-cyan">
+    <span className="rounded-full bg-coral-light px-2.5 py-0.5 text-xs font-medium text-coral">
       {label}
     </span>
   );

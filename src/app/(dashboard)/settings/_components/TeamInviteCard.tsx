@@ -48,7 +48,7 @@ export function TeamInviteCard({ onInvite, isPending, inviteUrl }: TeamInviteCar
       </form>
 
       {inviteUrl && (
-        <div className="mt-3 flex items-center gap-2 rounded-md bg-gray-50 p-2">
+        <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-warm-muted p-2">
           <code className="flex-1 truncate text-xs text-text-secondary">{inviteUrl}</code>
           <button
             onClick={handleCopy}

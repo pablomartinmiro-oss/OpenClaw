@@ -40,14 +40,14 @@ export function VoucherStats() {
     <div className="space-y-2">
       {/* Expiry alert banner */}
       {hasExpiring && (
-        <div className="flex items-center gap-2 rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-600" />
-          <span className="text-sm text-yellow-800">
+        <div className="flex items-center gap-2 rounded-2xl bg-gold-light border border-gold/30 px-4 py-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-gold" />
+          <span className="text-sm text-text-primary">
             {data.caducanSemana} {data.caducanSemana === 1 ? "cupón caduca" : "cupones caducan"} esta semana — contacta a estos clientes
           </span>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="ml-auto shrink-0 text-yellow-600 hover:text-yellow-800"
+            className="ml-auto shrink-0 text-gold hover:text-text-primary"
           >
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
@@ -72,7 +72,7 @@ export function VoucherStats() {
                   <td className="px-3 py-2 font-medium">{v.clientName}</td>
                   <td className="px-3 py-2 text-text-secondary">{v.clientPhone}</td>
                   <td className="px-3 py-2 font-mono text-xs">{v.voucherCouponCode ?? "—"}</td>
-                  <td className="px-3 py-2 text-red-600 font-medium">{formatDate(v.voucherExpiry)}</td>
+                  <td className="px-3 py-2 text-muted-red font-medium">{formatDate(v.voucherExpiry)}</td>
                 </tr>
               ))}
             </tbody>
@@ -83,24 +83,24 @@ export function VoucherStats() {
       {/* Stats row */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-4 rounded-lg border border-border bg-white px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        className="flex w-full items-center gap-4 rounded-2xl border border-warm-border bg-white px-4 py-3 text-left hover:bg-warm-muted/50 transition-colors"
       >
         <span className="text-sm font-semibold text-text-primary">Cupones Groupon</span>
         <div className="flex flex-1 flex-wrap items-center gap-4 text-xs">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-yellow-400" />
+            <span className="inline-block h-2 w-2 rounded-full bg-gold" />
             Pendientes: {data.pendientes}
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+            <span className="inline-block h-2 w-2 rounded-full bg-sage" />
             Canjeados este mes: {data.canjeados}
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+            <span className="inline-block h-2 w-2 rounded-full bg-soft-blue" />
             Ingresos: {formatEUR(data.ingresosMes)}
           </span>
           {data.caducanSemana > 0 && (
-            <span className="flex items-center gap-1 text-yellow-700 font-medium">
+            <span className="flex items-center gap-1 text-gold font-medium">
               <AlertTriangle className="h-3 w-3" />
               Caducan semana: {data.caducanSemana}
             </span>

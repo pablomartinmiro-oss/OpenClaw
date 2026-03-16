@@ -96,8 +96,8 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-border bg-sidebar-bg transition-all duration-200",
-        collapsed ? "w-16" : "w-[220px]"
+        "flex h-screen flex-col border-r border-warm-border bg-sidebar-bg transition-all duration-200",
+        collapsed ? "w-16" : "w-[240px]"
       )}
     >
       {/* Logo */}
@@ -108,7 +108,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "rounded-lg p-1.5 text-text-secondary hover:bg-cyan-light hover:text-cyan",
+            "rounded-[10px] p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral",
             collapsed ? "mx-auto" : "ml-auto"
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -139,10 +139,10 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-cyan-light text-cyan"
-                  : "text-text-secondary hover:bg-cyan-light/50 hover:text-cyan",
+                  ? "border-l-[3px] border-coral bg-warm-muted text-text-primary"
+                  : "text-text-secondary hover:bg-warm-muted hover:text-text-primary",
                 collapsed && "justify-center px-2"
               )}
               title={collapsed ? item.label : undefined}

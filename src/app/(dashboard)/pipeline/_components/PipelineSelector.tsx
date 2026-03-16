@@ -24,8 +24,8 @@ export function PipelineSelector({
           type="button"
           className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
             p.id === selectedId
-              ? "bg-cyan-light text-cyan"
-              : "bg-muted text-text-secondary hover:bg-cyan-light/50 hover:text-cyan"
+              ? "bg-coral-light text-coral"
+              : "bg-muted text-text-secondary hover:bg-warm-muted hover:text-text-primary"
           }`}
         >
           {p.name}

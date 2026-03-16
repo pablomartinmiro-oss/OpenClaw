@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 import type { Quote } from "@/hooks/useQuotes";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  nuevo: { label: "Nuevo", color: "bg-blue-50 text-blue-600" },
-  en_proceso: { label: "En Proceso", color: "bg-yellow-50 text-yellow-600" },
-  enviado: { label: "Enviado", color: "bg-green-50 text-success" },
-  aceptado: { label: "Aceptado", color: "bg-purple-50 text-purple" },
+  nuevo: { label: "Nuevo", color: "bg-soft-blue-light text-soft-blue" },
+  en_proceso: { label: "En Proceso", color: "bg-gold-light text-gold" },
+  enviado: { label: "Enviado", color: "bg-sage-light text-sage" },
+  aceptado: { label: "Aceptado", color: "bg-coral-light text-coral" },
 };
 
 const DESTINATION_LABELS: Record<string, string> = {
@@ -56,7 +56,7 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
             placeholder="Buscar cliente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-border bg-surface pl-10 pr-3 py-2 text-sm placeholder:text-text-secondary focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+            className="w-full rounded-lg border border-border bg-surface pl-10 pr-3 py-2 text-sm placeholder:text-text-secondary focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
           />
         </div>
 
@@ -65,7 +65,7 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-cyan focus:outline-none"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-coral focus:outline-none"
           >
             <option value="">Todos los estados</option>
             {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
@@ -75,7 +75,7 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
           <select
             value={filterDestination}
             onChange={(e) => setFilterDestination(e.target.value)}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-cyan focus:outline-none"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-coral focus:outline-none"
           >
             <option value="">Todos los destinos</option>
             {Object.entries(DESTINATION_LABELS).map(([key, label]) => (
@@ -102,8 +102,8 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
                 key={quote.id}
                 onClick={() => onSelect(quote)}
                 className={cn(
-                  "w-full border-b border-border p-4 text-left transition-colors hover:bg-cyan-light/30",
-                  isSelected && "bg-cyan-light border-l-2 border-l-cyan"
+                  "w-full border-b border-warm-border p-4 text-left transition-colors hover:bg-warm-muted/50",
+                  isSelected && "bg-warm-muted border-l-[3px] border-l-coral"
                 )}
               >
                 <div className="flex items-start justify-between">

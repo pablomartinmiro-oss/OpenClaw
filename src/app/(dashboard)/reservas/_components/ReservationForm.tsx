@@ -284,7 +284,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
         <button
           onClick={() => setMode("individual")}
           className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-            mode === "individual" ? "bg-cyan text-white" : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+            mode === "individual" ? "bg-coral text-white" : "bg-warm-muted text-text-secondary hover:bg-warm-border"
           }`}
         >
           Reserva Individual
@@ -292,7 +292,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
         <button
           onClick={() => setMode("grupal")}
           className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-            mode === "grupal" ? "bg-cyan text-white" : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+            mode === "grupal" ? "bg-coral text-white" : "bg-warm-muted text-text-secondary hover:bg-warm-border"
           }`}
         >
           Reserva Grupal
@@ -322,8 +322,8 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 onClick={() => setSource(s.value)}
                 className={`rounded-lg border-2 p-3 text-center text-sm font-semibold transition-colors ${
                   source === s.value
-                    ? "border-cyan bg-cyan-light text-cyan"
-                    : "border-border bg-white text-text-secondary hover:border-cyan/50"
+                    ? "border-coral bg-coral-light text-coral"
+                    : "border-warm-border bg-white text-text-secondary hover:border-coral/50"
                 }`}
               >
                 <span className="text-lg">{s.icon}</span>
@@ -359,7 +359,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 type="text"
                 value={form.clientName}
                 onChange={(e) => updateField("clientName", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
               {duplicateWarning && (
                 <div className="mt-1 flex items-center gap-1 text-xs text-yellow-600">
@@ -374,7 +374,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 type="tel"
                 value={form.clientPhone}
                 onChange={(e) => updateField("clientPhone", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             <div>
@@ -383,7 +383,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 type="email"
                 value={form.clientEmail}
                 onChange={(e) => updateField("clientEmail", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             {source === "groupon" && (
@@ -394,7 +394,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                   value={form.couponCode}
                   onChange={(e) => updateField("couponCode", e.target.value)}
                   placeholder="GRP-XXXX"
-                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                  className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
                 />
               </div>
             )}
@@ -411,7 +411,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
               <select
                 value={form.station}
                 onChange={(e) => updateField("station", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 <option value="">Seleccionar estación</option>
                 {STATIONS.map((s) => (
@@ -426,7 +426,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 lang="es"
                 value={form.activityDate}
                 onChange={(e) => updateField("activityDate", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             <div>
@@ -434,7 +434,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
               <select
                 value={form.schedule}
                 onChange={(e) => updateField("schedule", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 <option value="">Seleccionar horario</option>
                 {SCHEDULES.map((s) => (
@@ -447,7 +447,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
               <select
                 value={form.language}
                 onChange={(e) => updateField("language", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.value} value={l.value}>{l.label}</option>
@@ -503,7 +503,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                             next[i] = { ...next[i], name: e.target.value };
                             setParticipants(next);
                           }}
-                          className="w-full rounded border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-cyan"
+                          className="w-full rounded border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral"
                         />
                       </td>
                       <td className="px-2 py-1.5">
@@ -561,7 +561,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                             next[i] = { ...next[i], material: e.target.checked };
                             setParticipants(next);
                           }}
-                          className="h-4 w-4 rounded border-border accent-cyan"
+                          className="h-4 w-4 rounded border-border accent-coral"
                         />
                       </td>
                       <td className="px-2 py-1.5">
@@ -602,7 +602,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 step="0.01"
                 value={form.totalPrice}
                 onChange={(e) => updateField("totalPrice", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             <div>
@@ -613,7 +613,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 max="100"
                 value={form.discount}
                 onChange={(e) => updateField("discount", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             <div>
@@ -621,7 +621,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
               <select
                 value={form.paymentMethod}
                 onChange={(e) => updateField("paymentMethod", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 <option value="">Seleccionar</option>
                 <option value="groupon">Groupon</option>
@@ -636,7 +636,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 type="text"
                 value={form.paymentRef}
                 onChange={(e) => updateField("paymentRef", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
           </div>
@@ -657,7 +657,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
             <div>
@@ -666,7 +666,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 value={form.internalNotes}
                 onChange={(e) => updateField("internalNotes", e.target.value)}
                 rows={2}
-                className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan"
+                className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
               />
             </div>
           </div>
@@ -686,7 +686,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
                 value={m}
                 checked={notifyMethod === m}
                 onChange={() => setNotifyMethod(m)}
-                className="accent-cyan"
+                className="accent-coral"
               />
               {m === "email" ? "Email" : m === "whatsapp" ? "WhatsApp" : "Ambos"}
             </label>
@@ -697,7 +697,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
         <div className="grid grid-cols-2 gap-3">
           <Button
             size="lg"
-            className="gap-2 bg-green-600 text-white hover:bg-green-700"
+            className="gap-2 bg-sage text-white hover:bg-sage/90"
             onClick={() => handleSubmit("confirmada")}
             disabled={createReservation.isPending}
           >

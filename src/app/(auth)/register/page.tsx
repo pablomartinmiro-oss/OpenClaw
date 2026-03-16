@@ -91,8 +91,8 @@ function RegisterForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-border bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-surface">
+      <div className="w-full max-w-sm space-y-6 rounded-2xl border border-warm-border bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Crear cuenta</h1>
           <p className="mt-1 text-sm text-muted-foreground">

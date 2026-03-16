@@ -63,7 +63,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
         </div>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 rounded-lg bg-cyan px-4 py-2.5 text-sm font-medium text-white hover:bg-cyan/90 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
         >
           <Plus className="h-4 w-4" />
           Añadir Producto
@@ -77,7 +77,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
           className={cn(
             "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
             !filterCategory
-              ? "bg-cyan text-white"
+              ? "bg-coral text-white"
               : "bg-white text-text-secondary border border-border hover:bg-surface"
           )}
         >
@@ -90,7 +90,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               filterCategory === cat
-                ? "bg-cyan text-white"
+                ? "bg-coral text-white"
                 : "bg-white text-text-secondary border border-border hover:bg-surface"
             )}
           >
@@ -103,7 +103,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
       {Object.entries(grouped).map(([category, categoryProducts]) => (
         <div
           key={category}
-          className="rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden"
+          className="rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden"
         >
           <div className="border-b border-border px-6 py-4">
             <h2 className="text-lg font-semibold text-text-primary">
@@ -158,8 +158,8 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
                         className={cn(
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           product.isActive
-                            ? "bg-green-50 text-success"
-                            : "bg-red-50 text-danger"
+                            ? "bg-sage-light text-sage"
+                            : "bg-muted-red-light text-muted-red"
                         )}
                       >
                         {product.isActive ? "Activo" : "Inactivo"}
@@ -169,7 +169,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => onEdit(product)}
-                          className="rounded-lg p-1.5 text-text-secondary hover:bg-cyan-light hover:text-cyan transition-colors"
+                          className="rounded-lg p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral transition-colors"
                           title="Editar"
                         >
                           <Pencil className="h-4 w-4" />

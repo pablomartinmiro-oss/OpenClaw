@@ -38,7 +38,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
     <div className="w-72 overflow-y-auto border-l border-border bg-white p-4">
       {/* Contact header */}
       <div className="mb-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-light text-lg font-semibold text-purple">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-coral-light text-lg font-semibold text-coral">
           {contact.firstName[0]}
           {contact.lastName[0]}
         </div>
@@ -87,7 +87,7 @@ export function ContactSidebar({ contact, loading }: ContactSidebarProps) {
       <div className="mt-4 space-y-2 border-t border-border pt-4">
         <Link
           href={`/contacts/${contact.id}`}
-          className="flex items-center gap-2 text-xs font-medium text-cyan hover:underline"
+          className="flex items-center gap-2 text-xs font-medium text-coral hover:underline"
         >
           <ExternalLink className="h-3 w-3" />
           Ver perfil completo

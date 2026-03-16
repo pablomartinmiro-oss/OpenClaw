@@ -21,8 +21,8 @@ export function ConnectGHLStep({ isConnected }: ConnectGHLStepProps) {
   if (isConnected) {
     return (
       <div className="space-y-6 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
+          <CheckCircle2 className="h-8 w-8 text-sage" />
         </div>
         <div>
           <h2 className="text-xl font-semibold">GoHighLevel Connected</h2>
@@ -39,8 +39,8 @@ export function ConnectGHLStep({ isConnected }: ConnectGHLStepProps) {
 
   return (
     <div className="space-y-6 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-        <LinkIcon className="h-8 w-8 text-blue-600" />
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coral-light">
+        <LinkIcon className="h-8 w-8 text-coral" />
       </div>
       <div>
         <h2 className="text-xl font-semibold">Connect GoHighLevel</h2>

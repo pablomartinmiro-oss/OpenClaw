@@ -45,7 +45,7 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
             <TableCell>
               <Link
                 href={`/contacts/${contact.id}`}
-                className="font-medium text-text-primary hover:text-cyan hover:underline"
+                className="font-medium text-text-primary hover:text-coral hover:underline"
               >
                 {contact.firstName} {contact.lastName}
               </Link>

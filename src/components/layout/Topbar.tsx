@@ -38,7 +38,7 @@ export function Topbar({ unreadCount = 0, onNotificationClick }: TopbarProps) {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
         <Input
           placeholder="Search contacts, conversations..."
-          className="h-9 rounded-lg border-border bg-surface pl-9 text-sm placeholder:text-text-secondary"
+          className="h-9 rounded-[10px] border-warm-border bg-surface pl-9 text-sm placeholder:text-text-secondary focus:border-coral"
         />
       </div>
 
@@ -64,7 +64,7 @@ export function Topbar({ unreadCount = 0, onNotificationClick }: TopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-cyan-light text-xs font-semibold text-cyan">
+              <AvatarFallback className="bg-coral-light text-xs font-semibold text-coral">
                 {initials}
               </AvatarFallback>
             </Avatar>

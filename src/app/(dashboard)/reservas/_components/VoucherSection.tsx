@@ -90,7 +90,7 @@ export function VoucherSection({
   const hasData = !!(securityCode || couponCode || product);
 
   return (
-    <fieldset className="space-y-3 rounded-lg border-2 border-dashed border-cyan/30 bg-cyan-light/30 p-4">
+    <fieldset className="space-y-3 rounded-2xl border-2 border-dashed border-coral/30 bg-coral-light/30 p-4">
       <legend className="flex items-center gap-2 text-sm font-semibold text-text-primary">
         <Upload className="h-4 w-4" />
         ESCANEAR CUPÓN
@@ -107,13 +107,13 @@ export function VoucherSection({
         onDragLeave={() => setDragOver(false)}
         className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragOver
-            ? "border-cyan bg-cyan-light"
-            : "border-border bg-white hover:border-cyan/50"
+            ? "border-coral bg-coral-light"
+            : "border-warm-border bg-white hover:border-coral/50"
         }`}
       >
         {readVoucher.isPending ? (
           <div className="flex items-center justify-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-cyan" />
+            <Loader2 className="h-5 w-5 animate-spin text-coral" />
             <span className="text-sm text-text-secondary">Leyendo cupón...</span>
           </div>
         ) : (
@@ -149,7 +149,7 @@ export function VoucherSection({
             type="text"
             value={securityCode}
             onChange={(e) => onFieldChange("voucherSecurityCode", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
               hasData && securityCode ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -176,7 +176,7 @@ export function VoucherSection({
             type="text"
             value={couponCode}
             onChange={(e) => onFieldChange("voucherCouponCode", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
               hasData && couponCode ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -203,7 +203,7 @@ export function VoucherSection({
             type="text"
             value={product}
             onChange={(e) => onFieldChange("voucherProduct", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
               hasData && product ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -217,7 +217,7 @@ export function VoucherSection({
             step="0.01"
             value={pricePaid}
             onChange={(e) => onFieldChange("voucherPricePaid", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
               hasData && pricePaid ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -235,7 +235,7 @@ export function VoucherSection({
             type="date"
             value={expiry}
             onChange={(e) => onFieldChange("voucherExpiry", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
               hasData && expiry ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -246,7 +246,7 @@ export function VoucherSection({
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2 border-cyan text-cyan hover:bg-cyan-light"
+        className="w-full gap-2 border-coral text-coral hover:bg-coral-light"
         onClick={() => window.open("https://merchant.groupon.es", "_blank")}
       >
         <ExternalLink className="h-4 w-4" />
@@ -260,10 +260,10 @@ export function VoucherSection({
           type="checkbox"
           checked={redeemed}
           onChange={(e) => onFieldChange("voucherRedeemed", e.target.checked)}
-          className="h-5 w-5 rounded border-border accent-green-600"
+          className="h-5 w-5 rounded border-warm-border accent-sage"
         />
-        <CheckCircle2 className={`h-5 w-5 ${redeemed ? "text-green-600" : "text-text-secondary/40"}`} />
-        <span className={`text-sm font-medium ${redeemed ? "text-green-700" : "text-text-secondary"}`}>
+        <CheckCircle2 className={`h-5 w-5 ${redeemed ? "text-sage" : "text-text-secondary/40"}`} />
+        <span className={`text-sm font-medium ${redeemed ? "text-sage" : "text-text-secondary"}`}>
           Cupón canjeado en Groupon
         </span>
       </label>

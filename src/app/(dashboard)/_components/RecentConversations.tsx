@@ -19,11 +19,11 @@ function timeAgo(dateStr: string): string {
 }
 
 const AVATAR_COLORS = [
-  "bg-cyan-light text-cyan",
-  "bg-purple-light text-purple",
-  "bg-success/10 text-success",
-  "bg-warning/10 text-warning",
-  "bg-danger/10 text-danger",
+  "bg-coral-light text-coral",
+  "bg-sage-light text-sage",
+  "bg-gold-light text-gold",
+  "bg-soft-blue-light text-soft-blue",
+  "bg-muted-red-light text-muted-red",
 ];
 
 function getInitials(name: string): string {
