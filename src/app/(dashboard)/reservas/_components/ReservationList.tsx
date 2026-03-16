@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Search, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Reservation } from "@/hooks/useReservations";
 import { STATIONS, STATUS_CONFIG, SOURCE_CONFIG, formatDate, formatEUR, getStationLabel } from "./constants";
@@ -58,11 +58,20 @@ function getDateRange(filter: string): { from: Date; to: Date } | null {
   }
 }
 
+function escapeCsv(val: string): string {
+  if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
+  return val;
+}
+
 export function ReservationList({ reservations, loading, selectedId, onSelect }: ReservationListProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("todas");
   const [dateFilter, setDateFilter] = useState("hoy");
   const [stationFilter, setStationFilter] = useState("todas");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   const filtered = useMemo(() => {
     if (!reservations) return [];
@@ -87,16 +96,52 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
       list = list.filter((r) => r.station === stationFilter);
     }
 
-    const dateRange = getDateRange(dateFilter);
-    if (dateRange) {
-      list = list.filter((r) => {
-        const d = new Date(r.activityDate);
-        return d >= dateRange.from && d < dateRange.to;
-      });
+    if (dateFilter === "custom") {
+      if (customFrom) {
+        const from = new Date(customFrom);
+        list = list.filter((r) => new Date(r.activityDate) >= from);
+      }
+      if (customTo) {
+        const to = new Date(customTo);
+        to.setDate(to.getDate() + 1);
+        list = list.filter((r) => new Date(r.activityDate) < to);
+      }
+    } else {
+      const dateRange = getDateRange(dateFilter);
+      if (dateRange) {
+        list = list.filter((r) => {
+          const d = new Date(r.activityDate);
+          return d >= dateRange.from && d < dateRange.to;
+        });
+      }
     }
 
     return list;
-  }, [reservations, search, statusFilter, dateFilter, stationFilter]);
+  }, [reservations, search, statusFilter, dateFilter, stationFilter, customFrom, customTo]);
+
+  const handleExportCsv = useCallback(() => {
+    if (filtered.length === 0) return;
+    const headers = ["Nombre", "Teléfono", "Email", "Estación", "Fecha", "Estado", "Origen", "Precio", "Cupón"];
+    const rows = filtered.map((r) => [
+      escapeCsv(r.clientName),
+      escapeCsv(r.clientPhone),
+      escapeCsv(r.clientEmail),
+      escapeCsv(getStationLabel(r.station)),
+      new Date(r.activityDate).toLocaleDateString("es-ES"),
+      escapeCsv(STATUS_CONFIG[r.status as keyof typeof STATUS_CONFIG]?.label ?? r.status),
+      escapeCsv(SOURCE_CONFIG[r.source as keyof typeof SOURCE_CONFIG]?.label ?? r.source),
+      r.totalPrice.toFixed(2),
+      escapeCsv(r.couponCode ?? ""),
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reservas-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filtered]);
 
   if (loading) {
     return (
@@ -125,7 +170,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
       </div>
 
       {/* Date filters */}
-      <div className="flex gap-1 overflow-x-auto border-b border-border px-3 py-2">
+      <div className="flex flex-wrap gap-1 border-b border-border px-3 py-2">
         {DATE_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -140,7 +185,33 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
             {f.label}
           </button>
         ))}
+        <button
+          onClick={() => setDateFilter("custom")}
+          className={cn(
+            "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+            dateFilter === "custom"
+              ? "bg-coral text-white"
+              : "bg-warm-muted text-text-secondary hover:bg-warm-border"
+          )}
+        >
+          Rango
+        </button>
       </div>
+
+      {/* Custom date range */}
+      {dateFilter === "custom" && (
+        <div className="flex gap-2 border-b border-border px-3 py-2">
+          <input
+            type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
+            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-coral"
+          />
+          <span className="self-center text-xs text-text-secondary">—</span>
+          <input
+            type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
+            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-coral"
+          />
+        </div>
+      )}
 
       {/* Status + station filters */}
       <div className="flex flex-wrap gap-1 border-b border-border px-3 py-2">
@@ -226,9 +297,14 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
         )}
       </div>
 
-      {/* Count */}
-      <div className="border-t border-border px-3 py-2 text-xs text-text-secondary">
-        {filtered.length} de {reservations?.length ?? 0} reservas
+      {/* Count + Export */}
+      <div className="flex items-center justify-between border-t border-border px-3 py-2">
+        <span className="text-xs text-text-secondary">
+          {filtered.length} de {reservations?.length ?? 0} reservas
+        </span>
+        <button onClick={handleExportCsv} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-text-secondary hover:text-coral hover:bg-warm-muted transition-colors">
+          <Download className="h-3 w-3" /> CSV
+        </button>
       </div>
     </div>
   );

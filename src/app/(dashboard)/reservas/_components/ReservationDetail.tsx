@@ -4,11 +4,11 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle, ArrowLeft, Copy, Edit3, Save, X, Users, CreditCard, FileText, Clock } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, X, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateReservation, type Reservation } from "@/hooks/useReservations";
-import { STATUS_CONFIG, SOURCE_CONFIG, formatDate, formatEUR, getStationLabel } from "./constants";
-import type { Participant } from "@/hooks/useReservations";
+import { STATUS_CONFIG, SOURCE_CONFIG, formatDate } from "./constants";
+import { DetailSections } from "./DetailSections";
 
 interface ReservationDetailProps {
   reservation: Reservation;
@@ -19,6 +19,18 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState(reservation.notes ?? "");
   const [internalNotes, setInternalNotes] = useState(reservation.internalNotes ?? "");
+  const [editingClient, setEditingClient] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [clientFields, setClientFields] = useState({
+    clientName: reservation.clientName,
+    clientPhone: reservation.clientPhone,
+    clientEmail: reservation.clientEmail,
+  });
+  const [detailFields, setDetailFields] = useState({
+    station: reservation.station,
+    activityDate: reservation.activityDate.slice(0, 10),
+    schedule: reservation.schedule,
+  });
   const updateReservation = useUpdateReservation();
 
   const statusCfg = STATUS_CONFIG[reservation.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pendiente;
@@ -46,6 +58,26 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
       }
     );
   }, [reservation.id, notes, internalNotes, updateReservation]);
+
+  const handleSaveClient = useCallback(() => {
+    updateReservation.mutate(
+      { id: reservation.id, ...clientFields },
+      {
+        onSuccess: () => { toast.success("Datos del cliente actualizados"); setEditingClient(false); },
+        onError: () => toast.error("Error al guardar"),
+      }
+    );
+  }, [reservation.id, clientFields, updateReservation]);
+
+  const handleSaveDetails = useCallback(() => {
+    updateReservation.mutate(
+      { id: reservation.id, station: detailFields.station, activityDate: detailFields.activityDate, schedule: detailFields.schedule },
+      {
+        onSuccess: () => { toast.success("Detalles actualizados"); setEditingDetails(false); },
+        onError: () => toast.error("Error al guardar"),
+      }
+    );
+  }, [reservation.id, detailFields, updateReservation]);
 
   const copyToClipboard = useCallback((text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -98,157 +130,29 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
           )}
         </div>
 
-        {/* Client info */}
-        <Section icon={<Users className="h-4 w-4" />} title="Cliente">
-          <InfoRow label="Nombre" value={reservation.clientName} onCopy={() => copyToClipboard(reservation.clientName, "Nombre")} />
-          <InfoRow label="Teléfono" value={reservation.clientPhone} onCopy={() => copyToClipboard(reservation.clientPhone, "Teléfono")} />
-          <InfoRow label="Email" value={reservation.clientEmail} onCopy={() => copyToClipboard(reservation.clientEmail, "Email")} />
-          {reservation.couponCode && <InfoRow label="Cupón" value={reservation.couponCode} onCopy={() => copyToClipboard(reservation.couponCode!, "Cupón")} />}
-        </Section>
-
-        {/* Reservation details */}
-        <Section icon={<FileText className="h-4 w-4" />} title="Detalles">
-          <InfoRow label="Estación" value={getStationLabel(reservation.station)} />
-          <InfoRow label="Fecha" value={formatDate(reservation.activityDate)} />
-          <InfoRow label="Horario" value={reservation.schedule} />
-          <InfoRow label="Idioma" value={reservation.language === "es" ? "Español" : reservation.language === "en" ? "Inglés" : reservation.language} />
-          <InfoRow label="Origen" value={sourceCfg?.label ?? reservation.source} />
-        </Section>
-
-        {/* Participants */}
-        {reservation.participants && reservation.participants.length > 0 && (
-          <Section icon={<Users className="h-4 w-4" />} title={`Participantes (${reservation.participants.length})`}>
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nombre</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Tipo</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Servicio</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nivel</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Material</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(reservation.participants as Participant[]).map((p, i) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="px-3 py-2 text-text-primary">{p.name || "—"}</td>
-                      <td className="px-3 py-2 capitalize text-text-secondary">{p.type}</td>
-                      <td className="px-3 py-2 text-text-secondary">{p.service}</td>
-                      <td className="px-3 py-2 text-text-secondary">{p.level}</td>
-                      <td className="px-3 py-2 text-text-secondary">{p.material ? "Sí" : "No"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Section>
-        )}
-
-        {/* Pricing */}
-        <Section icon={<CreditCard className="h-4 w-4" />} title="Precio">
-          <InfoRow label="Precio total" value={formatEUR(reservation.totalPrice)} />
-          {reservation.discount > 0 && (
-            <>
-              <InfoRow label="Descuento" value={`${reservation.discount}%`} />
-              <InfoRow label="Precio final" value={formatEUR(finalPrice)} highlight />
-            </>
-          )}
-          {reservation.paymentMethod && <InfoRow label="Método de pago" value={reservation.paymentMethod} />}
-          {reservation.paymentRef && <InfoRow label="Ref. pago" value={reservation.paymentRef} />}
-        </Section>
-
-        {/* Voucher info (Groupon) */}
-        {reservation.source === "groupon" && (
-          <Section icon={<FileText className="h-4 w-4" />} title="Voucher Groupon">
-            {reservation.couponCode && <InfoRow label="Código cupón" value={reservation.couponCode} onCopy={() => copyToClipboard(reservation.couponCode!, "Código")} />}
-          </Section>
-        )}
-
-        {/* Notes */}
-        <Section
-          icon={<Edit3 className="h-4 w-4" />}
-          title="Notas"
-          action={
-            editingNotes
-              ? <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-6 gap-1 px-2 text-xs" onClick={() => setEditingNotes(false)}><X className="h-3 w-3" /> Cancelar</Button>
-                  <Button size="sm" className="h-6 gap-1 bg-sage px-2 text-xs text-white hover:bg-sage/90" onClick={handleSaveNotes} disabled={updateReservation.isPending}><Save className="h-3 w-3" /> Guardar</Button>
-                </div>
-              : <Button size="sm" variant="outline" className="h-6 gap-1 px-2 text-xs" onClick={() => setEditingNotes(true)}><Edit3 className="h-3 w-3" /> Editar</Button>
-          }
-        >
-          {editingNotes ? (
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs text-text-secondary">Notas para el cliente</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-text-secondary">Notas internas</label>
-                <textarea value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {reservation.notes ? <p className="text-sm text-text-primary">{reservation.notes}</p> : <p className="text-sm italic text-text-secondary">Sin notas para el cliente</p>}
-              {reservation.internalNotes && (
-                <div className="rounded-lg bg-warm-muted p-2">
-                  <span className="text-[10px] font-semibold uppercase text-text-secondary">Internas</span>
-                  <p className="text-sm text-text-primary">{reservation.internalNotes}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </Section>
-
-        {/* Notification history */}
-        {(reservation.emailSentAt || reservation.whatsappSentAt) && (
-          <Section icon={<Clock className="h-4 w-4" />} title="Notificaciones">
-            {reservation.emailSentAt && <InfoRow label="Email enviado" value={formatDate(reservation.emailSentAt)} />}
-            {reservation.whatsappSentAt && <InfoRow label="WhatsApp enviado" value={formatDate(reservation.whatsappSentAt)} />}
-          </Section>
-        )}
-
-        {/* Linked quote */}
-        {reservation.quote && (
-          <div className="rounded-lg border border-coral/30 bg-coral-light p-3">
-            <span className="text-xs font-medium text-coral">Vinculada a presupuesto #{reservation.quote.id.slice(-4).toUpperCase()}</span>
-            <p className="text-sm text-text-primary">{reservation.quote.clientName}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Helpers ── */
-
-function Section({ icon, title, action, children }: { icon: React.ReactNode; title: string; action?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <fieldset className="space-y-2">
-      <div className="flex items-center justify-between">
-        <legend className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
-          {icon} {title}
-        </legend>
-        {action}
-      </div>
-      {children}
-    </fieldset>
-  );
-}
-
-function InfoRow({ label, value, onCopy, highlight }: { label: string; value: string; onCopy?: () => void; highlight?: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-xs text-text-secondary">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <span className={cn("text-sm", highlight ? "font-semibold text-coral" : "text-text-primary")}>{value}</span>
-        {onCopy && (
-          <button onClick={onCopy} className="rounded p-0.5 text-text-secondary hover:text-coral">
-            <Copy className="h-3 w-3" />
-          </button>
-        )}
+        <DetailSections
+          reservation={reservation}
+          editingClient={editingClient}
+          setEditingClient={setEditingClient}
+          clientFields={clientFields}
+          setClientFields={setClientFields}
+          handleSaveClient={handleSaveClient}
+          editingDetails={editingDetails}
+          setEditingDetails={setEditingDetails}
+          detailFields={detailFields}
+          setDetailFields={setDetailFields}
+          handleSaveDetails={handleSaveDetails}
+          editingNotes={editingNotes}
+          setEditingNotes={setEditingNotes}
+          notes={notes}
+          setNotes={setNotes}
+          internalNotes={internalNotes}
+          setInternalNotes={setInternalNotes}
+          handleSaveNotes={handleSaveNotes}
+          copyToClipboard={copyToClipboard}
+          finalPrice={finalPrice}
+          isPending={updateReservation.isPending}
+        />
       </div>
     </div>
   );

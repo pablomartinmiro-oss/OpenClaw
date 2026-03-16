@@ -132,4 +132,33 @@ export function useAddQuoteItem() {
   });
 }
 
+export function useCreateQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      fetchJSON<{ quote: Quote }>("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+    },
+  });
+}
+
+export function useDeleteQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      fetchJSON<{ success: boolean }>(`/api/quotes/${id}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+      qc.invalidateQueries({ queryKey: ["quote"] });
+    },
+  });
+}
+
 export type { Quote, QuoteItem };

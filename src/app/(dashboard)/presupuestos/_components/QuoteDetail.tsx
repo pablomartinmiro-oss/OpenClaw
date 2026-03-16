@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Save, Send, Eye, Sparkles, MapPin, Calendar, Users, Phone, Mail, Sun, Snowflake, CalendarCheck } from "lucide-react";
+import { Save, Send, Eye, Sparkles, MapPin, Calendar, Users, Phone, Mail, Sun, Snowflake, CalendarCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { Quote, QuoteItem } from "@/hooks/useQuotes";
-import { useUpdateQuote, useUpdateQuoteItems } from "@/hooks/useQuotes";
+import { useUpdateQuote, useUpdateQuoteItems, useDeleteQuote } from "@/hooks/useQuotes";
 import type { Product } from "@/hooks/useProducts";
 import { autoGeneratePackage } from "@/lib/quotes/auto-package";
 import type { Upsell } from "@/lib/quotes/auto-package";
@@ -24,6 +24,7 @@ interface QuoteDetailProps {
   quote: Quote;
   products: Product[];
   onPreviewEmail: (quote: Quote, items: EditableItem[]) => void;
+  onDeleted?: () => void;
 }
 
 function formatDate(dateStr: string) {
@@ -46,7 +47,7 @@ function getInitialState(quote: Quote, products: Product[]) {
   );
 }
 
-export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProps) {
+export function QuoteDetail({ quote, products, onPreviewEmail, onDeleted }: QuoteDetailProps) {
   const router = useRouter();
   const initial = getInitialState(quote, products);
   const [items, setItems] = useState<EditableItem[]>(initial.items);
@@ -55,6 +56,7 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
   const updateQuote = useUpdateQuote();
   const updateItems = useUpdateQuoteItems();
   const createFromQuote = useCreateFromQuote();
+  const deleteQuote = useDeleteQuote();
   const { data: calendarEntries } = useSeasonCalendar();
 
   const season: Season = calendarEntries
@@ -129,6 +131,15 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
     } catch { toast.error("Error al crear reserva"); }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("¿Eliminar este presupuesto? Esta acción no se puede deshacer.")) return;
+    try {
+      await deleteQuote.mutateAsync(quote.id);
+      toast.success("Presupuesto eliminado");
+      onDeleted?.();
+    } catch { toast.error("Error al eliminar"); }
+  };
+
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Client info */}
@@ -180,9 +191,14 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
 
       {/* Actions bar */}
       <div className="border-t border-border bg-white px-6 py-4 flex items-center justify-between gap-3">
-        <button onClick={handleCreateReservation} disabled={createFromQuote.isPending} className="flex items-center gap-2 rounded-lg border border-sage bg-sage-light px-4 py-2.5 text-sm font-medium text-sage hover:bg-sage-light/80 transition-colors disabled:opacity-50">
-          <CalendarCheck className="h-4 w-4" /> Crear Reserva
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleCreateReservation} disabled={createFromQuote.isPending} className="flex items-center gap-2 rounded-lg border border-sage bg-sage-light px-4 py-2.5 text-sm font-medium text-sage hover:bg-sage-light/80 transition-colors disabled:opacity-50">
+            <CalendarCheck className="h-4 w-4" /> Crear Reserva
+          </button>
+          <button onClick={handleDelete} disabled={deleteQuote.isPending} className="flex items-center gap-2 rounded-lg border border-muted-red/30 px-3 py-2.5 text-sm font-medium text-muted-red hover:bg-muted-red-light transition-colors disabled:opacity-50">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           <button onClick={handleSaveDraft} disabled={updateItems.isPending} className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface transition-colors disabled:opacity-50">
             <Save className="h-4 w-4" /> Guardar Borrador

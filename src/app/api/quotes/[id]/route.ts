@@ -78,3 +78,38 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { tenantId } = session.user;
+  const { id } = await params;
+  const log = logger.child({ tenantId, path: `/api/quotes/${id}` });
+
+  try {
+    const existing = await prisma.quote.findFirst({
+      where: { id, tenantId },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    }
+
+    await prisma.quoteItem.deleteMany({ where: { quoteId: id } });
+    await prisma.quote.delete({ where: { id } });
+
+    log.info({ quoteId: id }, "Quote deleted");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    log.error({ error }, "Failed to delete quote");
+    return NextResponse.json(
+      { error: "Failed to delete quote", code: "QUOTES_ERROR" },
+      { status: 500 }
+    );
+  }
+}

@@ -1,8 +1,8 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** UX POLISH & FIXES COMPLETE
-- **Step:** All phases complete + UX polish (print, autocomplete, expiry, search)
+- **Phase:** PHASE M COMPLETE — Feature Gaps
+- **Step:** All phases complete + Phase M (quote CRUD, CSV export, editable details, date range)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** f78b7f9 (2026-03-16)
 - **Next:** Deploy to Railway, connect real GHL sub-account
@@ -267,6 +267,34 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Filters products by name across all categories
 - Works alongside existing category and station filters
 
+### Phase M: Feature Gaps (2026-03-16) ✅
+
+**Quote CRUD (Create + Delete)** ✅
+- `POST /api/quotes` — create new quotes with client info, trip details, services
+- `DELETE /api/quotes/[id]` — cascade delete (items first, then quote)
+- `useCreateQuote` and `useDeleteQuote` hooks in `useQuotes.ts`
+- `QuoteForm.tsx` component: client fields, station selector, dates, pax, service checkboxes
+- "Nuevo" button in presupuestos page header, right panel toggles between form and detail
+- Delete button (trash icon) in QuoteDetail action bar with confirmation dialog
+
+**CSV Export for Reservations** ✅
+- Download button in ReservationList footer exports filtered results
+- UTF-8 BOM for Excel compatibility, proper CSV escaping
+- Columns: Nombre, Teléfono, Email, Estación, Fecha, Estado, Origen, Precio, Cupón
+- Filename: `reservas-YYYY-MM-DD.csv`
+
+**Editable Fields in ReservationDetail** ✅
+- Split into `ReservationDetail.tsx` (120 lines) + `DetailSections.tsx` (220 lines)
+- Inline editing for client info (name, phone, email) with save/cancel
+- Inline editing for details (station dropdown, date picker, schedule dropdown)
+- Notes editing preserved from previous implementation
+- All edits use existing `useUpdateReservation` → PATCH endpoint
+
+**Custom Date Range Filter** ✅
+- "Rango" button alongside preset date filters (Hoy, Mañana, Semana, Mes, Todas)
+- Shows two date inputs (from/to) when selected
+- Filters `activityDate` within the custom range
+
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
 2. `20260316100000_phase2_auth_voucher_datamode` — Auth fields, voucher fields, dataMode, GrouponProductMapping
@@ -308,11 +336,15 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 ## Auto-Audit Results
 
-### Phase H Final Audit (GHL Live Sync) — Latest
+### Phase M Final Audit (Feature Gaps) — Latest
 - ✅ Type Check: 0 errors
-- ✅ Lint: 0 errors, 3 warnings (underscore-prefixed destructured vars)
+- ✅ Lint: 0 errors, 3 warnings (pre-existing underscore-prefixed vars)
 - ✅ Build: compiled clean (45+ routes)
-- ✅ Security: all API routes have auth + permissions + tenant scoping
+
+### Phase H Audit (GHL Live Sync)
+- ✅ Type Check: 0 errors
+- ✅ Lint: 0 errors, 3 warnings
+- ✅ Build: compiled clean
 - ✅ Deployed: commit f78b7f9
 
 ### Previous Audits (all passed)
