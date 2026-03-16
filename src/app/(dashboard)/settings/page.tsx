@@ -89,6 +89,7 @@ export default function SettingsPage() {
           loading={tenantLoading}
           onToggle={handleDataModeChange}
           isPending={updateDataMode.isPending}
+          syncStatus={tenantData?.syncStatus}
         />
 
         <div className="grid gap-6 lg:grid-cols-2">

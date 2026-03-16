@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth/config";
 import { createGHLClient } from "@/lib/ghl/client";
 import { getCachedOrFetch } from "@/lib/cache/redis";
 import { CacheKeys, CacheTTL } from "@/lib/cache/keys";
+import { prisma } from "@/lib/db";
+import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { PermissionKey } from "@/types/auth";
@@ -25,6 +27,36 @@ export async function GET(req: Request) {
   const log = logger.child({ tenantId, path: "/api/crm/opportunities" });
 
   try {
+    const mode = await getDataMode(tenantId);
+
+    if (mode === "live") {
+      const opportunities = await prisma.cachedOpportunity.findMany({
+        where: {
+          tenantId,
+          ...(pipelineId ? { pipelineId } : {}),
+        },
+        orderBy: { cachedAt: "desc" },
+      });
+
+      log.info({ count: opportunities.length, mode }, "Opportunities from cache");
+      return NextResponse.json({
+        opportunities: opportunities.map((o) => ({
+          id: o.id,
+          name: o.name ?? "",
+          pipelineId: o.pipelineId,
+          pipelineStageId: o.pipelineStageId,
+          monetaryValue: o.monetaryValue ?? 0,
+          contactId: o.contactId ?? "",
+          contactName: o.contactName,
+          assignedTo: o.assignedTo,
+          createdAt: o.cachedAt.toISOString(),
+          status: o.status ?? "open",
+        })),
+        meta: { total: opportunities.length, currentPage: 1, nextPage: null },
+      });
+    }
+
+    // Mock mode
     const data = await getCachedOrFetch<GHLOpportunitiesResponse>(
       CacheKeys.opportunities(tenantId, pipelineId),
       CacheTTL.opportunities,
@@ -37,7 +69,7 @@ export async function GET(req: Request) {
       }
     );
 
-    log.info({ count: data.opportunities.length }, "Opportunities fetched");
+    log.info({ count: data.opportunities.length, mode }, "Opportunities fetched");
     return NextResponse.json(data);
   } catch (error) {
     log.error({ error }, "Failed to fetch opportunities");

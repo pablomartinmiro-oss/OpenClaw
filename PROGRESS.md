@@ -1,10 +1,10 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE 2 DEPLOYED & LIVE
-- **Step:** Phase 1 (25/25) + Phase 2 (6/6 features) — All complete
+- **Phase:** PHASE 3 — GHL SYNC COMPLETE (pending deploy)
+- **Step:** Phase 1 (25/25) + Phase 2 (6/6) + Phase 3 (10/10 sync steps) — All complete
 - **Live URL:** https://crm-dash-prod.up.railway.app
-- **Next:** Design system overhaul (warm/premium aesthetic inspired by kinso.ai), then connect real GHL sub-account
+- **Next:** Deploy Phase 3, then connect real GHL sub-account for end-to-end live testing
 - **Date:** 2026-03-16
 
 ## Completed Steps
@@ -149,16 +149,63 @@
 - Single migration: `prisma/migrations/20260316100000_phase2_auth_voucher_datamode/migration.sql`
 - All ALTER TABLE and CREATE TABLE statements consolidated
 
+### Phase H: GHL Live Sync (2026-03-16) ✅
+
+#### Step 1: GHLClient Class ✅
+- **`src/lib/ghl/api.ts`** — Complete rewrite with typed `GHLClient` class
+- Methods: getContacts, getContact, createContact, updateContact, deleteContact, searchContacts, getContactNotes, addContactNote, addContactTag, removeContactTag, getConversations, getConversation, getMessages, sendMessage, getPipelines, getOpportunities, getOpportunity, createOpportunity, updateOpportunity, getCustomFields, createCustomField, getLocation, getCalendars, getAppointments, getForms, getFormSubmissions, getTags
+- Auto-refresh on 401, exponential backoff on 429/5xx
+- `getGHLClient(tenantId)` factory reads encrypted tokens from DB
+
+#### Step 2: GHL Types ✅
+- **`src/lib/ghl/types.ts`** — Expanded with CreateContactData, UpdateContactData, SendMessageData, CreateOpportunityData, UpdateOpportunityData, GHLCustomField, GHLCalendar, GHLAppointment, GHLForm, GHLFormSubmission, GHLTag, GHLWebhookEventType, GHLWebhookPayload
+
+#### Step 3: Cache Tables ✅
+- **Prisma schema** — 6 new models: CachedContact, CachedConversation, CachedOpportunity, CachedPipeline, SyncQueue, SyncStatus
+- **Migration:** `prisma/migrations/20260316200000_ghl_cache_sync/migration.sql`
+
+#### Step 4: Sync Service ✅
+- **`src/lib/ghl/sync.ts`** — fullSync (paginated), incrementalSync, webhook cache handlers (upsertCachedContact, deleteCachedContact, updateCachedContactTags, updateCachedContactDnd, cacheMessage, upsertCachedOpportunity, updateCachedOpportunityField), processSyncQueue with exponential backoff
+
+#### Step 5: Updated API Routes ✅
+- **Contacts** (`/api/crm/contacts`, `/api/crm/contacts/[id]`) — GET/POST/PUT/DELETE with live mode reading from cache, writing through GHL
+- **Conversations** (`/api/crm/conversations`) — GET from CachedConversation in live mode
+- **Messages** (`/api/crm/conversations/[id]/messages`) — GET fresh from GHL, POST via GHLClient
+- **Pipelines** (`/api/crm/pipelines`) — GET from CachedPipeline in live mode
+- **Opportunities** (`/api/crm/opportunities`, `/api/crm/opportunities/[id]`) — GET from cache, PUT through GHL + cache update
+- **Notes** (`/api/crm/contacts/[id]/notes`) — GET/POST via GHLClient in live mode
+- **Dashboard stats** (`/api/dashboard/stats`) — NEW: totalContacts, pipelineValue, activeConversations from cache
+
+#### Step 6: Two-Way Sync + SyncQueue ✅
+- Failed GHL writes queued to SyncQueue with exponential backoff retry
+- processSyncQueue handles updateContact, createContact, updateOpportunity, createOpportunity
+
+#### Step 7: Webhook Cache Updates ✅
+- **`/api/crm/webhooks`** — Rewritten to call cache upsert functions for all GHL events (ContactCreate/Update/Delete, TagUpdate, DndUpdate, InboundMessage, OutboundMessage, OpportunityCreate/StageUpdate/StatusUpdate/MonetaryValueUpdate)
+
+#### Step 8: Mock/Real Toggle Wired ✅
+- **Settings tenant API** — PATCH triggers fullSync() in background when switching to live mode
+- **DataModeCard** — shows sync status, last sync timestamp, "Sincronizar ahora" button
+
+#### Step 9: Cron Safety Net ✅
+- **`/api/cron/sync`** — processes SyncQueue, runs incrementalSync for all live tenants
+- Added to PUBLIC_ROUTES in middleware
+
+#### Step 10: Dashboard Stats ✅
+- Dashboard home shows GHL live stats (contacts, pipeline value, active conversations) in live mode
+- Shows recent GHL opportunities in activity feed
+
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before running migrations
 - `prisma migrate dev --name init` needs to be run before seed works
 - ANTHROPIC_API_KEY must be set on Railway for voucher reader to work
 - Voucher section only visible when "CUPÓN GROUPON" source is selected in reservation form
+- Phase 3 migration needs to be deployed to Railway (`prisma migrate deploy`)
 
 ## Pending Work
-- **Design system overhaul** — warm/premium aesthetic inspired by kinso.ai (colors, fonts, spacing defined, not yet applied)
-- **Connect real GHL sub-account** via OAuth flow
-- **Live mode** for contacts and conversations (mock mode fully works)
+- **Deploy Phase 3 to Railway** — run migration, test live sync
+- **Connect real GHL sub-account** via OAuth flow and test end-to-end
+- **Set up Railway cron** for `/api/cron/sync` (every 5 minutes)
 
 ## Deployment Info
 - **Platform:** Railway (Docker)
@@ -233,3 +280,10 @@
 - ✅ Smoke Test: /api/health returned 200 on production
 - ✅ Security: all new API routes have auth + permissions + tenant scoping, voucher API auth-protected
 - ✅ Deployed: commit ce6f718 live on Railway
+
+### Phase H Final Audit (GHL Live Sync)
+- ✅ Type Check: 0 errors
+- ✅ Lint: 0 errors, 3 warnings (underscore-prefixed destructured vars — standard pattern)
+- ✅ Build: compiled clean (45+ routes including new sync/cron/stats endpoints)
+- ⬜ Smoke Test: pending deployment
+- ✅ Security: all new API routes have auth + permissions + tenant scoping, cron route in PUBLIC_ROUTES, webhooks HMAC-verified

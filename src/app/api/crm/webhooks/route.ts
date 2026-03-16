@@ -7,6 +7,15 @@ import {
   invalidateConversationCaches,
   invalidateOpportunityCaches,
 } from "@/lib/cache/invalidation";
+import {
+  upsertCachedContact,
+  deleteCachedContact,
+  updateCachedContactTags,
+  updateCachedContactDnd,
+  cacheMessage,
+  upsertCachedOpportunity,
+  updateCachedOpportunityField,
+} from "@/lib/ghl/sync";
 
 // GHL raw response — webhook payload varies by event type
 interface WebhookPayload {
@@ -17,7 +26,6 @@ interface WebhookPayload {
 
 function verifySignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.GHL_WEBHOOK_SECRET;
-  // If no secret configured, skip verification (dev mode)
   if (!secret) return true;
   if (!signature) return false;
 
@@ -28,7 +36,6 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
 export async function POST(req: NextRequest) {
   const log = logger.child({ path: "/api/crm/webhooks" });
 
-  // Read raw body for signature verification
   const rawBody = await req.text();
   const signature = req.headers.get("x-ghl-signature");
 
@@ -61,7 +68,7 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
 
-  // Log the webhook regardless
+  // Log the webhook
   await prisma.webhookLog.create({
     data: {
       tenantId: tenant?.id ?? null,
@@ -81,39 +88,71 @@ export async function POST(req: NextRequest) {
   log.info({ tenantId, event: type }, "Processing webhook");
 
   try {
-    // Invalidate caches based on event type
-    if (type.startsWith("Contact")) {
-      const contactId = (payload as Record<string, string>).contactId;
-      await invalidateContactCaches(tenantId, contactId);
-    }
+    const data = (payload as Record<string, unknown>);
 
-    if (
-      type.startsWith("Conversation") ||
-      type === "InboundMessage" ||
-      type === "OutboundMessage"
-    ) {
-      const conversationId = (payload as Record<string, string>).conversationId;
-      await invalidateConversationCaches(tenantId, conversationId);
-    }
+    switch (type) {
+      // ==================== CONTACTS ====================
+      case "ContactCreate":
+      case "ContactUpdate":
+        await upsertCachedContact(tenantId, data);
+        await invalidateContactCaches(tenantId, data.contactId as string ?? data.id as string);
+        break;
 
-    if (type.startsWith("Opportunity")) {
-      const pipelineId = (payload as Record<string, string>).pipelineId;
-      if (pipelineId) {
-        await invalidateOpportunityCaches(tenantId, pipelineId);
-      }
+      case "ContactDelete":
+        await deleteCachedContact(tenantId, (data.id as string) ?? (data.contactId as string));
+        await invalidateContactCaches(tenantId, data.id as string);
+        break;
+
+      case "ContactTagUpdate":
+        await updateCachedContactTags(tenantId, data);
+        await invalidateContactCaches(tenantId, data.id as string ?? data.contactId as string);
+        break;
+
+      case "ContactDndUpdate":
+        await updateCachedContactDnd(tenantId, data);
+        break;
+
+      // ==================== MESSAGES ====================
+      case "InboundMessage":
+      case "OutboundMessage":
+        await cacheMessage(tenantId, data);
+        await invalidateConversationCaches(tenantId, data.conversationId as string);
+        break;
+
+      // ==================== OPPORTUNITIES ====================
+      case "OpportunityCreate":
+        await upsertCachedOpportunity(tenantId, data);
+        if (data.pipelineId) {
+          await invalidateOpportunityCaches(tenantId, data.pipelineId as string);
+        }
+        break;
+
+      case "OpportunityStageUpdate":
+      case "OpportunityStatusUpdate":
+      case "OpportunityMonetaryValueUpdate":
+        await updateCachedOpportunityField(tenantId, data);
+        if (data.pipelineId) {
+          await invalidateOpportunityCaches(tenantId, data.pipelineId as string);
+        }
+        break;
+
+      // ==================== NOTES & TASKS ====================
+      case "NoteCreate":
+      case "TaskCreate":
+        // Invalidate contact cache so notes/tasks show fresh
+        if (data.contactId) {
+          await invalidateContactCaches(tenantId, data.contactId as string);
+        }
+        break;
+
+      default:
+        log.info({ event: type }, "Unhandled webhook event type");
     }
 
     // Mark as processed
     await prisma.webhookLog.updateMany({
-      where: {
-        tenantId,
-        event: type,
-        status: "received",
-      },
-      data: {
-        status: "processed",
-        processedAt: new Date(),
-      },
+      where: { tenantId, event: type, status: "received" },
+      data: { status: "processed", processedAt: new Date() },
     });
 
     log.info({ tenantId, event: type }, "Webhook processed");

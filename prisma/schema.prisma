@@ -31,15 +31,20 @@ model Tenant {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  users           User[]
-  roles           Role[]
-  moduleConfigs   ModuleConfig[]
-  notifications   Notification[]
-  products        Product[]
-  quotes          Quote[]
-  reservations    Reservation[]
-  stationCapacity StationCapacity[]
-  grouponMappings GrouponProductMapping[]
+  users              User[]
+  roles              Role[]
+  moduleConfigs      ModuleConfig[]
+  notifications      Notification[]
+  products           Product[]
+  quotes             Quote[]
+  reservations       Reservation[]
+  stationCapacity    StationCapacity[]
+  grouponMappings    GrouponProductMapping[]
+  cachedContacts     CachedContact[]
+  cachedConversations CachedConversation[]
+  cachedOpportunities CachedOpportunity[]
+  cachedPipelines    CachedPipeline[]
+  syncStatus         SyncStatus?
 }
 
 // ==================== USER ====================
@@ -312,4 +317,122 @@ model WebhookLog {
 
   @@index([tenantId, event])
   @@index([createdAt])
+}
+
+// ==================== GHL CACHE TABLES ====================
+
+model CachedContact {
+  id           String    @id // GHL contact ID
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  firstName    String?
+  lastName     String?
+  name         String?
+  email        String?
+  phone        String?
+  tags         Json?     // string array
+  customFields Json?     // key-value pairs
+  source       String?
+  dateAdded    DateTime?
+  lastActivity DateTime?
+  dnd          Boolean   @default(false)
+  raw          Json?     // full GHL response
+  cachedAt     DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, name])
+  @@index([tenantId, email])
+  @@index([tenantId, phone])
+}
+
+model CachedConversation {
+  id              String    @id // GHL conversation ID
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactId       String
+  contactName     String?
+  contactPhone    String?
+  contactEmail    String?
+  lastMessageBody String?
+  lastMessageDate DateTime?
+  lastMessageType String?   // SMS, Email, WhatsApp
+  unreadCount     Int       @default(0)
+  raw             Json?
+  cachedAt        DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, lastMessageDate])
+}
+
+model CachedOpportunity {
+  id              String    @id // GHL opportunity ID
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pipelineId      String
+  pipelineStageId String
+  name            String?
+  contactId       String?
+  contactName     String?
+  monetaryValue   Float?
+  status          String?   // open, won, lost, abandoned
+  assignedTo      String?
+  lastActivity    DateTime?
+  raw             Json?
+  cachedAt        DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId, pipelineId])
+  @@index([tenantId, pipelineStageId])
+}
+
+model CachedPipeline {
+  id        String   @id // GHL pipeline ID
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  stages    Json     // array of { id, name, position }
+  raw       Json?
+  cachedAt  DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+// ==================== SYNC QUEUE ====================
+
+model SyncQueue {
+  id          String   @id @default(cuid())
+  tenantId    String
+  action      String   // "updateContact", "createOpportunity", etc.
+  resourceId  String   // GHL resource ID
+  payload     Json     // data to send
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5)
+  lastError   String?
+  status      String   @default("pending") // pending, processing, completed, failed
+  createdAt   DateTime @default(now())
+  nextRetryAt DateTime @default(now())
+
+  @@index([tenantId, status])
+  @@index([status, nextRetryAt])
+}
+
+// ==================== SYNC STATUS ====================
+
+model SyncStatus {
+  id              String    @id @default(cuid())
+  tenantId        String    @unique
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lastFullSync    DateTime?
+  lastIncrSync    DateTime?
+  contactCount    Int       @default(0)
+  conversationCount Int     @default(0)
+  opportunityCount  Int     @default(0)
+  pipelineCount   Int       @default(0)
+  syncInProgress  Boolean   @default(false)
+  lastError       String?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId])
 }

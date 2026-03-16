@@ -15,6 +15,7 @@ const PUBLIC_ROUTES = [
   "/api/health",
   "/api/crm/webhooks",
   "/api/crm/oauth",
+  "/api/cron/sync",
 ];
 
 export async function middleware(req: NextRequest) {

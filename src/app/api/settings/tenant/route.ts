@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
+import { fullSync } from "@/lib/ghl/sync";
 import type { PermissionKey } from "@/types/auth";
 
 export async function GET() {
@@ -20,24 +21,27 @@ export async function GET() {
   const log = logger.child({ tenantId, path: "/api/settings/tenant" });
 
   try {
-    const tenant = await prisma.tenant.findUniqueOrThrow({
-      where: { id: tenantId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        ghlLocationId: true,
-        ghlConnectedAt: true,
-        ghlTokenExpiry: true,
-        onboardingComplete: true,
-        dataMode: true,
-        isActive: true,
-        createdAt: true,
-      },
-    });
+    const [tenant, syncStatus] = await Promise.all([
+      prisma.tenant.findUniqueOrThrow({
+        where: { id: tenantId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          ghlLocationId: true,
+          ghlConnectedAt: true,
+          ghlTokenExpiry: true,
+          onboardingComplete: true,
+          dataMode: true,
+          isActive: true,
+          createdAt: true,
+        },
+      }),
+      prisma.syncStatus.findUnique({ where: { tenantId } }),
+    ]);
 
     log.info("Tenant settings fetched");
-    return NextResponse.json({ tenant });
+    return NextResponse.json({ tenant, syncStatus });
   } catch (error) {
     log.error({ error }, "Failed to fetch tenant settings");
     return NextResponse.json(
@@ -85,6 +89,21 @@ export async function PATCH(request: NextRequest) {
       data: { ...(dataMode !== undefined ? { dataMode } : {}) },
       select: { id: true, dataMode: true },
     });
+
+    // Trigger full sync when switching to live for the first time
+    if (dataMode === "live") {
+      const syncStatus = await prisma.syncStatus.findUnique({
+        where: { tenantId },
+      });
+
+      if (!syncStatus?.lastFullSync) {
+        log.info({ tenantId }, "First time live mode — triggering full sync");
+        // Run sync in background (don't block the response)
+        fullSync(tenantId).catch((err) => {
+          log.error({ tenantId, error: err }, "Background full sync failed");
+        });
+      }
+    }
 
     log.info({ dataMode: updated.dataMode }, "Tenant settings updated");
     return NextResponse.json({ tenant: updated });

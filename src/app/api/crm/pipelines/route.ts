@@ -3,10 +3,12 @@ import { auth } from "@/lib/auth/config";
 import { createGHLClient } from "@/lib/ghl/client";
 import { getCachedOrFetch } from "@/lib/cache/redis";
 import { CacheKeys, CacheTTL } from "@/lib/cache/keys";
+import { prisma } from "@/lib/db";
+import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { PermissionKey } from "@/types/auth";
-import type { GHLPipelinesResponse } from "@/lib/ghl/types";
+import type { GHLPipelinesResponse, GHLPipelineStage } from "@/lib/ghl/types";
 
 export async function GET() {
   const session = await auth();
@@ -23,6 +25,24 @@ export async function GET() {
   const log = logger.child({ tenantId, path: "/api/crm/pipelines" });
 
   try {
+    const mode = await getDataMode(tenantId);
+
+    if (mode === "live") {
+      const pipelines = await prisma.cachedPipeline.findMany({
+        where: { tenantId },
+      });
+
+      log.info({ count: pipelines.length, mode }, "Pipelines from cache");
+      return NextResponse.json({
+        pipelines: pipelines.map((p) => ({
+          id: p.id,
+          name: p.name,
+          stages: p.stages as unknown as GHLPipelineStage[],
+        })),
+      });
+    }
+
+    // Mock mode
     const data = await getCachedOrFetch<GHLPipelinesResponse>(
       CacheKeys.pipelines(tenantId),
       CacheTTL.pipelines,
@@ -33,7 +53,7 @@ export async function GET() {
       }
     );
 
-    log.info({ count: data.pipelines.length }, "Pipelines fetched");
+    log.info({ count: data.pipelines.length, mode }, "Pipelines fetched");
     return NextResponse.json(data);
   } catch (error) {
     log.error({ error }, "Failed to fetch pipelines");

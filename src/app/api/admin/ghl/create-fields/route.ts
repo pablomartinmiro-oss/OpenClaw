@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { hasPermission } from "@/lib/auth/permissions";
-import { createCustomField, getCustomFields } from "@/lib/ghl/api";
+import { getGHLClient } from "@/lib/ghl/api";
 import { logger } from "@/lib/logger";
 import type { PermissionKey } from "@/types/auth";
 
 const SKICENTER_FIELDS = [
-  { name: "Estación preferida", dataType: "TEXT", placeholder: "Baqueira, Sierra Nevada..." },
-  { name: "Nivel de esquí", dataType: "TEXT", placeholder: "Principiante, Intermedio, Avanzado" },
-  { name: "Código cupón Groupon", dataType: "TEXT", placeholder: "GRP-XXXX" },
-  { name: "Número de reservas", dataType: "NUMERICAL", placeholder: "0" },
-  { name: "Última reserva", dataType: "DATE", placeholder: "" },
+  { name: "Estación preferida", fieldKey: "estacion_preferida", dataType: "TEXT" },
+  { name: "Nivel de esquí", fieldKey: "nivel_esqui", dataType: "TEXT" },
+  { name: "Código cupón Groupon", fieldKey: "codigo_groupon", dataType: "TEXT" },
+  { name: "Número de reservas", fieldKey: "num_reservas", dataType: "NUMERICAL" },
+  { name: "Última reserva", fieldKey: "ultima_reserva", dataType: "DATE" },
 ];
 
 export async function POST(request: NextRequest) {
@@ -30,11 +30,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const fieldsToCreate = (body as { fields?: typeof SKICENTER_FIELDS }).fields ?? SKICENTER_FIELDS;
 
-    // Get existing fields to avoid duplicates
-    const existing = await getCustomFields(tenantId);
-    const existingNames = new Set(
-      (existing.customFields as { name: string }[]).map((f) => f.name)
-    );
+    const ghl = await getGHLClient(tenantId);
+    const existing = await ghl.getCustomFields();
+    const existingNames = new Set(existing.map((f) => f.name));
 
     const created: string[] = [];
     const skipped: string[] = [];
@@ -44,7 +42,7 @@ export async function POST(request: NextRequest) {
         skipped.push(field.name);
         continue;
       }
-      await createCustomField(tenantId, field);
+      await ghl.createCustomField(field);
       created.push(field.name);
     }
 

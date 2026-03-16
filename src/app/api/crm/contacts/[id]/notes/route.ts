@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { createGHLClient } from "@/lib/ghl/client";
+import { getGHLClient } from "@/lib/ghl/api";
+import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { PermissionKey } from "@/types/auth";
@@ -24,6 +26,14 @@ export async function GET(
   const { id } = await params;
 
   try {
+    const mode = await getDataMode(tenantId);
+
+    if (mode === "live") {
+      const ghl = await getGHLClient(tenantId);
+      const notes = await ghl.getContactNotes(id);
+      return NextResponse.json({ notes });
+    }
+
     const client = await createGHLClient(tenantId);
     const res = await client.get(`/contacts/${id}/notes`);
     return NextResponse.json(res.data as GHLNotesResponse);
@@ -55,6 +65,14 @@ export async function POST(
   const body = await req.json();
 
   try {
+    const mode = await getDataMode(tenantId);
+
+    if (mode === "live") {
+      const ghl = await getGHLClient(tenantId);
+      const note = await ghl.addContactNote(id, body.body);
+      return NextResponse.json(note);
+    }
+
     const client = await createGHLClient(tenantId);
     const res = await client.post(`/contacts/${id}/notes`, {
       body: body.body,

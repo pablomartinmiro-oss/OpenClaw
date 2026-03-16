@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { hasPermission } from "@/lib/auth/permissions";
-import { getContacts } from "@/lib/ghl/api";
+import { fullSync } from "@/lib/ghl/sync";
 import { logger } from "@/lib/logger";
 import type { PermissionKey } from "@/types/auth";
 
+/**
+ * Legacy sync endpoint — redirects to full-sync.
+ * Kept for backward compatibility.
+ */
 export async function POST() {
   const session = await auth();
   if (!session?.user) {
@@ -19,29 +23,9 @@ export async function POST() {
   const log = logger.child({ tenantId, path: "/api/admin/ghl/sync-contacts" });
 
   try {
-    let offset = 0;
-    const limit = 100;
-    let totalSynced = 0;
-    let hasMore = true;
-
-    while (hasMore) {
-      const result = await getContacts(tenantId, { limit, offset });
-      const contacts = result.contacts;
-
-      if (!contacts || contacts.length === 0) {
-        hasMore = false;
-        break;
-      }
-
-      totalSynced += contacts.length;
-      offset += limit;
-      hasMore = contacts.length === limit;
-
-      log.info({ batch: offset / limit, count: contacts.length }, "Contacts batch synced");
-    }
-
-    log.info({ totalSynced }, "Contact sync complete");
-    return NextResponse.json({ ok: true, totalSynced });
+    const result = await fullSync(tenantId);
+    log.info({ totalSynced: result.contacts }, "Contact sync complete");
+    return NextResponse.json({ ok: true, totalSynced: result.contacts });
   } catch (error) {
     log.error({ error }, "Contact sync failed");
     return NextResponse.json(

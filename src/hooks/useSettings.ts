@@ -46,8 +46,18 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json();
 }
 
+interface SyncStatus {
+  lastFullSync: string | null;
+  lastIncrSync: string | null;
+  contactCount: number;
+  conversationCount: number;
+  opportunityCount: number;
+  pipelineCount: number;
+  syncInProgress: boolean;
+}
+
 export function useTenantSettings() {
-  return useQuery<{ tenant: TenantSettings }>({
+  return useQuery<{ tenant: TenantSettings; syncStatus: SyncStatus | null }>({
     queryKey: ["tenant-settings"],
     queryFn: () => fetchJSON("/api/settings/tenant"),
   });

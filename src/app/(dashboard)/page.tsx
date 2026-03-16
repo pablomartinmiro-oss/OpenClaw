@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { FileText, Send, TrendingUp, Euro } from "lucide-react";
+import { FileText, Send, TrendingUp, Euro, Users, MessageCircle, BarChart3 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "@/hooks/useQuotes";
 import { StatCard } from "./_components/StatCard";
 
@@ -28,10 +29,36 @@ const STATUS_COLORS: Record<string, string> = {
   aceptado: "bg-coral",
 };
 
+interface DashboardStats {
+  mode: "mock" | "live";
+  stats: {
+    totalContacts: number;
+    pipelineValue: number;
+    activeConversations: number;
+    recentContacts: { id: string; name: string | null; email: string | null; source: string | null; updatedAt: string }[];
+    recentOpportunities: { id: string; name: string | null; monetaryValue: number | null; status: string | null; updatedAt: string }[];
+    lastSync: string | null;
+    syncInProgress: boolean;
+  } | null;
+}
+
+function useDashboardStats() {
+  return useQuery<DashboardStats>({
+    queryKey: ["dashboard-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/stats");
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
+    },
+  });
+}
+
 export default function DashboardHome() {
-  const { data: quotes, isLoading } = useQuotes();
+  const { data: quotes, isLoading: quotesLoading } = useQuotes();
+  const { data: dashStats, isLoading: statsLoading } = useDashboardStats();
 
   const allQuotes = useMemo(() => quotes ?? [], [quotes]);
+  const isLive = dashStats?.mode === "live" && dashStats.stats;
 
   const thisMonth = allQuotes.filter((q) => {
     const d = new Date(q.createdAt);
@@ -46,7 +73,6 @@ export default function DashboardHome() {
     ? sent.reduce((sum, q) => sum + q.totalAmount, 0) / sent.length
     : 0;
 
-  // By destination
   const byDestination = useMemo(() => {
     const map: Record<string, number> = {};
     for (const q of allQuotes) {
@@ -57,7 +83,6 @@ export default function DashboardHome() {
 
   const maxDestCount = Math.max(1, ...byDestination.map(([, c]) => c));
 
-  // By status
   const byStatus = useMemo(() => {
     const map: Record<string, number> = { nuevo: 0, en_proceso: 0, enviado: 0, aceptado: 0 };
     for (const q of allQuotes) {
@@ -66,10 +91,7 @@ export default function DashboardHome() {
     return map;
   }, [allQuotes]);
 
-  // Weekly chart data (placeholder for demo)
   const weeklyData = [3, 5, 4, 7, 2, 6, 4];
-
-  // Recent quotes
   const recentQuotes = allQuotes.slice(0, 5);
 
   return (
@@ -78,17 +100,55 @@ export default function DashboardHome() {
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Dashboard</h1>
         <p className="text-sm text-text-secondary">
           Resumen de actividad de Skicenter
+          {isLive && dashStats.stats?.lastSync && (
+            <span className="ml-2 text-xs text-sage">
+              Sincronizado: {new Date(dashStats.stats.lastSync).toLocaleString("es-ES")}
+            </span>
+          )}
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* GHL Live Stats — only shown in live mode */}
+      {isLive && dashStats.stats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            title="Contactos GHL"
+            value={dashStats.stats.totalContacts.toLocaleString("es-ES")}
+            description="en GoHighLevel"
+            icon={Users}
+            loading={statsLoading}
+            iconColor="text-coral"
+            iconBg="bg-coral-light"
+          />
+          <StatCard
+            title="Valor Pipeline"
+            value={formatCurrency(dashStats.stats.pipelineValue)}
+            description="oportunidades abiertas"
+            icon={BarChart3}
+            loading={statsLoading}
+            iconColor="text-sage"
+            iconBg="bg-sage-light"
+          />
+          <StatCard
+            title="Conversaciones Activas"
+            value={dashStats.stats.activeConversations}
+            description="últimos 7 días"
+            icon={MessageCircle}
+            loading={statsLoading}
+            iconColor="text-soft-blue"
+            iconBg="bg-soft-blue-light"
+          />
+        </div>
+      )}
+
+      {/* Quote KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Presupuestos Este Mes"
           value={thisMonth.length}
           description={`${allQuotes.length} total`}
           icon={FileText}
-          loading={isLoading}
+          loading={quotesLoading}
           iconColor="text-coral"
           iconBg="bg-coral-light"
         />
@@ -97,7 +157,7 @@ export default function DashboardHome() {
           value={sent.length}
           description={`${byStatus.nuevo} pendientes`}
           icon={Send}
-          loading={isLoading}
+          loading={quotesLoading}
           iconColor="text-soft-blue"
           iconBg="bg-soft-blue-light"
         />
@@ -106,7 +166,7 @@ export default function DashboardHome() {
           value={`${conversionRate}%`}
           description={`${accepted.length} aceptados`}
           icon={TrendingUp}
-          loading={isLoading}
+          loading={quotesLoading}
           iconColor="text-sage"
           iconBg="bg-sage-light"
         />
@@ -115,7 +175,7 @@ export default function DashboardHome() {
           value={formatCurrency(avgValue)}
           description="por presupuesto"
           icon={Euro}
-          loading={isLoading}
+          loading={quotesLoading}
           iconColor="text-gold"
           iconBg="bg-gold-light"
         />
@@ -171,7 +231,7 @@ export default function DashboardHome() {
                 </div>
               );
             })}
-            {byDestination.length === 0 && !isLoading && (
+            {byDestination.length === 0 && !quotesLoading && (
               <p className="py-8 text-center text-sm text-text-secondary">Sin datos</p>
             )}
           </div>
@@ -184,6 +244,28 @@ export default function DashboardHome() {
           <h2 className="text-base font-semibold text-text-primary">Actividad Reciente</h2>
         </div>
         <div className="space-y-3">
+          {/* GHL recent activity */}
+          {isLive && dashStats.stats?.recentOpportunities.map((opp) => (
+            <div
+              key={opp.id}
+              className="flex items-center justify-between rounded-lg border border-border p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-sage" />
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{opp.name}</p>
+                  <p className="text-xs text-text-secondary">
+                    Oportunidad · {opp.status}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-medium text-text-secondary">
+                {opp.monetaryValue ? formatCurrency(opp.monetaryValue) : "—"}
+              </span>
+            </div>
+          ))}
+
+          {/* Quote activity */}
           {recentQuotes.map((quote) => {
             const statusLabel: Record<string, string> = {
               nuevo: "Nuevo",
@@ -217,7 +299,7 @@ export default function DashboardHome() {
               </div>
             );
           })}
-          {recentQuotes.length === 0 && !isLoading && (
+          {recentQuotes.length === 0 && !quotesLoading && !isLive && (
             <p className="py-4 text-center text-sm text-text-secondary">
               Sin actividad reciente
             </p>

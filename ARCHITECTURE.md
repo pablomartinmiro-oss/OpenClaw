@@ -136,8 +136,8 @@ Tenant (company)
 - Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding`
 
 ## GHL Integration
-- Client factory: `createGHLClient(tenantId)` from `@/lib/ghl/client.ts`
-- Returns mock client when `ENABLE_MOCK_GHL=true`
+- **Mock mode**: `createGHLClient(tenantId)` from `@/lib/ghl/client.ts` → returns `MockGHLClient` with `.get()/.post()/.put()/.delete()` methods
+- **Live mode**: `getGHLClient(tenantId)` from `@/lib/ghl/api.ts` → returns typed `GHLClient` class with named methods (`.getContacts()`, `.updateContact()`, etc.)
 - Real client: axios with rate limiting (80/10s), token refresh on 401, retry with backoff on 429/5xx
 - Mock server: `src/lib/ghl/mock-server.ts` — 20 contacts, 10 conversations, 15 opportunities
 - OAuth: `src/lib/ghl/oauth.ts` — `getAuthorizeUrl()` and `exchangeCodeForTokens()`
@@ -148,7 +148,44 @@ Tenant (company)
 - `getDataMode(tenantId)` utility in `src/lib/data/getDataMode.ts`
 - Toggle in Settings UI → DataModeCard component
 - Cannot switch to live without valid GHL OAuth tokens
-- Mock = local DB queries. Live = GHL API calls via bridge routes.
+- Mock = MockGHLClient + local seed data. Live = cached DB tables (synced from GHL) for reads, GHLClient for writes.
+
+## GHL Sync Architecture
+
+### Data Flow
+```
+GHL API ←→ GHLClient (typed methods) ←→ Cache Tables (Postgres) ←→ API Routes ←→ Frontend
+                                              ↑
+                                        Webhooks (real-time)
+                                        Full Sync (on toggle)
+                                        Incremental Sync (cron)
+```
+
+### Cache Tables
+- `CachedContact`, `CachedConversation`, `CachedOpportunity`, `CachedPipeline` — mirror GHL data
+- `SyncStatus` — per-tenant sync metadata (last sync, counts, in-progress flag)
+- `SyncQueue` — failed write retries with exponential backoff
+
+### Sync Modes
+1. **Full Sync** (`fullSync(tenantId)`) — paginated fetch of all GHL data → bulk upsert to cache tables. Triggered on first switch to live mode or manually via "Sincronizar ahora".
+2. **Incremental Sync** (`incrementalSync(tenantId)`) — checks cache staleness, re-fetches if needed. Run by cron safety net.
+3. **Webhook Sync** — real-time cache upserts on GHL events (contact/conversation/opportunity changes). Handlers in `src/lib/ghl/sync.ts`.
+4. **Write-Through** — writes go to GHL first, then update local cache immediately. On failure, queued to SyncQueue.
+
+### Sync Service (`src/lib/ghl/sync.ts`)
+- Mapper functions: `mapContactToCache()`, `mapConversationToCache()`, `mapOpportunityToCache()`, `mapPipelineToCache()`
+- Webhook handlers: `upsertCachedContact()`, `deleteCachedContact()`, `updateCachedContactTags()`, `cacheMessage()`, `upsertCachedOpportunity()`, etc.
+- `processSyncQueue()` — retries failed writes with exponential backoff (max 5 attempts)
+
+### API Route Pattern (Live Mode)
+```typescript
+const mode = await getDataMode(tenantId);
+if (mode === "live") {
+  // READ: query CachedXxx table (fast, local)
+  // WRITE: call ghl.updateXxx() → upsert cache → on error, queue to SyncQueue
+}
+// else: use MockGHLClient (existing mock flow)
+```
 
 ## Voucher System (AI-Powered)
 

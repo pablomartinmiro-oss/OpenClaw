@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { hasPermission } from "@/lib/auth/permissions";
-import { testConnection } from "@/lib/ghl/api";
+import { getGHLClient } from "@/lib/ghl/api";
 import { logger } from "@/lib/logger";
 import type { PermissionKey } from "@/types/auth";
 
@@ -18,9 +18,10 @@ export async function GET() {
   const log = logger.child({ tenantId: session.user.tenantId, path: "/api/admin/ghl/test" });
 
   try {
-    const result = await testConnection(session.user.tenantId);
+    const ghl = await getGHLClient(session.user.tenantId);
+    const location = await ghl.getLocation();
     log.info("GHL connection test passed");
-    return NextResponse.json({ ok: true, location: result.location });
+    return NextResponse.json({ ok: true, location });
   } catch (error) {
     log.error({ error }, "GHL connection test failed");
     return NextResponse.json(
