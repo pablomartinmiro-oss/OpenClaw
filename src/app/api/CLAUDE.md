@@ -5,7 +5,6 @@
 ```typescript
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
-import { hasPermission } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db";
 import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
@@ -13,11 +12,9 @@ import { logger } from "@/lib/logger";
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.tenantId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!hasPermission(session.user.permissions, "required:permission")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
   const tenantId = session.user.tenantId;
   // Always scope queries by tenantId
+  // NOTE: No hasPermission() checks — removed because DB roles lack populated permissions
 }
 ```
 
@@ -35,7 +32,7 @@ if (mode === "live") {
 
 ## Route Map
 
-- `/api/crm/*` — GHL bridge (auth + permissions + mode branch)
+- `/api/crm/*` — GHL bridge (auth + mode branch)
 - `/api/admin/ghl/*` — Admin sync tools
 - `/api/cron/sync` — Background sync (PUBLIC route, for external cron)
 - `/api/pricing` — POST price calculation (season-aware matrix lookup)

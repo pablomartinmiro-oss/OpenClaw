@@ -35,31 +35,33 @@
 ## Request Flow
 
 ```
-Browser → Middleware (JWT check) → Next.js Route
+Browser → Middleware (JWT check via getToken()) → Next.js Route
   │
   ├── (auth) routes: /login, /register — no auth required
   │
   ├── (dashboard) routes: /, /reservas, /settings, etc.
   │   └── Layout wraps with SessionProvider + QueryClientProvider
   │
-  └── API routes:
+  └── API routes (session + tenant auth, NO permission checks):
       ├── /api/auth/*              — NextAuth handlers
-      ├── /api/crm/*               — GHL bridge (auth + permissions + mode branch)
+      ├── /api/crm/*               — GHL bridge (mode branch: mock vs live)
       │   ├── contacts/            — GET/POST + [id] GET/PUT/DELETE + [id]/notes GET/POST
-      │   ├── conversations/       — GET + [id]/messages GET/POST
+      │   ├── conversations/       — GET (paginated) + [id]/messages GET/POST + [id]/assign PUT
       │   ├── pipelines/           — GET
-      │   ├── opportunities/       — GET + [id] PUT
+      │   ├── opportunities/       — GET (paginated) + [id] PUT
       │   ├── oauth/               — authorize + callback (public)
       │   └── webhooks/            — POST (HMAC verified, updates cache)
       ├── /api/admin/ghl/*         — Admin sync tools (full-sync, sync-status, test, create-fields)
       ├── /api/cron/sync           — Background sync (public, for external cron)
       ├── /api/dashboard/stats     — Cached stats for dashboard
-      ├── /api/pricing              — POST price calculation (season-aware matrix lookup)
-      ├── /api/season-calendar/*   — Season period CRUD (auth + permissions)
-      ├── /api/products/*          — Product catalog CRUD (station filter, pricing matrix)
-      ├── /api/reservations/*      — Local DB CRUD (auth + tenant scope)
-      ├── /api/voucher/read        — Claude API (auth + image → structured JSON)
-      ├── /api/settings/*          — Tenant + team + mappings (auth + permissions)
+      ├── /api/pricing             — POST price calculation (season-aware matrix lookup)
+      ├── /api/season-calendar/*   — Season period CRUD
+      ├── /api/products/*          — Product catalog CRUD + bulk-import
+      ├── /api/quotes/*            — Quote CRUD + [id]/items
+      ├── /api/reservations/*      — Reservation CRUD + stats + voucher-stats + capacity + duplicate + from-quote
+      ├── /api/voucher/read        — Claude API (image → structured JSON)
+      ├── /api/settings/*          — Tenant + team + team/[userId]/role + team/invite + groupon-mappings
+      ├── /api/onboarding/*        — Complete + invite + roles + team
       └── /api/health              — Public health check
 ```
 
@@ -79,14 +81,33 @@ Tenant (company)
   ├── Notifications
   ├── GHL Connection (encrypted OAuth tokens, locationId)
   ├── CachedContacts (synced from GHL)
-  ├── CachedConversations (synced from GHL)
+  ├── CachedConversations (synced from GHL, assignedTo in raw JSON)
   ├── CachedOpportunities (synced from GHL)
   ├── CachedPipelines (synced from GHL)
   ├── SyncStatus (last sync times, counts, in-progress flag)
-  └── SyncQueue (failed write retries)
+  └── SyncQueue (failed write retries with exponential backoff)
 ```
 
 **Every query includes `WHERE tenantId = ?`** — enforced at the API route level.
+
+## Authentication & Authorization
+
+### Auth Flow
+- NextAuth v5 with credentials provider + JWT strategy
+- Session: `{ id, email, name, tenantId, roleId, roleName, permissions, onboardingComplete }`
+- Edge middleware uses `getToken()` from `next-auth/jwt` — NOT `auth()` (Prisma → node:path → edge crash)
+- Cookie: `__Secure-authjs.session-token` (HTTPS) or `authjs.session-token` (HTTP)
+
+### Registration
+- `POST /api/auth/register` — two paths:
+  - **New tenant**: creates Tenant + 4 Roles + User (Owner) + ModuleConfigs in transaction
+  - **Invite join**: validates invite token, updates placeholder user, assigns Sales Rep role
+- After registration: auto-login via `signIn("credentials")` → redirect
+
+### Authorization
+- **API level:** Session + tenant check only. `hasPermission()` was removed from all 32 API routes because DB roles don't have populated permissions.
+- **UI level:** `RoleGate` component + `usePermissions()` hook still gate UI elements client-side.
+- Public routes: `/api/auth/*`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth/*`, `/api/cron/sync`
 
 ## Database Access
 - Import `prisma` from `@/lib/db`
@@ -109,81 +130,18 @@ Tenant (company)
 - Format: `iv:tag:ciphertext` (all hex-encoded)
 - Used for GHL access/refresh tokens
 
-## Logging
-- Import `logger`, `createRequestLogger`, `createGHLLogger` from `@/lib/logger`
-- Never use `console.log` — use structured pino logger
-- Child loggers carry `tenantId` and `userId` context
-
-## Environment
-- Bootstrap modules (logger, db, redis, encryption) read `process.env` directly
-- All application code imports `env` from `@/lib/env` for validated access
-- Exception: `ANTHROPIC_API_KEY` read via `process.env` (per spec requirement)
-
-## Testing
-- Tests in `__tests__/` directory, mirroring `src/` structure
-- Prisma and Redis mocked in `__tests__/setup.ts`
-- Run with `npx vitest run`
-
-## Authentication
-
-### NextAuth v5 Setup
-- Config in `src/lib/auth/config.ts` — exports `handlers`, `auth`, `signIn`, `signOut`, `SESSION_COOKIE_NAME`
-- Credentials provider with bcrypt password verification
-- JWT strategy — session data embedded in token
-- Session includes: `id`, `email`, `name`, `tenantId`, `roleId`, `roleName`, `permissions`, `onboardingComplete`
-
-### Registration Flow
-- `POST /api/auth/register` — two paths:
-  - **New tenant**: creates Tenant + 4 Roles + User (Owner) + ModuleConfigs in transaction
-  - **Invite join**: validates invite token, updates placeholder user, assigns Sales Rep role
-- After registration: auto-login via `signIn("credentials")` → redirect
-
-### Cookie Configuration
-- Explicit `cookies.sessionToken` with name derived from AUTH_URL protocol
-- `__Secure-authjs.session-token` for HTTPS, `authjs.session-token` for HTTP
-- Critical for deployments behind TLS-terminating proxies (Railway)
-
-## RBAC
-- 15 permission keys defined in `src/lib/auth/permissions.ts`
-- 4 default roles: Owner/Manager (all), Sales Rep, Marketing, VA/Admin
-- `hasPermission(perms, key)`, `hasAnyPermission()`, `hasAllPermissions()` — pure functions
-- `RoleGate` component (`src/components/shared/RoleGate.tsx`) — client-side UI gating
-- `usePermissions()` hook (`src/hooks/usePermissions.ts`) — returns `can()`, `canAny()`, `canAll()`
-- Permission type: `PermissionKey` from `src/types/auth.ts`
-
-## Middleware
-- `src/middleware.ts` — uses `getToken()` from `next-auth/jwt` (edge-compatible)
-- Does NOT import `@/lib/auth/config` (would pull in Prisma → node:path → edge crash)
-- Public routes: `/login`, `/register`, `/api/auth`, `/api/health`, `/api/crm/webhooks`, `/api/crm/oauth`, `/api/cron/sync`
-- Unauthenticated users redirected to `/login`
-- Onboarding redirect: if `token.onboardingComplete === false`, redirects to `/onboarding`
-
 ## GHL Integration
 
 ### Two Client Modes
 - **Mock mode**: `createGHLClient(tenantId)` from `@/lib/ghl/client.ts` → returns `MockGHLClient` with `.get()/.post()/.put()/.delete()` methods
-- **Live mode**: `getGHLClient(tenantId)` from `@/lib/ghl/api.ts` → returns typed `GHLClient` class with named methods (`.getContacts()`, `.updateContact()`, etc.)
+- **Live mode**: `getGHLClient(tenantId)` from `@/lib/ghl/api.ts` → returns typed `GHLClient` class with named methods
 
 ### GHLClient Class (`src/lib/ghl/api.ts`)
-- Typed methods: getContacts, getContact, createContact, updateContact, deleteContact, searchContacts, getContactNotes, addContactNote, addContactTag, removeContactTag, getConversations, getConversation, getMessages, sendMessage, getPipelines, getOpportunities, getOpportunity, createOpportunity, updateOpportunity, getCustomFields, createCustomField, getLocation, getCalendars, getAppointments, getForms, getFormSubmissions, getTags
+- 25+ typed methods: getContacts, getContact, createContact, updateContact, deleteContact, searchContacts, getContactNotes, addContactNote, addContactTag, removeContactTag, getConversations, getConversation, updateConversation, getMessages, sendMessage, getPipelines, getOpportunities, getOpportunity, createOpportunity, updateOpportunity, getCustomFields, createCustomField, getLocation, getCalendars, getAppointments, getForms, getFormSubmissions, getTags
 - Auto-refresh on 401, exponential backoff on 429/5xx
 - Rate limiting: 80 requests per 10 seconds
 
-### Other GHL Files
-- Mock server: `src/lib/ghl/mock-server.ts` — 20 contacts, 10 conversations, 15 opportunities
-- OAuth: `src/lib/ghl/oauth.ts` — `getAuthorizeUrl()` and `exchangeCodeForTokens()`
-- OAuth routes: `/api/crm/oauth/authorize` (requires auth) and `/api/crm/oauth/callback` (public)
-
-## Mock/Real Data Mode
-- Tenant model has `dataMode` field: "mock" (default) or "live"
-- `getDataMode(tenantId)` utility in `src/lib/data/getDataMode.ts`
-- Toggle in Settings UI → DataModeCard component
-- Cannot switch to live without valid GHL OAuth tokens
-- Mock = MockGHLClient + local seed data. Live = cached DB tables (synced from GHL) for reads, GHLClient for writes.
-
-## GHL Sync Architecture
-
-### Data Flow
+### GHL Sync Architecture
 ```
 GHL API ←→ GHLClient (typed methods) ←→ Cache Tables (Postgres) ←→ API Routes ←→ Frontend
                                               ↑
@@ -192,31 +150,11 @@ GHL API ←→ GHLClient (typed methods) ←→ Cache Tables (Postgres) ←→ A
                                         Incremental Sync (cron)
 ```
 
-### Cache Tables
-- `CachedContact`, `CachedConversation`, `CachedOpportunity`, `CachedPipeline` — mirror GHL data
-- `SyncStatus` — per-tenant sync metadata (last sync, counts, in-progress flag)
-- `SyncQueue` — failed write retries with exponential backoff
-
 ### Sync Modes
-1. **Full Sync** (`fullSync(tenantId)`) — paginated fetch of all GHL data → bulk upsert to cache tables. Triggered on first switch to live mode or manually via "Sincronizar ahora".
-2. **Incremental Sync** (`incrementalSync(tenantId)`) — checks cache staleness, re-fetches if needed. Run by cron safety net.
-3. **Webhook Sync** — real-time cache upserts on GHL events (contact/conversation/opportunity changes). Handlers in `src/lib/ghl/sync.ts`.
-4. **Write-Through** — writes go to GHL first, then update local cache immediately. On failure, queued to SyncQueue.
-
-### Sync Service (`src/lib/ghl/sync.ts`)
-- Mapper functions: `mapContactToCache()`, `mapConversationToCache()`, `mapOpportunityToCache()`, `mapPipelineToCache()`
-- Webhook handlers: `upsertCachedContact()`, `deleteCachedContact()`, `updateCachedContactTags()`, `cacheMessage()`, `upsertCachedOpportunity()`, etc.
-- `processSyncQueue()` — retries failed writes with exponential backoff (max 5 attempts)
-
-### API Route Pattern (Live Mode)
-```typescript
-const mode = await getDataMode(tenantId);
-if (mode === "live") {
-  // READ: query CachedXxx table (fast, local)
-  // WRITE: call ghl.updateXxx() → upsert cache → on error, queue to SyncQueue
-}
-// else: use MockGHLClient (existing mock flow)
-```
+1. **Full Sync** (`fullSync(tenantId)`) — paginated fetch of all GHL data → bulk upsert to cache tables. Triggered on first switch to live mode.
+2. **Incremental Sync** (`incrementalSync(tenantId)`) — checks cache staleness, re-fetches if needed. Run by cron.
+3. **Webhook Sync** — real-time cache upserts on GHL events (12+ event types). HMAC-SHA256 verified.
+4. **Write-Through** — writes go to GHL first, then update local cache. On failure, queued to SyncQueue (max 5 retries, exponential backoff).
 
 ### Webhook Events Handled
 ContactCreate, ContactUpdate, ContactDelete, ContactTagUpdate, ContactDndUpdate, InboundMessage, OutboundMessage, OpportunityCreate, OpportunityStageUpdate, OpportunityStatusUpdate, OpportunityMonetaryValueUpdate, NoteCreate, TaskCreate
@@ -238,12 +176,7 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 ### Tracking
 - VoucherStats component queries `/api/reservations/voucher-stats`
 - Aggregates: pendientes, canjeados, ingresos, caducan semana/mes
-- Yellow alert banner for vouchers expiring within 7 days
-
-### Groupon Product Mapping
-- GrouponProductMapping model in DB (tenantId, grouponDesc, regex pattern, services JSON)
-- CRUD API at `/api/settings/groupon-mappings`
-- Editor UI in Settings page (GrouponMappingCard component)
+- Groupon product mapping: regex → services CRUD in Settings
 
 ## Pricing Engine
 
@@ -256,73 +189,58 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 ### Pricing Matrices (JSON in Product.pricingMatrix)
 - **Day-based** (equipment, forfaits, lockers): `{ media: { "1": 36, "2": 60 }, alta: { "1": 42 } }`
 - **Private lessons** (hour+people): `{ media: { "1h": { "1p": 70, "2p": 75 } } }`
-- Runtime type guard `isPrivateLessonMatrix()` checks if first key ends with "h"
 
-### Client/Server Split
-- `src/lib/pricing/calculator.ts` — server-side, imports Prisma (getSeason, calculatePrice)
-- `src/lib/pricing/client.ts` — client-safe, pure functions (getProductPrice, EUR formatter)
-- **Critical:** Client hooks import from `client.ts`, never from `calculator.ts` (avoids Prisma in client bundle → node:module crash)
-
-### Hooks
-- `useCalculatePrice()` — mutation calling POST `/api/pricing`
-- `useSeasonCalendar()` — CRUD hooks for season calendar entries
-- `getProductPrice()` re-exported from `@/lib/pricing/client` via `usePricing.ts`
-
-## UI Components
-- shadcn/ui components in `src/components/ui/`
-- Uses `sonner` for toast notifications (not deprecated toast)
-- Tailwind v4 with `tw-animate-css`
-- shadcn/ui v4 uses base-ui (not Radix) — `render` prop instead of `asChild`
-
-## Design System
-- DM Sans font
-- Warm coral primary (#E87B5A), sage green success (#5B8C6D), warm gold warning (#D4A853)
-- Warm off-white background (#FAF9F7), warm black text (#2D2A26)
-- 16px card radius, 10px input/button radius, 6px pill radius
-
-## Layout
-- Route groups: `(dashboard)` for authenticated pages, `(auth)` for login/register/onboarding
-- Dashboard layout (`src/app/(dashboard)/layout.tsx`) wraps with `SessionProvider` + `QueryClientProvider`
-- Sidebar, Topbar, MobileNav in `src/components/layout/`
+### Client/Server Split (CRITICAL)
+- `src/lib/pricing/calculator.ts` — server-side, imports Prisma
+- `src/lib/pricing/client.ts` — client-safe, pure functions
+- Client hooks import from `client.ts`, never from `calculator.ts` (avoids Prisma in client bundle)
 
 ## React Query Hooks
-- `src/hooks/useGHL.ts` — GHL data fetching (conversations, contacts, pipelines)
-- `src/hooks/useReservations.ts` — reservation CRUD + stats + capacity
-- `src/hooks/useSettings.ts` — tenant settings, team, data mode, invites, sync status
-- `src/hooks/useVoucher.ts` — voucher AI reader mutation
-- `src/hooks/usePricing.ts` — price calculation mutation + client-side season detection
-- `src/hooks/useSeasonCalendar.ts` — season calendar CRUD
-- `src/hooks/useProducts.ts` — product catalog CRUD (station, pricingMatrix fields)
-- All use `fetchJSON<T>()` helper that throws on non-ok responses
 
-## Reservations Module
-- Two-panel layout: ReservationList (35%) + ReservationForm (65%)
-- Source selection: Groupon / Caja / Presupuesto
-- Groupon source shows VoucherSection (image reader + manual fields + Groupon validation)
-- VoucherStats widget above main layout (collapsible)
-- Keyboard shortcuts: F1=New, F2=Confirm, F3=No availability, F4=Duplicate, Ctrl+Enter=Confirm
+All in `src/hooks/` — use `fetchJSON<T>()` helper that throws on non-ok:
+- `useGHL.ts` — GHL data (conversations, contacts, pipelines, opportunities) + mutations (assign, update, delete, move)
+- `useReservations.ts` — reservation CRUD + stats + capacity + duplicate + from-quote
+- `useQuotes.ts` — quote CRUD + delete
+- `useSettings.ts` — tenant, team, data mode, invites, sync status
+- `useProducts.ts` — product catalog CRUD
+- `usePricing.ts` — price calculation + season detection
+- `useSeasonCalendar.ts` — season calendar CRUD
+- `useVoucher.ts` — voucher AI reader mutation
 
-## Settings Module
-- DataModeCard — mock/live toggle + sync status + manual sync button (requires Owner + GHL connected for live)
-- TenantInfoCard — company name, slug, created date
-- GHLConnectionCard — connection status, reconnect button
-- GrouponMappingCard — CRUD table for Groupon product → Skicenter service mappings
-- TeamInviteCard — email input + invite button, shows invite URL with copy
-- TeamTable — role dropdown per user (permission-gated)
+## UI Architecture
 
-## GHL Webhooks
-- Endpoint: `POST /api/crm/webhooks` (public, verified via HMAC-SHA256)
-- Events trigger real-time cache upserts via sync.ts handlers
-- All webhooks logged to `WebhookLog` table
+### Layout
+- Route groups: `(dashboard)` for authenticated pages, `(auth)` for login/register/onboarding
+- Dashboard layout wraps with `SessionProvider` + `QueryClientProvider`
+- Sidebar (240px), Topbar, MobileNav in `src/components/layout/`
 
-## Optimistic Updates
-- `useSendMessage`: appends outbound message immediately, rolls back on error
-- `useAddNote`: prepends note immediately, rolls back on error
-- Pattern: `onMutate` (cancel + snapshot + optimistic set) → `onError` (rollback) → `onSettled` (refetch)
+### Design System
+- DM Sans font, warm coral primary (#E87B5A)
+- shadcn/ui v4 on base-ui — `render` prop instead of `asChild`
+- Toasts: `sonner`, Tailwind v4 with `tw-animate-css`
+
+### Key UI Patterns
+- Every data component has a Skeleton loader — never blank screens
+- Every mutation is optimistic — update UI immediately, rollback on error
+- Drag-and-drop: @dnd-kit v6 (`useDraggable`/`useDroppable`, PointerSensor 8px)
+- All UI text in SPANISH, all currency in EUR via `Intl.NumberFormat`
+
+## Modules
+
+| Module | Path | Key Features |
+|--------|------|-------------|
+| Dashboard | `/` | Stats cards, daily volume chart, top station, source revenue, activity feed |
+| Contacts | `/contacts` | Table + detail with inline edit + notes + delete |
+| Comms | `/comms` | 3-panel chat, conversation assignment, contact sidebar |
+| Pipeline | `/pipeline` | Kanban DnD, opportunity modal, pipeline selector |
+| Reservas | `/reservas` | Form + list, Groupon voucher, auto-pricing, CSV export, date range filter |
+| Presupuestos | `/presupuestos` | Quote CRUD, auto-package, print/PDF, expiry badges, convert to reservation |
+| Catálogo | `/catalogo` | Product table, season toggle, station filter, CSV import |
+| Settings | `/settings` | Data mode, GHL OAuth, team, season calendar, price import, Groupon mappings |
 
 ## Railway Deployment
-- **Build:** `npm install` → postinstall (`prisma generate`) → `npm run build` (`next build`)
+- **Build:** `npm install` → postinstall (`prisma generate`) → `npm run build`
 - **Start:** `npm start` → `prisma migrate deploy` → `prisma db seed` → `next start`
-- **Key constraint:** `prisma migrate deploy` must run at start (not build) because Railway injects DATABASE_URL at runtime
+- **Key constraint:** `prisma migrate deploy` runs at start (not build) — DATABASE_URL injected at runtime
 - **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool
-- **Prisma config** (`prisma.config.ts`): defines seed command — Prisma v7 ignores `package.json` seed config
+- **Prisma config** (`prisma.config.ts`): defines seed command — Prisma v7 ignores `package.json`
