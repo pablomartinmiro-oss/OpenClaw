@@ -1,10 +1,11 @@
 export const STATIONS = [
   { value: "baqueira", label: "Baqueira Beret" },
   { value: "sierra_nevada", label: "Sierra Nevada" },
+  { value: "valdesqui", label: "Valdesquí" },
+  { value: "la_pinilla", label: "La Pinilla" },
   { value: "grandvalira", label: "Grandvalira" },
   { value: "formigal", label: "Formigal" },
   { value: "alto_campoo", label: "Alto Campoo" },
-  { value: "la_pinilla", label: "La Pinilla" },
 ] as const;
 
 export const SCHEDULES = [
