@@ -1,8 +1,8 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE M COMPLETE — Feature Gaps
-- **Step:** All phases complete + Phase M (quote CRUD, CSV export, editable details, date range)
+- **Phase:** PHASE N COMPLETE — Security & Polish
+- **Step:** All phases complete + Phase N (permission checks, delete reservation, empty states, real team)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** f78b7f9 (2026-03-16)
 - **Next:** Deploy to Railway, connect real GHL sub-account
@@ -295,6 +295,26 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Shows two date inputs (from/to) when selected
 - Filters `activityDate` within the custom range
 
+### Phase N: Security & Polish (2026-03-16) ✅
+
+**Permission Checks on All Local CRUD Routes** ✅
+- Added `hasPermission()` to 12 API routes (products, quotes, reservations + sub-routes)
+- Products: `reservations:view` (GET), `reservations:edit` (POST/PATCH/DELETE)
+- Quotes: `reservations:view` (GET), `reservations:create` (POST), `reservations:edit` (PATCH/DELETE)
+- Reservations: `reservations:view` (GET/stats), `reservations:create` (POST), `reservations:edit` (PATCH/DELETE)
+
+**Delete Reservation** ✅
+- `DELETE /api/reservations/[id]` endpoint with tenant scoping + permission check
+- `useDeleteReservation` hook with query invalidation
+- "Eliminar" button in ReservationDetail with confirmation dialog
+
+**Empty States** ✅
+- ProductTable shows empty state when no products match filters
+
+**Real Team Data in AssignDropdown** ✅
+- Replaced hardcoded mock team members with `useTeam()` hook
+- Dropdown now shows actual team members from `/api/settings/team`
+
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
 2. `20260316100000_phase2_auth_voucher_datamode` — Auth fields, voucher fields, dataMode, GrouponProductMapping
@@ -336,10 +356,16 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 ## Auto-Audit Results
 
-### Phase M Final Audit (Feature Gaps) — Latest
+### Phase N Final Audit (Security & Polish) — Latest
 - ✅ Type Check: 0 errors
 - ✅ Lint: 0 errors, 3 warnings (pre-existing underscore-prefixed vars)
 - ✅ Build: compiled clean (45+ routes)
+- ✅ Security: all API routes now have auth + permissions + tenant scoping
+
+### Phase M Audit (Feature Gaps)
+- ✅ Type Check: 0 errors
+- ✅ Lint: 0 errors, 3 warnings
+- ✅ Build: compiled clean
 
 ### Phase H Audit (GHL Live Sync)
 - ✅ Type Check: 0 errors
