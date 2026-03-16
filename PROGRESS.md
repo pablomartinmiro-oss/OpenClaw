@@ -1,8 +1,8 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** RESERVATION DETAIL VIEW COMPLETE
-- **Step:** Phase 1-3 + Pricing Engine + Auto-Pricing + Reservation Detail — All complete
+- **Phase:** DASHBOARD + PRESUPUESTOS ENHANCEMENT COMPLETE
+- **Step:** All phases complete + Dashboard real stats + Quote-to-Reservation flow
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** f78b7f9 (2026-03-16)
 - **Next:** Deploy to Railway, connect real GHL sub-account
@@ -211,6 +211,30 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 **Station Filter Fix** ✅
 - ReservationList station filter now uses shared STATIONS constant (includes Valdesquí)
+
+### Phase K: Dashboard & Presupuestos Enhancement (2026-03-16) ✅
+
+**Dashboard Real Data** ✅
+- Replaced hardcoded weekly chart with real daily reservation volume from stats API
+- Added reservation KPIs: today's reservations, weekly revenue
+- Added top station widget and source revenue breakdown cards
+- Recent activity now shows reservations + quotes + GHL opportunities
+- Fixed destination labels to use shared STATIONS constant
+- Stats API now returns `dailyVolume` (7-day breakdown) and `recentReservations` (last 5)
+
+**QuoteDetail Split** ✅
+- Split 470-line QuoteDetail into 2 files (204 + 124 lines):
+  - `QuoteDetail.tsx` — header, request summary, actions
+  - `PackageTable.tsx` — editable package builder table with upsells
+
+**Quote-to-Reservation Flow** ✅
+- Added "Crear Reserva" button in QuoteDetail action bar
+- Uses `useCreateFromQuote` hook → navigates to /reservas after creation
+
+**Station Labels Consolidation** ✅
+- All modules now use shared `STATIONS` constant from `reservas/_components/constants.ts`
+- Removed duplicate `DESTINATION_LABELS` from QuoteList, QuoteDetail, and dashboard
+- All 7 stations consistent: Baqueira, Sierra Nevada, Valdesquí, La Pinilla, Grandvalira, Formigal, Alto Campoo
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
