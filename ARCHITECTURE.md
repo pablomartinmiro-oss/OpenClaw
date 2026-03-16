@@ -54,6 +54,9 @@ Browser → Middleware (JWT check) → Next.js Route
       ├── /api/admin/ghl/*         — Admin sync tools (full-sync, sync-status, test, create-fields)
       ├── /api/cron/sync           — Background sync (public, for external cron)
       ├── /api/dashboard/stats     — Cached stats for dashboard
+      ├── /api/pricing              — POST price calculation (season-aware matrix lookup)
+      ├── /api/season-calendar/*   — Season period CRUD (auth + permissions)
+      ├── /api/products/*          — Product catalog CRUD (station filter, pricing matrix)
       ├── /api/reservations/*      — Local DB CRUD (auth + tenant scope)
       ├── /api/voucher/read        — Claude API (auth + image → structured JSON)
       ├── /api/settings/*          — Tenant + team + mappings (auth + permissions)
@@ -69,7 +72,8 @@ Tenant (company)
   ├── ModuleConfigs (per-module settings)
   ├── Reservations (with voucher tracking fields)
   ├── Quotes + QuoteItems
-  ├── Products (catalog)
+  ├── Products (catalog, with pricingMatrix JSON for season-aware pricing)
+  ├── SeasonCalendar (alta/media season periods per station)
   ├── GrouponProductMappings (regex → services mapping)
   ├── StationCapacity (per station/date)
   ├── Notifications
@@ -241,6 +245,29 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 - CRUD API at `/api/settings/groupon-mappings`
 - Editor UI in Settings page (GrouponMappingCard component)
 
+## Pricing Engine
+
+### Season-Aware Pricing
+- `SeasonCalendar` table defines alta/media periods per station (or "all" for global)
+- Default season is "media" when no matching entry found
+- Server-side: `getSeason(tenantId, station, date)` queries DB
+- Client-side: `getSeasonFromCalendar(entries, station, date)` uses pre-fetched data
+
+### Pricing Matrices (JSON in Product.pricingMatrix)
+- **Day-based** (equipment, forfaits, lockers): `{ media: { "1": 36, "2": 60 }, alta: { "1": 42 } }`
+- **Private lessons** (hour+people): `{ media: { "1h": { "1p": 70, "2p": 75 } } }`
+- Runtime type guard `isPrivateLessonMatrix()` checks if first key ends with "h"
+
+### Client/Server Split
+- `src/lib/pricing/calculator.ts` — server-side, imports Prisma (getSeason, calculatePrice)
+- `src/lib/pricing/client.ts` — client-safe, pure functions (getProductPrice, EUR formatter)
+- **Critical:** Client hooks import from `client.ts`, never from `calculator.ts` (avoids Prisma in client bundle → node:module crash)
+
+### Hooks
+- `useCalculatePrice()` — mutation calling POST `/api/pricing`
+- `useSeasonCalendar()` — CRUD hooks for season calendar entries
+- `getProductPrice()` re-exported from `@/lib/pricing/client` via `usePricing.ts`
+
 ## UI Components
 - shadcn/ui components in `src/components/ui/`
 - Uses `sonner` for toast notifications (not deprecated toast)
@@ -263,6 +290,9 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 - `src/hooks/useReservations.ts` — reservation CRUD + stats + capacity
 - `src/hooks/useSettings.ts` — tenant settings, team, data mode, invites, sync status
 - `src/hooks/useVoucher.ts` — voucher AI reader mutation
+- `src/hooks/usePricing.ts` — price calculation mutation + client-side season detection
+- `src/hooks/useSeasonCalendar.ts` — season calendar CRUD
+- `src/hooks/useProducts.ts` — product catalog CRUD (station, pricingMatrix fields)
 - All use `fetchJSON<T>()` helper that throws on non-ok responses
 
 ## Reservations Module

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { Product } from "@/hooks/useProducts";
-import { CATEGORY_LABELS, PRICE_TYPE_LABELS, DESTINATION_LABELS } from "./ProductTable";
+import { CATEGORY_LABELS, PRICE_TYPE_LABELS, STATION_LABELS } from "./ProductTable";
 
 function getInitialForm(product: Product | null) {
   if (product) {
@@ -11,19 +11,25 @@ function getInitialForm(product: Product | null) {
       category: product.category,
       name: product.name,
       description: product.description || "",
-      destination: product.destination || "",
+      station: product.station || "all",
+      personType: product.personType || "",
+      tier: product.tier || "",
+      includesHelmet: product.includesHelmet,
       price: product.price.toString(),
       priceType: product.priceType,
       isActive: product.isActive,
     };
   }
   return {
-    category: "alojamiento",
+    category: "alquiler",
     name: "",
     description: "",
-    destination: "",
+    station: "all",
+    personType: "",
+    tier: "",
+    includesHelmet: false,
     price: "",
-    priceType: "per_night",
+    priceType: "per_day",
     isActive: true,
   };
 }
@@ -47,8 +53,11 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
       category: form.category,
       name: form.name,
       description: form.description || null,
-      destination: form.destination || null,
-      price: parseFloat(form.price),
+      station: form.station || "all",
+      personType: form.personType || null,
+      tier: form.tier || null,
+      includesHelmet: form.includesHelmet,
+      price: parseFloat(form.price) || 0,
       priceType: form.priceType,
       isActive: form.isActive,
     } as Partial<Product>);
@@ -61,10 +70,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
           <h2 className="text-lg font-semibold text-text-primary">
             {product ? "Editar Producto" : "Nuevo Producto"}
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-text-secondary hover:bg-surface transition-colors"
-          >
+          <button onClick={onClose} className="rounded-lg p-1.5 text-text-secondary hover:bg-surface transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -72,9 +78,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Categoría
-              </label>
+              <label className="block text-sm font-medium text-text-primary mb-1">Categoría</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -86,16 +90,13 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Destino
-              </label>
+              <label className="block text-sm font-medium text-text-primary mb-1">Estación</label>
               <select
-                value={form.destination}
-                onChange={(e) => setForm({ ...form, destination: e.target.value })}
+                value={form.station}
+                onChange={(e) => setForm({ ...form, station: e.target.value })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
               >
-                <option value="">Todos los destinos</option>
-                {Object.entries(DESTINATION_LABELS).map(([key, label]) => (
+                {Object.entries(STATION_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
@@ -103,9 +104,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              Nombre
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-1">Nombre</label>
             <input
               type="text"
               value={form.name}
@@ -116,9 +115,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              Descripción
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-1">Descripción</label>
             <input
               type="text"
               value={form.description}
@@ -127,11 +124,48 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
             />
           </div>
 
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Tipo persona</label>
+              <select
+                value={form.personType}
+                onChange={(e) => setForm({ ...form, personType: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+              >
+                <option value="">Sin especificar</option>
+                <option value="adulto">Adulto</option>
+                <option value="infantil">Infantil</option>
+                <option value="baby">Baby</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Calidad</label>
+              <select
+                value={form.tier}
+                onChange={(e) => setForm({ ...form, tier: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+              >
+                <option value="">Sin especificar</option>
+                <option value="media_quality">Media calidad</option>
+                <option value="alta_quality">Alta calidad</option>
+              </select>
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 text-sm text-text-primary">
+                <input
+                  type="checkbox"
+                  checked={form.includesHelmet}
+                  onChange={(e) => setForm({ ...form, includesHelmet: e.target.checked })}
+                  className="h-4 w-4 rounded border-border text-coral focus:ring-coral"
+                />
+                Incluye casco
+              </label>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Precio (€)
-              </label>
+              <label className="block text-sm font-medium text-text-primary mb-1">Precio base (€)</label>
               <input
                 type="number"
                 step="0.01"
@@ -143,9 +177,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Tipo de Precio
-              </label>
+              <label className="block text-sm font-medium text-text-primary mb-1">Tipo de Precio</label>
               <select
                 value={form.priceType}
                 onChange={(e) => setForm({ ...form, priceType: e.target.value })}
@@ -166,9 +198,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
               className="h-4 w-4 rounded border-border text-coral focus:ring-coral"
             />
-            <label htmlFor="isActive" className="text-sm text-text-primary">
-              Producto activo
-            </label>
+            <label htmlFor="isActive" className="text-sm text-text-primary">Producto activo</label>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

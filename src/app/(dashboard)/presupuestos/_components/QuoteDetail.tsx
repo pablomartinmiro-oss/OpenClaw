@@ -13,6 +13,8 @@ import {
   Users,
   Phone,
   Mail,
+  Sun,
+  Snowflake,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Quote, QuoteItem } from "@/hooks/useQuotes";
@@ -20,6 +22,9 @@ import { useUpdateQuote, useUpdateQuoteItems } from "@/hooks/useQuotes";
 import type { Product } from "@/hooks/useProducts";
 import { autoGeneratePackage } from "@/lib/quotes/auto-package";
 import type { Upsell } from "@/lib/quotes/auto-package";
+import { useSeasonCalendar } from "@/hooks/useSeasonCalendar";
+import { getSeasonFromCalendar } from "@/hooks/usePricing";
+import type { Season } from "@/lib/pricing/types";
 import { DESTINATION_LABELS } from "./QuoteList";
 
 interface QuoteDetailProps {
@@ -87,6 +92,12 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
   const [showAddProduct, setShowAddProduct] = useState(false);
   const updateQuote = useUpdateQuote();
   const updateItems = useUpdateQuoteItems();
+  const { data: calendarEntries } = useSeasonCalendar();
+
+  // Auto-detect season from the activity date
+  const season: Season = calendarEntries
+    ? getSeasonFromCalendar(calendarEntries, quote.destination, new Date(quote.checkIn))
+    : "media";
 
   const nights = Math.max(
     1,
@@ -109,7 +120,8 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
         wantsClases: quote.wantsClases,
         wantsEquipment: quote.wantsEquipment,
       },
-      products
+      products,
+      season
     );
     setItems(result.items);
     setUpsells(result.upsells);
@@ -275,7 +287,12 @@ export function QuoteDetail({ quote, products, onPreviewEmail }: QuoteDetailProp
           </div>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
-          {quote.wantsAccommodation && <ServiceBadge label="Alojamiento" />}
+          <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            season === "alta" ? "bg-coral-light text-coral" : "bg-sage-light text-sage"
+          }`}>
+            {season === "alta" ? <Snowflake className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
+            {season === "alta" ? "Temporada Alta" : "Temporada Media"}
+          </span>
           {quote.wantsForfait && <ServiceBadge label="Forfait" />}
           {quote.wantsClases && <ServiceBadge label="Clases" />}
           {quote.wantsEquipment && <ServiceBadge label="Alquiler" />}

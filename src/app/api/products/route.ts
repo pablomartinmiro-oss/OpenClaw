@@ -13,16 +13,16 @@ export async function GET(request: NextRequest) {
   const log = logger.child({ tenantId, path: "/api/products" });
   const { searchParams } = request.nextUrl;
   const category = searchParams.get("category");
-  const destination = searchParams.get("destination");
+  const station = searchParams.get("station");
 
   try {
     const where: Record<string, unknown> = { tenantId };
     if (category) where.category = category;
-    if (destination) where.destination = destination;
+    if (station) where.station = station;
 
     const products = await prisma.product.findMany({
       where,
-      orderBy: [{ category: "asc" }, { name: "asc" }],
+      orderBy: [{ sortOrder: "asc" }, { category: "asc" }, { name: "asc" }],
     });
 
     log.info({ count: products.length }, "Products fetched");
@@ -52,10 +52,15 @@ export async function POST(request: NextRequest) {
         tenantId,
         category: body.category,
         name: body.name,
+        station: body.station || "all",
         description: body.description || null,
-        destination: body.destination || null,
-        price: parseFloat(body.price),
+        personType: body.personType || null,
+        tier: body.tier || null,
+        includesHelmet: body.includesHelmet ?? false,
+        price: parseFloat(body.price) || 0,
         priceType: body.priceType,
+        pricingMatrix: body.pricingMatrix ? JSON.parse(JSON.stringify(body.pricingMatrix)) : null,
+        sortOrder: body.sortOrder ?? 0,
         isActive: body.isActive ?? true,
       },
     });

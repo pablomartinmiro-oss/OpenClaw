@@ -45,6 +45,7 @@ model Tenant {
   cachedOpportunities CachedOpportunity[]
   cachedPipelines    CachedPipeline[]
   syncStatus         SyncStatus?
+  seasonCalendar     SeasonCalendar[]
 }
 
 // ==================== USER ====================
@@ -128,23 +129,45 @@ model Notification {
 
 // ==================== PRODUCT CATALOG ====================
 model Product {
-  id          String   @id @default(cuid())
-  tenantId    String
-  category    String   // alojamiento, forfait, cursillo, alquiler, apres_ski
-  name        String
-  description String?
-  destination String?  // baqueira, sierra_nevada, formigal, alto_campoo, grandvalira, or null for "all"
-  price       Float
-  priceType   String   // per_night, per_day, per_person, fixed
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  tenantId       String
+  category       String   // "alquiler", "escuela", "clase_particular", "forfait", "locker", "apreski"
+  name           String
+  station        String   // "baqueira", "sierra_nevada", "valdesqui", "la_pinilla", "grandvalira", "formigal", "alto_campoo", "all"
+  description    String?
+  personType     String?  // "adulto", "infantil", "baby", null
+  tier           String?  // "media_quality", "alta_quality", null (for equipment tiers)
+  includesHelmet Boolean  @default(false)
+  priceType      String   // "per_day", "per_person_per_hour", "per_session", "fixed"
+  price          Float    @default(0) // Base price (1 day, media season) for display
+  pricingMatrix  Json?    // Season-aware pricing: { media: {...}, alta: {...} }
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  quoteItems  QuoteItem[]
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quoteItems     QuoteItem[]
 
+  @@index([tenantId, station, category])
   @@index([tenantId, category])
-  @@index([tenantId, destination])
+}
+
+// ==================== SEASON CALENDAR ====================
+model SeasonCalendar {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  station   String   // "baqueira", "sierra_nevada", etc. or "all"
+  season    String   // "media" or "alta"
+  startDate DateTime
+  endDate   DateTime
+  label     String?  // "Navidades", "Semana Santa", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, station])
+  @@unique([tenantId, station, startDate])
 }
 
 // ==================== QUOTES (PRESUPUESTOS) ====================

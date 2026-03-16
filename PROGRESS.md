@@ -1,11 +1,11 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE 3 DEPLOYED — GHL Live Sync
-- **Step:** Phase 1 (25/25) + Phase 2 (6/6) + Phase 3 (10/10) — All complete & deployed
+- **Phase:** PRICING ENGINE COMPLETE
+- **Step:** Phase 1 (25/25) + Phase 2 (6/6) + Phase 3 (10/10) + Pricing Engine (13/13) — All complete
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** f78b7f9 (2026-03-16)
-- **Next:** Connect real GHL sub-account via OAuth flow and test end-to-end live sync
+- **Next:** Deploy pricing engine to Railway, connect real GHL sub-account
 - **Date:** 2026-03-16
 
 ## What the App Does Today
@@ -135,10 +135,51 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - DM Sans font, warm coral (#E87B5A) primary accent
 - Applied across all pages and components
 
+### Phase I: Smart Pricing Engine (2026-03-16) ✅
+
+**Step 8: Schema & Types** ✅
+- Product model refactored: `destination` → `station`, added `personType`, `tier`, `includesHelmet`, `pricingMatrix` (Json), `sortOrder`
+- New `SeasonCalendar` model for alta/media season periods per station
+- Migration: `20260316300000_pricing_engine`
+- All pricing types in `src/lib/pricing/types.ts`
+
+**Step 9: Pricing Calculator** ✅
+- Server-side: `src/lib/pricing/calculator.ts` — `getSeason()` (queries DB), `calculatePrice()` (full matrix lookup)
+- Client-side: `src/lib/pricing/client.ts` — pure `getProductPrice()` (no Prisma dependency), `EUR` formatter
+- Separated to avoid pulling Prisma into client bundles
+
+**Step 10: Real Skicenter Prices** ✅
+- 27+ products seeded with full pricing matrices (equipment, forfaits, escuela, clases particulares, lockers, après-ski)
+- Day-based matrices: `{ media: { "1": 36, "2": 60, ... }, alta: { "1": 42, ... } }`
+- Private lesson matrices: `{ media: { "1h": { "1p": 70, "2p": 75, ... }, ... } }`
+- 3 alta season periods (Navidades, Carnaval, Semana Santa)
+
+**Step 11: API Routes** ✅
+- `POST /api/pricing` — server-side price calculation
+- `GET/POST /api/season-calendar` — season period CRUD
+- `PATCH/DELETE /api/season-calendar/[id]` — individual entry management
+- Product API updated with new fields (station filter, personType, tier, etc.)
+
+**Step 12: Catálogo UI** ✅
+- ProductTable: season toggle (Media/Alta), station filter, matrix-based price display
+- ProductModal: station, personType, tier, includesHelmet fields
+- Category badges: alquiler, escuela, clase_particular, forfait, locker, apreski
+
+**Step 13: Presupuestos Integration** ✅
+- Auto-package uses `getMatrixPrice()` for season-aware pricing
+- `findByStation()` for smart product matching (prefers station match, falls back to "all")
+- QuoteDetail shows season badge and passes season to auto-package
+- Season auto-detected from pre-fetched calendar entries
+
+**Step 13b: Settings UI** ✅
+- SeasonCalendarCard: full CRUD for season periods, grouped by station, color-coded badges
+- PriceImportCard: shell with drag-and-drop zone (Excel/CSV), "Próximamente" notice
+
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
 2. `20260316100000_phase2_auth_voucher_datamode` — Auth fields, voucher fields, dataMode, GrouponProductMapping
 3. `20260316200000_ghl_cache_sync` — Cache tables, SyncQueue, SyncStatus
+4. `20260316300000_pricing_engine` — Product refactor (destination→station, new fields), SeasonCalendar table
 
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before migrations

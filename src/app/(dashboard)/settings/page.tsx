@@ -11,6 +11,8 @@ import { TeamTable } from "./_components/TeamTable";
 import { DataModeCard } from "./_components/DataModeCard";
 import { TeamInviteCard } from "./_components/TeamInviteCard";
 import { GrouponMappingCard } from "./_components/GrouponMappingCard";
+import { SeasonCalendarCard } from "./_components/SeasonCalendarCard";
+import { PriceImportCard } from "./_components/PriceImportCard";
 import { toast } from "sonner";
 
 function SettingsToast() {
@@ -106,6 +108,14 @@ export default function SettingsPage() {
             loading={tenantLoading}
           />
         </div>
+      </RoleGate>
+
+      <RoleGate permission="settings:tenant">
+        <SeasonCalendarCard />
+      </RoleGate>
+
+      <RoleGate permission="settings:tenant">
+        <PriceImportCard />
       </RoleGate>
 
       <RoleGate permission="settings:tenant">

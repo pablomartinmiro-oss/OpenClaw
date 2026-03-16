@@ -7,11 +7,16 @@ interface Product {
   tenantId: string;
   category: string;
   name: string;
+  station: string;
   description: string | null;
-  destination: string | null;
-  price: number;
+  personType: string | null;
+  tier: string | null;
+  includesHelmet: boolean;
   priceType: string;
+  price: number;
+  pricingMatrix: Record<string, unknown> | null;
   isActive: boolean;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,7 +30,7 @@ async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
 export function useProducts(category?: string, destination?: string) {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
-  if (destination) params.set("destination", destination);
+  if (destination) params.set("station", destination);
   const qs = params.toString();
 
   return useQuery({
