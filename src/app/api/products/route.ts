@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
+import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
+
+export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { tenantId } = session.user;
+  const log = logger.child({ tenantId, path: "/api/products" });
+  const { searchParams } = request.nextUrl;
+  const category = searchParams.get("category");
+  const destination = searchParams.get("destination");
+
+  try {
+    const where: Record<string, unknown> = { tenantId };
+    if (category) where.category = category;
+    if (destination) where.destination = destination;
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: [{ category: "asc" }, { name: "asc" }],
+    });
+
+    log.info({ count: products.length }, "Products fetched");
+    return NextResponse.json({ products });
+  } catch (error) {
+    log.error({ error }, "Failed to fetch products");
+    return NextResponse.json(
+      { error: "Failed to fetch products", code: "PRODUCTS_ERROR" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { tenantId } = session.user;
+  const log = logger.child({ tenantId, path: "/api/products" });
+
+  try {
+    const body = await request.json();
+    const product = await prisma.product.create({
+      data: {
+        tenantId,
+        category: body.category,
+        name: body.name,
+        description: body.description || null,
+        destination: body.destination || null,
+        price: parseFloat(body.price),
+        priceType: body.priceType,
+        isActive: body.isActive ?? true,
+      },
+    });
+
+    log.info({ productId: product.id }, "Product created");
+    return NextResponse.json({ product }, { status: 201 });
+  } catch (error) {
+    log.error({ error }, "Failed to create product");
+    return NextResponse.json(
+      { error: "Failed to create product", code: "PRODUCTS_ERROR" },
+      { status: 500 }
+    );
+  }
+}

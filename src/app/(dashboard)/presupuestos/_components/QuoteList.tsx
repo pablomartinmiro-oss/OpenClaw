@@ -1,0 +1,157 @@
+"use client";
+
+import { useState } from "react";
+import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Quote } from "@/hooks/useQuotes";
+
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  nuevo: { label: "Nuevo", color: "bg-blue-50 text-blue-600" },
+  en_proceso: { label: "En Proceso", color: "bg-yellow-50 text-yellow-600" },
+  enviado: { label: "Enviado", color: "bg-green-50 text-success" },
+  aceptado: { label: "Aceptado", color: "bg-purple-50 text-purple" },
+};
+
+const DESTINATION_LABELS: Record<string, string> = {
+  baqueira: "Baqueira",
+  sierra_nevada: "Sierra Nevada",
+  formigal: "Formigal",
+  alto_campoo: "Alto Campoo",
+  grandvalira: "Grandvalira",
+};
+
+interface QuoteListProps {
+  quotes: Quote[];
+  selectedId: string | null;
+  onSelect: (quote: Quote) => void;
+}
+
+export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterDestination, setFilterDestination] = useState<string>("");
+
+  const filtered = quotes.filter((q) => {
+    if (search && !q.clientName.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterStatus && q.status !== filterStatus) return false;
+    if (filterDestination && q.destination !== filterDestination) return false;
+    return true;
+  });
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Search */}
+      <div className="border-b border-border p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          <input
+            type="text"
+            placeholder="Buscar cliente..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-border bg-surface pl-10 pr-3 py-2 text-sm placeholder:text-text-secondary focus:border-cyan focus:outline-none focus:ring-1 focus:ring-cyan"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="mt-3 flex gap-2 flex-wrap">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-cyan focus:outline-none"
+          >
+            <option value="">Todos los estados</option>
+            {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+          <select
+            value={filterDestination}
+            onChange={(e) => setFilterDestination(e.target.value)}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs focus:border-cyan focus:outline-none"
+          >
+            <option value="">Todos los destinos</option>
+            {Object.entries(DESTINATION_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Quote cards */}
+      <div className="flex-1 overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="p-8 text-center text-sm text-text-secondary">
+            No se encontraron presupuestos
+          </div>
+        ) : (
+          filtered.map((quote) => {
+            const config = STATUS_CONFIG[quote.status] || STATUS_CONFIG.nuevo;
+            const isSelected = selectedId === quote.id;
+            const totalPax = quote.adults + quote.children;
+
+            return (
+              <button
+                key={quote.id}
+                onClick={() => onSelect(quote)}
+                className={cn(
+                  "w-full border-b border-border p-4 text-left transition-colors hover:bg-cyan-light/30",
+                  isSelected && "bg-cyan-light border-l-2 border-l-cyan"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <h3 className="font-medium text-sm text-text-primary">
+                    {quote.clientName}
+                  </h3>
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", config.color)}>
+                    {config.label}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-3 text-xs text-text-secondary">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {DESTINATION_LABELS[quote.destination] || quote.destination}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(quote.checkIn)} - {formatDate(quote.checkOut)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {totalPax} pax
+                  </span>
+                </div>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-text-secondary">
+                    {new Date(quote.createdAt).toLocaleDateString("es-ES", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  {quote.totalAmount > 0 && (
+                    <span className="text-sm font-semibold text-text-primary">
+                      {quote.totalAmount.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+export { STATUS_CONFIG, DESTINATION_LABELS };

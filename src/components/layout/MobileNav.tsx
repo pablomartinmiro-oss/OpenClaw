@@ -7,10 +7,11 @@ import { Menu } from "lucide-react";
 import {
   MessageSquare,
   Kanban,
-  BarChart3,
   Users,
   Settings,
   LayoutDashboard,
+  FileText,
+  Package,
 } from "lucide-react";
 import {
   Sheet,
@@ -31,11 +32,12 @@ interface MobileNavItem {
 
 const NAV_ITEMS: MobileNavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard, permission: null },
-  { label: "Comms", href: "/comms", icon: MessageSquare, permission: "comms:view" },
-  { label: "Pipelines", href: "/pipelines", icon: Kanban, permission: "pipelines:view" },
-  { label: "Analytics", href: "/analytics", icon: BarChart3, permission: "analytics:view" },
-  { label: "Contacts", href: "/contacts", icon: Users, permission: "contacts:view" },
-  { label: "Settings", href: "/settings", icon: Settings, permission: "settings:team" },
+  { label: "Presupuestos", href: "/presupuestos", icon: FileText, permission: null },
+  { label: "Catálogo", href: "/catalogo", icon: Package, permission: null },
+  { label: "Comunicaciones", href: "/comms", icon: MessageSquare, permission: "comms:view" },
+  { label: "Contactos", href: "/contacts", icon: Users, permission: "contacts:view" },
+  { label: "Pipeline", href: "/pipelines", icon: Kanban, permission: "pipelines:view" },
+  { label: "Ajustes", href: "/settings", icon: Settings, permission: "settings:team" },
 ];
 
 export function MobileNav() {
@@ -62,7 +64,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-64 bg-sidebar-bg p-0">
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
         <div className="flex h-14 items-center border-b border-border px-4">
-          <span className="text-lg font-semibold text-text-primary">CRM Dashboard</span>
+          <span className="text-lg font-semibold text-text-primary">Skicenter</span>
         </div>
         <nav className="space-y-1 px-2 py-3">
           {visibleItems.map((item) => {

@@ -131,14 +131,18 @@ async function refreshGHLTokens(
     throw new Error("No refresh token available");
   }
 
+  // GHL token endpoint requires x-www-form-urlencoded
+  const body = new URLSearchParams({
+    client_id: process.env.GHL_CLIENT_ID ?? "",
+    client_secret: process.env.GHL_CLIENT_SECRET ?? "",
+    grant_type: "refresh_token",
+    refresh_token: decrypt(tenant.ghlRefreshToken),
+  });
+
   const res = await axios.post(
     "https://services.leadconnectorhq.com/oauth/token",
-    {
-      client_id: process.env.GHL_CLIENT_ID,
-      client_secret: process.env.GHL_CLIENT_SECRET,
-      grant_type: "refresh_token",
-      refresh_token: decrypt(tenant.ghlRefreshToken),
-    }
+    body.toString(),
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
   );
 
   await prisma.tenant.update({

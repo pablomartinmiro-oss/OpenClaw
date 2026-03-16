@@ -6,12 +6,13 @@ import { usePathname } from "next/navigation";
 import {
   MessageSquare,
   Kanban,
-  BarChart3,
   Users,
   Settings,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
+  FileText,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -34,31 +35,37 @@ const NAV_ITEMS: NavItem[] = [
     permission: null,
   },
   {
-    label: "Comms",
+    label: "Presupuestos",
+    href: "/presupuestos",
+    icon: FileText,
+    permission: null,
+  },
+  {
+    label: "Catálogo",
+    href: "/catalogo",
+    icon: Package,
+    permission: null,
+  },
+  {
+    label: "Comunicaciones",
     href: "/comms",
     icon: MessageSquare,
     permission: "comms:view",
   },
   {
-    label: "Pipelines",
-    href: "/pipelines",
-    icon: Kanban,
-    permission: "pipelines:view",
-  },
-  {
-    label: "Analytics",
-    href: "/analytics",
-    icon: BarChart3,
-    permission: "analytics:view",
-  },
-  {
-    label: "Contacts",
+    label: "Contactos",
     href: "/contacts",
     icon: Users,
     permission: "contacts:view",
   },
   {
-    label: "Settings",
+    label: "Pipeline",
+    href: "/pipelines",
+    icon: Kanban,
+    permission: "pipelines:view",
+  },
+  {
+    label: "Ajustes",
     href: "/settings",
     icon: Settings,
     permission: "settings:team",
@@ -88,7 +95,7 @@ export function Sidebar({ unreadCount = 0 }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-border px-4">
         {!collapsed && (
-          <span className="text-lg font-semibold text-text-primary">CRM Dashboard</span>
+          <span className="text-lg font-semibold text-text-primary">Skicenter</span>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -155,7 +162,7 @@ export function Sidebar({ unreadCount = 0 }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-border p-3">
         {!collapsed && (
-          <p className="truncate text-xs text-text-secondary">GHL Dashboard v0.1</p>
+          <p className="truncate text-xs text-text-secondary">Skicenter Dashboard v1.0</p>
         )}
       </div>
     </aside>
