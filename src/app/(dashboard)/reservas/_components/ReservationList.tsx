@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Reservation } from "@/hooks/useReservations";
-import { STATUS_CONFIG, SOURCE_CONFIG, formatDate, formatEUR, getStationLabel } from "./constants";
+import { STATIONS, STATUS_CONFIG, SOURCE_CONFIG, formatDate, formatEUR, getStationLabel } from "./constants";
 import { Badge } from "@/components/ui/badge";
 
 interface ReservationListProps {
@@ -164,12 +164,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect }:
           className="ml-auto rounded-lg border border-border bg-white px-2 py-1 text-xs text-text-secondary"
         >
           <option value="todas">Todas estaciones</option>
-          <option value="baqueira">Baqueira</option>
-          <option value="sierra_nevada">Sierra Nevada</option>
-          <option value="grandvalira">Grandvalira</option>
-          <option value="formigal">Formigal</option>
-          <option value="alto_campoo">Alto Campoo</option>
-          <option value="la_pinilla">La Pinilla</option>
+          {STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>
 

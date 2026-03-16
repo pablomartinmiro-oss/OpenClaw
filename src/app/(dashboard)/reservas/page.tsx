@@ -5,6 +5,7 @@ import { useReservations, useReservationStats } from "@/hooks/useReservations";
 import { StatsBar } from "./_components/StatsBar";
 import { ReservationList } from "./_components/ReservationList";
 import { ReservationForm } from "./_components/ReservationForm";
+import { ReservationDetail } from "./_components/ReservationDetail";
 import { WeeklyStats } from "./_components/WeeklyStats";
 import { VoucherStats } from "./_components/VoucherStats";
 
@@ -16,8 +17,13 @@ export default function ReservasPage() {
 
   const lastReservation = useMemo(() => {
     if (!reservations || reservations.length === 0) return null;
-    return reservations[0]; // newest first
+    return reservations[0];
   }, [reservations]);
+
+  const selectedReservation = useMemo(() => {
+    if (!selectedId || !reservations) return null;
+    return reservations.find((r) => r.id === selectedId) ?? null;
+  }, [selectedId, reservations]);
 
   return (
     <div className="flex h-[calc(100vh-5rem)] flex-col gap-4">
@@ -35,18 +41,25 @@ export default function ReservasPage() {
             reservations={reservations}
             loading={isLoading}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
           />
           <WeeklyStats stats={stats} />
         </div>
 
-        {/* Right panel: 65% */}
+        {/* Right panel: 65% — detail view or create form */}
         <div className="flex w-[65%] flex-col rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-          <ReservationForm
-            existingReservations={reservations}
-            lastReservation={lastReservation}
-            onCreated={() => {}}
-          />
+          {selectedReservation ? (
+            <ReservationDetail
+              reservation={selectedReservation}
+              onBack={() => setSelectedId(null)}
+            />
+          ) : (
+            <ReservationForm
+              existingReservations={reservations}
+              lastReservation={lastReservation}
+              onCreated={() => {}}
+            />
+          )}
         </div>
       </div>
     </div>

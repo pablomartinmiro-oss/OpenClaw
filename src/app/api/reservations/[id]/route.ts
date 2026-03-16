@@ -54,18 +54,30 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { status, notes, internalNotes, notificationType } = body as Record<string, unknown>;
+    const body = await request.json() as Record<string, unknown>;
+
+    const ALLOWED_FIELDS = [
+      "status", "notes", "internalNotes", "notificationType",
+      "clientName", "clientPhone", "clientEmail", "couponCode",
+      "station", "activityDate", "schedule", "language",
+      "totalPrice", "discount", "paymentMethod", "paymentRef",
+    ] as const;
 
     const updateData: Record<string, unknown> = {};
-    if (status !== undefined) updateData.status = status;
-    if (notes !== undefined) updateData.notes = notes;
-    if (internalNotes !== undefined) updateData.internalNotes = internalNotes;
-    if (notificationType !== undefined) updateData.notificationType = notificationType;
+    for (const field of ALLOWED_FIELDS) {
+      if (body[field] !== undefined) updateData[field] = body[field];
+    }
+    if (body.participants !== undefined) {
+      updateData.participants = JSON.parse(JSON.stringify(body.participants));
+    }
+    if (body.services !== undefined) {
+      updateData.services = JSON.parse(JSON.stringify(body.services));
+    }
 
     // Track notification sending
+    const status = updateData.status as string | undefined;
     if (status === "confirmada" || status === "sin_disponibilidad") {
-      if (notificationType) {
+      if (updateData.notificationType) {
         updateData.emailSentAt = new Date();
         updateData.whatsappSentAt = new Date();
       }

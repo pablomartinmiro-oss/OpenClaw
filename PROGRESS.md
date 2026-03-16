@@ -1,11 +1,11 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PRICING ENGINE COMPLETE
-- **Step:** Phase 1 (25/25) + Phase 2 (6/6) + Phase 3 (10/10) + Pricing Engine (13/13) — All complete
+- **Phase:** RESERVATION DETAIL VIEW COMPLETE
+- **Step:** Phase 1-3 + Pricing Engine + Auto-Pricing + Reservation Detail — All complete
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last deployed commit:** f78b7f9 (2026-03-16)
-- **Next:** Deploy pricing engine to Railway, connect real GHL sub-account
+- **Next:** Deploy to Railway, connect real GHL sub-account
 - **Date:** 2026-03-16
 
 ## What the App Does Today
@@ -174,6 +174,43 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 **Step 13b: Settings UI** ✅
 - SeasonCalendarCard: full CRUD for season periods, grouped by station, color-coded badges
 - PriceImportCard: shell with drag-and-drop zone (Excel/CSV), "Próximamente" notice
+
+### Phase J: Auto-Pricing & Reservation Detail (2026-03-16) ✅
+
+**Auto-Pricing in ReservationForm** ✅
+- Wired pricing engine into form: season detection, product matching, price breakdown
+- Service-to-category mapping (cursillo→escuela, forfait→forfait, etc.)
+- `effectivePrice` derived state pattern (useMemo, not useEffect) to avoid lint errors
+- Manual price override with "restore auto price" button
+
+**ReservationForm Split** ✅
+- Split 951-line form into 4 files under 300 lines each:
+  - `ReservationForm.tsx` (327 lines) — main form
+  - `ParticipantsTable.tsx` (113 lines) — participants grid
+  - `PriceBreakdown.tsx` (47 lines) — auto-calculated price display
+  - `pricing-helpers.ts` (70 lines) — service-to-product matching
+
+**CLAUDE.md Restructure** ✅
+- Split 330-line root CLAUDE.md into 4 scoped files:
+  - `CLAUDE.md` (74 lines) — project overview + non-negotiable rules
+  - `src/CLAUDE.md` (63 lines) — code patterns, imports, conventions
+  - `src/app/api/CLAUDE.md` (67 lines) — API route patterns, GHL sync
+  - `src/app/(dashboard)/CLAUDE.md` (55 lines) — design system, UI conventions
+
+**Reservation Detail View** ✅
+- `ReservationDetail.tsx` — full detail panel when clicking a reservation in the list
+- Status management (confirm, cancel, mark unavailable, revert to pending)
+- Client info with copy-to-clipboard, participants table, pricing summary
+- Inline notes editing with save
+- Notification history, linked quote display
+- Page toggles between create form and detail view based on selection
+
+**Enhanced PATCH API** ✅
+- Expanded `/api/reservations/[id]` PATCH to support all editable fields
+- Allowlist pattern: status, notes, client info, station, pricing, participants, services
+
+**Station Filter Fix** ✅
+- ReservationList station filter now uses shared STATIONS constant (includes Valdesquí)
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
