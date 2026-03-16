@@ -72,6 +72,34 @@ export async function GET() {
 
     const topStation = Object.entries(stationCounts).sort((a, b) => b[1] - a[1])[0];
 
+    // Daily volume for the current week (Mon-Sun)
+    const dailyVolume: { day: string; count: number; revenue: number }[] = [];
+    const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    const allWeekReservations = await prisma.reservation.findMany({
+      where: { tenantId, createdAt: { gte: weekStart, lt: weekEnd } },
+      select: { createdAt: true, totalPrice: true },
+    });
+    for (let d = 0; d < 7; d++) {
+      const dayStart = new Date(weekStart);
+      dayStart.setDate(dayStart.getDate() + d);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const dayRes = allWeekReservations.filter((r) => r.createdAt >= dayStart && r.createdAt < dayEnd);
+      dailyVolume.push({
+        day: DAY_LABELS[d],
+        count: dayRes.length,
+        revenue: dayRes.reduce((s, r) => s + r.totalPrice, 0),
+      });
+    }
+
+    // Recent reservations (last 5)
+    const recentReservations = await prisma.reservation.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, clientName: true, station: true, status: true, totalPrice: true, source: true, createdAt: true },
+    });
+
     log.info("Stats fetched");
     return NextResponse.json({
       today: { confirmed, noAvailability, pending, total },
@@ -82,6 +110,8 @@ export async function GET() {
         bySource: weeklyBySource,
         topStation: topStation ? { name: topStation[0], count: topStation[1] } : null,
       },
+      dailyVolume,
+      recentReservations,
     });
   } catch (error) {
     log.error({ error }, "Failed to fetch stats");

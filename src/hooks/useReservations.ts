@@ -61,6 +61,11 @@ export interface ReservationStats {
     bySource: Record<string, number>;
     topStation: { name: string; count: number } | null;
   };
+  dailyVolume: { day: string; count: number; revenue: number }[];
+  recentReservations: {
+    id: string; clientName: string; station: string; status: string;
+    totalPrice: number; source: string; createdAt: string;
+  }[];
 }
 
 export interface CapacityResult {

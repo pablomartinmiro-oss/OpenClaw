@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { FileText, Send, TrendingUp, Euro, Users, MessageCircle, BarChart3 } from "lucide-react";
+import { FileText, Send, TrendingUp, Euro, Users, MessageCircle, BarChart3, CalendarCheck, Snowflake } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "@/hooks/useQuotes";
+import { useReservationStats } from "@/hooks/useReservations";
 import { StatCard } from "./_components/StatCard";
+import { STATIONS } from "./reservas/_components/constants";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("es-ES", {
@@ -14,19 +16,22 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-const DESTINATION_LABELS: Record<string, string> = {
-  baqueira: "Baqueira",
-  sierra_nevada: "Sierra Nevada",
-  formigal: "Formigal",
-  alto_campoo: "Alto Campoo",
-  grandvalira: "Grandvalira",
-};
+function getStationLabel(value: string): string {
+  return STATIONS.find((s) => s.value === value)?.label ?? value;
+}
 
-const STATUS_COLORS: Record<string, string> = {
+const QUOTE_STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-soft-blue",
   en_proceso: "bg-gold",
   enviado: "bg-sage",
   aceptado: "bg-coral",
+};
+
+const RESERVATION_STATUS_COLORS: Record<string, string> = {
+  pendiente: "bg-gold",
+  confirmada: "bg-sage",
+  sin_disponibilidad: "bg-muted-red",
+  cancelada: "bg-gray-400",
 };
 
 interface DashboardStats {
@@ -56,22 +61,14 @@ function useDashboardStats() {
 export default function DashboardHome() {
   const { data: quotes, isLoading: quotesLoading } = useQuotes();
   const { data: dashStats, isLoading: statsLoading } = useDashboardStats();
+  const { data: resStats, isLoading: resStatsLoading } = useReservationStats();
 
   const allQuotes = useMemo(() => quotes ?? [], [quotes]);
   const isLive = dashStats?.mode === "live" && dashStats.stats;
 
-  const thisMonth = allQuotes.filter((q) => {
-    const d = new Date(q.createdAt);
-    const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-
   const sent = allQuotes.filter((q) => q.status === "enviado" || q.status === "aceptado");
   const accepted = allQuotes.filter((q) => q.status === "aceptado");
   const conversionRate = sent.length > 0 ? Math.round((accepted.length / sent.length) * 100) : 0;
-  const avgValue = sent.length > 0
-    ? sent.reduce((sum, q) => sum + q.totalAmount, 0) / sent.length
-    : 0;
 
   const byDestination = useMemo(() => {
     const map: Record<string, number> = {};
@@ -83,16 +80,11 @@ export default function DashboardHome() {
 
   const maxDestCount = Math.max(1, ...byDestination.map(([, c]) => c));
 
-  const byStatus = useMemo(() => {
-    const map: Record<string, number> = { nuevo: 0, en_proceso: 0, enviado: 0, aceptado: 0 };
-    for (const q of allQuotes) {
-      map[q.status] = (map[q.status] || 0) + 1;
-    }
-    return map;
-  }, [allQuotes]);
+  const dailyVolume = resStats?.dailyVolume ?? [];
+  const maxDayCount = Math.max(1, ...dailyVolume.map((d) => d.count));
 
-  const weeklyData = [3, 5, 4, 7, 2, 6, 4];
-  const recentQuotes = allQuotes.slice(0, 5);
+  const recentQuotes = allQuotes.slice(0, 3);
+  const recentReservations = resStats?.recentReservations ?? [];
 
   return (
     <div className="space-y-6">
@@ -111,96 +103,42 @@ export default function DashboardHome() {
       {/* GHL Live Stats — only shown in live mode */}
       {isLive && dashStats.stats && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            title="Contactos GHL"
-            value={dashStats.stats.totalContacts.toLocaleString("es-ES")}
-            description="en GoHighLevel"
-            icon={Users}
-            loading={statsLoading}
-            iconColor="text-coral"
-            iconBg="bg-coral-light"
-          />
-          <StatCard
-            title="Valor Pipeline"
-            value={formatCurrency(dashStats.stats.pipelineValue)}
-            description="oportunidades abiertas"
-            icon={BarChart3}
-            loading={statsLoading}
-            iconColor="text-sage"
-            iconBg="bg-sage-light"
-          />
-          <StatCard
-            title="Conversaciones Activas"
-            value={dashStats.stats.activeConversations}
-            description="últimos 7 días"
-            icon={MessageCircle}
-            loading={statsLoading}
-            iconColor="text-soft-blue"
-            iconBg="bg-soft-blue-light"
-          />
+          <StatCard title="Contactos GHL" value={dashStats.stats.totalContacts.toLocaleString("es-ES")} description="en GoHighLevel" icon={Users} loading={statsLoading} iconColor="text-coral" iconBg="bg-coral-light" />
+          <StatCard title="Valor Pipeline" value={formatCurrency(dashStats.stats.pipelineValue)} description="oportunidades abiertas" icon={BarChart3} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
+          <StatCard title="Conversaciones Activas" value={dashStats.stats.activeConversations} description="últimos 7 días" icon={MessageCircle} loading={statsLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" />
         </div>
       )}
 
-      {/* Quote KPI Cards */}
+      {/* Reservation + Quote KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Presupuestos Este Mes"
-          value={thisMonth.length}
-          description={`${allQuotes.length} total`}
-          icon={FileText}
-          loading={quotesLoading}
-          iconColor="text-coral"
-          iconBg="bg-coral-light"
-        />
-        <StatCard
-          title="Presupuestos Enviados"
-          value={sent.length}
-          description={`${byStatus.nuevo} pendientes`}
-          icon={Send}
-          loading={quotesLoading}
-          iconColor="text-soft-blue"
-          iconBg="bg-soft-blue-light"
-        />
-        <StatCard
-          title="Tasa de Conversión"
-          value={`${conversionRate}%`}
-          description={`${accepted.length} aceptados`}
-          icon={TrendingUp}
-          loading={quotesLoading}
-          iconColor="text-sage"
-          iconBg="bg-sage-light"
-        />
-        <StatCard
-          title="Valor Medio"
-          value={formatCurrency(avgValue)}
-          description="por presupuesto"
-          icon={Euro}
-          loading={quotesLoading}
-          iconColor="text-gold"
-          iconBg="bg-gold-light"
-        />
+        <StatCard title="Reservas Hoy" value={resStats?.today.total ?? 0} description={`${resStats?.today.confirmed ?? 0} confirmadas`} icon={CalendarCheck} loading={resStatsLoading} iconColor="text-coral" iconBg="bg-coral-light" />
+        <StatCard title="Ingresos Semanales" value={formatCurrency(resStats?.weekly.totalRevenue ?? 0)} description={`${resStats?.weekly.totalReservations ?? 0} reservas`} icon={Euro} loading={resStatsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
+        <StatCard title="Presupuestos" value={allQuotes.length} description={`${sent.length} enviados`} icon={FileText} loading={quotesLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" />
+        <StatCard title="Tasa Conversión" value={`${conversionRate}%`} description={`${accepted.length} aceptados`} icon={TrendingUp} loading={quotesLoading} iconColor="text-gold" iconBg="bg-gold-light" />
       </div>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Weekly volume */}
+        {/* Weekly volume — real data */}
         <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Volumen Semanal</h2>
-            <span className="text-xs text-text-secondary">Últimos 7 días</span>
+            <h2 className="text-base font-semibold text-text-primary">Reservas Esta Semana</h2>
+            <span className="text-xs text-text-secondary">{resStats?.weekly.totalReservations ?? 0} total</span>
           </div>
           <div className="flex h-48 items-end gap-1">
-            {weeklyData.map((val, i) => (
+            {dailyVolume.map((d, i) => (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                <span className="text-[10px] font-medium text-text-primary">{d.count > 0 ? d.count : ""}</span>
                 <div
                   className="w-full rounded-t-lg bg-gradient-to-t from-coral to-coral/40 transition-all"
-                  style={{ height: `${(val / 8) * 100}%` }}
+                  style={{ height: `${d.count > 0 ? Math.max((d.count / maxDayCount) * 100, 4) : 0}%` }}
                 />
-                <span className="text-[10px] text-text-secondary">
-                  {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"][i]}
-                </span>
+                <span className="text-[10px] text-text-secondary">{d.day}</span>
               </div>
             ))}
+            {dailyVolume.length === 0 && (
+              <div className="flex w-full items-center justify-center text-sm text-text-secondary">Sin datos</div>
+            )}
           </div>
         </div>
 
@@ -217,16 +155,11 @@ export default function DashboardHome() {
               return (
                 <div key={dest}>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-sm text-text-primary">
-                      {DESTINATION_LABELS[dest] || dest}
-                    </span>
+                    <span className="text-sm text-text-primary">{getStationLabel(dest)}</span>
                     <span className="text-xs font-medium text-text-secondary">{count}</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full ${colors[i % colors.length]} transition-all`}
-                      style={{ width: `${Math.max(pct, 4)}%` }}
-                    />
+                    <div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} />
                   </div>
                 </div>
               );
@@ -238,6 +171,36 @@ export default function DashboardHome() {
         </div>
       </div>
 
+      {/* Top station + source breakdown */}
+      {resStats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {resStats.weekly.topStation && (
+            <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-coral-light">
+                <Snowflake className="h-5 w-5 text-coral" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-text-secondary">Estación Más Activa</p>
+                <p className="text-lg font-bold text-text-primary">{getStationLabel(resStats.weekly.topStation.name)}</p>
+                <p className="text-xs text-text-secondary">{resStats.weekly.topStation.count} reservas esta semana</p>
+              </div>
+            </div>
+          )}
+          {Object.entries(resStats.weekly.bySource).map(([src, revenue]) => (
+            <div key={src} className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${src === "groupon" ? "bg-sage-light" : "bg-gold-light"}`}>
+                <Send className={`h-5 w-5 ${src === "groupon" ? "text-sage" : "text-gold"}`} />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-text-secondary capitalize">{src === "caja" ? "Venta en caja" : src === "groupon" ? "Groupon" : src}</p>
+                <p className="text-lg font-bold text-text-primary">{formatCurrency(revenue)}</p>
+                <p className="text-xs text-text-secondary">ingresos esta semana</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Recent Activity */}
       <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
         <div className="mb-4 flex items-center justify-between">
@@ -246,63 +209,52 @@ export default function DashboardHome() {
         <div className="space-y-3">
           {/* GHL recent activity */}
           {isLive && dashStats.stats?.recentOpportunities.map((opp) => (
-            <div
-              key={opp.id}
-              className="flex items-center justify-between rounded-lg border border-border p-3"
-            >
+            <div key={opp.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
                 <div className="h-2.5 w-2.5 rounded-full bg-sage" />
                 <div>
                   <p className="text-sm font-medium text-text-primary">{opp.name}</p>
-                  <p className="text-xs text-text-secondary">
-                    Oportunidad · {opp.status}
-                  </p>
+                  <p className="text-xs text-text-secondary">Oportunidad · {opp.status}</p>
                 </div>
               </div>
-              <span className="text-xs font-medium text-text-secondary">
-                {opp.monetaryValue ? formatCurrency(opp.monetaryValue) : "—"}
-              </span>
+              <span className="text-xs font-medium text-text-secondary">{opp.monetaryValue ? formatCurrency(opp.monetaryValue) : "—"}</span>
             </div>
           ))}
 
-          {/* Quote activity */}
-          {recentQuotes.map((quote) => {
-            const statusLabel: Record<string, string> = {
-              nuevo: "Nuevo",
-              en_proceso: "En Proceso",
-              enviado: "Enviado",
-              aceptado: "Aceptado",
-            };
-            return (
-              <div
-                key={quote.id}
-                className="flex items-center justify-between rounded-lg border border-border p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`h-2.5 w-2.5 rounded-full ${STATUS_COLORS[quote.status] || "bg-gray-400"}`}
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-text-primary">{quote.clientName}</p>
-                    <p className="text-xs text-text-secondary">
-                      {DESTINATION_LABELS[quote.destination]} ·{" "}
-                      {new Date(quote.createdAt).toLocaleDateString("es-ES", {
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </p>
-                  </div>
+          {/* Recent reservations */}
+          {recentReservations.map((r) => (
+            <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div className="flex items-center gap-3">
+                <div className={`h-2.5 w-2.5 rounded-full ${RESERVATION_STATUS_COLORS[r.status] ?? "bg-gray-400"}`} />
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{r.clientName}</p>
+                  <p className="text-xs text-text-secondary">
+                    Reserva · {getStationLabel(r.station)} · {new Date(r.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                  </p>
                 </div>
-                <span className="text-xs font-medium text-text-secondary">
-                  {statusLabel[quote.status] || quote.status}
-                </span>
               </div>
-            );
-          })}
-          {recentQuotes.length === 0 && !quotesLoading && !isLive && (
-            <p className="py-4 text-center text-sm text-text-secondary">
-              Sin actividad reciente
-            </p>
+              <span className="text-xs font-medium text-text-secondary">{formatCurrency(r.totalPrice)}</span>
+            </div>
+          ))}
+
+          {/* Recent quotes */}
+          {recentQuotes.map((quote) => (
+            <div key={quote.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div className="flex items-center gap-3">
+                <div className={`h-2.5 w-2.5 rounded-full ${QUOTE_STATUS_COLORS[quote.status] ?? "bg-gray-400"}`} />
+                <div>
+                  <p className="text-sm font-medium text-text-primary">{quote.clientName}</p>
+                  <p className="text-xs text-text-secondary">
+                    Presupuesto · {getStationLabel(quote.destination)} · {new Date(quote.createdAt).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-medium text-text-secondary">{formatCurrency(quote.totalAmount)}</span>
+            </div>
+          ))}
+
+          {recentReservations.length === 0 && recentQuotes.length === 0 && !quotesLoading && !resStatsLoading && !isLive && (
+            <p className="py-4 text-center text-sm text-text-secondary">Sin actividad reciente</p>
           )}
         </div>
       </div>
