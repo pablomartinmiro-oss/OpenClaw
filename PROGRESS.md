@@ -1,28 +1,28 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE S — Settings Seed Button + Catálogo Matrix View
-- **Step:** All phases A-R complete + seed button in Settings + expandable pricing matrix in Catálogo
+- **Phase:** PHASE S — Complete (19 phases shipped)
+- **Step:** All phases A-S complete. Full-featured CRM dashboard with 93-product catalog, expandable pricing, seed UI.
 - **Live URL:** https://crm-dash-prod.up.railway.app
-- **Last deployed commit:** fc2e8d0 (2026-03-16)
-- **Next:** Deploy to Railway, connect real GHL sub-account, set up Railway cron, test webhooks
+- **Last pushed commit:** 033fbd7 (2026-03-17)
+- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R+S not yet deployed
 - **Date:** 2026-03-17
 
 ## What the App Does Today
 
 A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies, built on GoHighLevel:
 
-1. **Auth & Multi-Tenant** — Register new companies, invite team members, 4 RBAC roles (Owner, Manager, Sales Rep, VA/Admin). Session-based auth via NextAuth v5 JWT.
+1. **Auth & Multi-Tenant** — Register new companies, invite team members, 4 RBAC roles (Owner, Manager, Sales Rep, VA/Admin). Session-based auth via NextAuth v5 JWT. Two demo accounts.
 2. **Dashboard** — Stats cards (contacts, pipeline value, conversations, today's reservations, weekly revenue), daily reservation volume chart, top station widget, source revenue breakdown, recent activity feed (reservations + quotes + GHL opportunities).
 3. **Contacts** — Searchable table with source/tag filters, detail page with inline editing (name, email, phone) + notes + delete. Live mode reads from synced cache.
 4. **Communications** — 3-panel chat (conversation list with mine/unassigned/unread filters, message thread, contact sidebar with full contact data). Conversation assignment via GHL API. Paginated API.
 5. **Pipeline** — Kanban board with drag-and-drop stage movement (@dnd-kit v6), opportunity detail modal with status badges, pipeline selector, value totals per stage. Paginated API.
-6. **Reservations** — Form + list with Groupon voucher integration (AI image reader via Claude API), voucher tracking stats. Inline editing of client info, station, date, notes. CSV export. Custom date range filter. Status management (confirm, cancel, mark unavailable). Client search autocomplete.
-7. **Presupuestos** — Quote CRUD with auto-package (season-aware pricing), line item editing, email preview with print/PDF, quote expiry badges, quote-to-reservation conversion.
-8. **Catálogo** — Product catalog CRUD with station filter, season toggle (Media/Alta), pricing matrix display, search, CSV bulk import with preview table.
-9. **Settings** — Mock/live toggle with sync status, GHL OAuth connection, team management with invites, Groupon product mappings, season calendar CRUD, CSV price import.
+6. **Reservations** — Form + list with Groupon voucher integration (AI image reader via Claude API), voucher tracking stats. Inline editing of client info, station, date, notes. CSV export. Custom date range filter. Status management (confirm, cancel, mark unavailable). Client search autocomplete. Participants table with baby/infantil/adulto types, SnowCamp services.
+7. **Presupuestos** — Quote CRUD with auto-package (season-aware pricing across 10 categories), line item editing, email preview with print/PDF, quote expiry badges, quote-to-reservation conversion. Upsell suggestions for après-ski, menu, locker, snowcamp, taxi.
+8. **Catálogo** — 93 products across 10 categories. Product CRUD with station filter, season toggle (Media/Alta), expandable pricing matrix (click chevron to see full 1-7 day prices for both seasons), private lesson hour×people matrix, bundle component display. Search, CSV bulk import with preview table.
+9. **Settings** — Mock/live toggle with sync status, GHL OAuth connection, team management with invites, Groupon product mappings, season calendar CRUD (7 periods), CSV price import, "Sembrar Catálogo" button to seed full 93-product catalog.
 10. **GHL Sync** — Full sync (paginated), incremental sync (cron), webhook real-time sync (12 event types), write-through with retry queue (SyncQueue).
-11. **Pricing Engine** — Season-aware pricing matrices (day-based + private lesson hour/people), auto-pricing in reservation form, manual override with restore.
+11. **Pricing Engine** — Season-aware pricing matrices (day-based + private lesson hour/people + bundle component aggregation), auto-pricing in reservation form, manual override with restore. 7 season periods (3 alta + 4 media).
 
 ## Completed Phases
 
@@ -132,7 +132,7 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Auth is now session + tenant only (no granular RBAC at API level)
 - Deployed to Railway: commit fc2e8d0
 
-### Phase R: Complete Product Catalog (2026-03-16) ✅
+### Phase R: Complete Product Catalog (2026-03-17) ✅
 - 93 products across 10 categories: alquiler (33), locker (4), escuela (6), clase_particular (5), forfait (10), menu (2), snowcamp (9), apreski (12), taxi (4), pack (8)
 - Full 2025/2026 season calendar with 7 periods (3 alta + 4 media)
 - New categories: menu, snowcamp, taxi, pack (bundle)
@@ -140,6 +140,7 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Seed endpoint: POST `/api/admin/seed-products`
 - La Pinilla products capped at 5 days, Baqueira has separate Sector Baqueira/Beret
 - Bundle packs store component references for dynamic price calculation
+- UI updated: ParticipantsTable with Baby type + SnowCamp services, auto-package with 5 upsell categories
 
 ### Phase S: Seed Button + Catálogo Matrix View (2026-03-17) ✅
 - "Sembrar Catálogo" button in Settings page (SeedCatalogCard) — triggers POST `/api/admin/seed-products`
@@ -159,13 +160,18 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Voucher section only visible when "CUPÓN GROUPON" source is selected
 - Cron endpoint (`/api/cron/sync`) needs Railway cron job configured (every 5 min)
 - Permission checks removed — auth is session-only (no granular RBAC at API level)
+- GHL OAuth tokens expire after 24h — auto-refresh works but hasn't been tested under real load
+- Mock mode contacts are hardcoded (20 contacts) — pagination returns max 101 via `limit` param
+- Phases R+S pushed to git but NOT yet deployed to Railway — need `git push` to trigger Railway deploy
+- Product catalog seed on Railway requires clicking "Sembrar Catálogo" in Settings after deploy (or `fetch('/api/admin/seed-products', {method:'POST'})` in browser console)
 
 ## Pending Work (Operational — Not Code)
+- **Deploy phases R+S to Railway** — push is done, Railway auto-deploys from main
+- **Seed catalog on live** — click "Sembrar Catálogo" in Settings after deploy
 - **Connect real GHL sub-account** via OAuth flow and test end-to-end live sync
 - **Set up Railway cron** for `/api/cron/sync` (every 5 minutes)
 - **Test webhook delivery** — register webhook URL in GHL marketplace app settings
 - **Email/WhatsApp delivery** — integrate Resend (email) + Twilio (WhatsApp) for real notifications
-- ~~**Seed real product prices**~~ — DONE: 93 products seeded via POST /api/admin/seed-products
 
 ## Key Decisions
 - **Prisma v7** requires adapter pattern — `@prisma/adapter-pg`
@@ -179,6 +185,8 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **@dnd-kit v6** for drag-and-drop — `useDraggable`/`useDroppable` (not sortable)
 - **Railway**: migrations at start time (not build), DATABASE_URL injected at runtime
 - **Cookie config explicit** for Railway's TLS proxy — `__Secure-` prefix when AUTH_URL is HTTPS
+- **Product tier naming**: "media"/"alta" (not "media_quality"/"alta_quality") — code handles both for backward compat
+- **Bundle products**: pricingMatrix stores `{ type: "bundle", components: ["slug1", ...] }` — price resolved from components
 
 ## Deployment Info
 - **Platform:** Railway (Docker)
@@ -190,12 +198,13 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 ## Auto-Audit Results
 
-### Phase Q Final Audit — Latest
+### Phase S Final Audit (2026-03-17) — Latest
 - ✅ Type Check: 0 errors
 - ✅ Build: compiled clean (48+ routes)
-- ✅ Deployed: commit fc2e8d0
+- ✅ Pushed: commit 033fbd7
 
 ### Previous Audits (all passed)
+- Phase Q: 0 errors, deployed fc2e8d0
 - Phase P: 0 type/lint errors, build clean
 - Phase N: 0 type/lint errors, build clean
 - Phase M: 0 type/lint errors, build clean

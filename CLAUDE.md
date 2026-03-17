@@ -10,7 +10,9 @@ You are an autonomous senior full-stack engineer building a multi-tenant Skicent
 - **Deploy:** Railway (Docker + Postgres + Redis)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Last deployed:** commit fc2e8d0 (2026-03-16)
+- **Last pushed:** commit 033fbd7 (2026-03-17) — phases R+S
+- **Last deployed:** commit fc2e8d0 (2026-03-16) — Railway auto-deploys from main
+- **Phases completed:** A through S (19 phases)
 
 ## Key Docs
 
@@ -55,6 +57,20 @@ You are an autonomous senior full-stack engineer building a multi-tenant Skicent
 - **Mock mode:** `MockGHLClient` (axios-style) returns fake data from `mock-server.ts`. Local CRUD (reservations, quotes, products) uses real Postgres.
 - **Live mode:** Reads from cache tables (CachedContact/Conversation/Opportunity/Pipeline). Writes go through `GHLClient` → GHL API → update cache. Failed writes queued to SyncQueue.
 - First switch to live triggers `fullSync(tenantId)`.
+- **GHL not yet connected** — no real sub-account OAuth flow tested. Token auto-refresh built but untested under load.
+
+## Product Catalog (Current State)
+
+- **93 products** across 10 categories: alquiler (33), locker (4), escuela (6), clase_particular (5), forfait (10), menu (2), snowcamp (9), apreski (12), taxi (4), pack (8)
+- **3 stations**: Baqueira Beret, Sierra Nevada, La Pinilla (equipment per-station, not "all")
+- **Season calendar**: 7 periods (3 alta: Navidades, Carnaval, Semana Santa; 4 media)
+- **Pricing matrices**: Day-based `{ media: { "1": 36, "2": 72 }, alta: {...} }`, private lessons `{ media: { "1h": { "1p": 70 } } }`
+- **Bundle products**: priceType "bundle", pricingMatrix `{ type: "bundle", components: ["slug1", ...] }` — price = sum of components
+- **Tier naming**: "media"/"alta" (code also handles legacy "media_quality"/"alta_quality")
+- **La Pinilla**: max 5 day pricing (not 7)
+- **Seed**: POST `/api/admin/seed-products` or "Sembrar Catálogo" button in Settings
+- **Catalog data file**: `src/lib/constants/product-catalog.ts` (buildFullCatalog function)
+- **Constants**: `src/lib/constants/skicenter.ts` (age brackets, skill levels)
 
 ## Voucher Reader (AI)
 
@@ -87,6 +103,16 @@ Warm/premium aesthetic inspired by kinso.ai:
 9. GHL tokens always encrypted via `lib/encryption.ts`
 10. API routes: session + tenant auth only (no `hasPermission()` checks — they were removed)
 
+## Known Issues
+
+- **GHL not connected** — OAuth flow built but no real sub-account connected yet
+- **GHL token expiry** — 24h refresh built in GHLClient but untested under real load
+- **Mock contacts hardcoded** — MockGHLClient returns 20 fake contacts; pagination uses `limit` param (max 101)
+- **Permission checks removed** — DB roles lack populated permissions → all API routes are session+tenant only
+- **Phases R+S not deployed** — pushed to git (033fbd7) but Railway last deployed fc2e8d0
+- **Cron not configured** — `/api/cron/sync` needs Railway cron job (every 5 min)
+- **ANTHROPIC_API_KEY** — must be set on Railway env vars for voucher reader
+
 ## Operating Mode
 
 - **Auto-audit** after every step: `tsc --noEmit` → `eslint src/` → `npm run build`
@@ -106,6 +132,35 @@ Warm/premium aesthetic inspired by kinso.ai:
 - Seed: `npx prisma db seed`
 - Login: `admin@demo.com` / `demo1234` (Owner), `sales@demo.com` / `demo1234` (Sales Rep)
 - Mock GHL: `ENABLE_MOCK_GHL=true`
+- Seed catalog on live: Settings → "Sembrar Catálogo" or `fetch('/api/admin/seed-products', {method:'POST'})`
+
+## File Structure (Key Directories)
+
+```
+src/
+├── app/
+│   ├── (auth)/          — login, register, onboarding
+│   ├── (dashboard)/     — all main pages (/, contacts, comms, pipeline, reservas, presupuestos, catalogo, settings)
+│   └── api/             — 32+ route files (auth, crm, admin, products, quotes, reservations, pricing, settings, voucher, health)
+├── components/
+│   ├── layout/          — Sidebar, Topbar, MobileNav
+│   ├── shared/          — RoleGate, EmptyState, ErrorBoundary
+│   └── ui/              — shadcn/ui components
+├── hooks/               — React Query hooks (useGHL, useReservations, useQuotes, useProducts, usePricing, useSettings, useVoucher, useSeasonCalendar, usePermissions)
+├── lib/
+│   ├── auth/            — NextAuth config, permissions
+│   ├── cache/           — Redis client, keys, TTLs
+│   ├── constants/       — product-catalog.ts (93 products), skicenter.ts (age brackets, skill levels)
+│   ├── data/            — getDataMode.ts
+│   ├── ghl/             — GHLClient (live), MockGHLClient, sync service
+│   ├── pricing/         — types.ts, client.ts (pure), calculator.ts (server)
+│   └── quotes/          — auto-package.ts (season-aware quote builder)
+├── generated/prisma/    — Prisma generated client (do not edit)
+prisma/
+├── schema.prisma        — 20+ models
+├── seed.ts              — Demo data seeder (imports buildFullCatalog)
+└── migrations/          — 4 migrations
+```
 
 ## Future Work (NOT NOW)
 

@@ -75,8 +75,8 @@ Tenant (company)
   ├── ModuleConfigs (per-module settings)
   ├── Reservations (with voucher tracking fields)
   ├── Quotes + QuoteItems
-  ├── Products (catalog, with pricingMatrix JSON for season-aware pricing)
-  ├── SeasonCalendar (alta/media season periods per station)
+  ├── Products (93 products, 10 categories, with pricingMatrix JSON)
+  ├── SeasonCalendar (7 periods: 3 alta + 4 media)
   ├── GrouponProductMappings (regex → services mapping)
   ├── StationCapacity (per station/date)
   ├── Notifications
@@ -179,10 +179,17 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 - Aggregates: pendientes, canjeados, ingresos, caducan semana/mes
 - Groupon product mapping: regex → services CRUD in Settings
 
-## Pricing Engine
+## Product Catalog & Pricing Engine
+
+### Catalog Structure (93 products)
+- **10 categories**: alquiler (33), locker (4), escuela (6), clase_particular (5), forfait (10), menu (2), snowcamp (9), apreski (12), taxi (4), pack (8)
+- **3 stations**: baqueira, sierra_nevada, la_pinilla (equipment per-station)
+- **Catalog data**: `src/lib/constants/product-catalog.ts` — `buildFullCatalog()` generates all products
+- **Seed**: POST `/api/admin/seed-products` or Settings → "Sembrar Catálogo"
+- **Constants**: `src/lib/constants/skicenter.ts` (age brackets, skill levels)
 
 ### Season-Aware Pricing
-- `SeasonCalendar` table defines alta/media periods per station (or "all" for global)
+- `SeasonCalendar` table: 7 periods (3 alta: Navidades, Carnaval, Semana Santa; 4 media)
 - Default season is "media" when no matching entry found
 - Server-side: `getSeason(tenantId, station, date)` queries DB
 - Client-side: `getSeasonFromCalendar(entries, station, date)` uses pre-fetched data
@@ -190,11 +197,18 @@ VoucherSection (drop zone / manual) → ReservationForm state → POST /api/rese
 ### Pricing Matrices (JSON in Product.pricingMatrix)
 - **Day-based** (equipment, forfaits, lockers): `{ media: { "1": 36, "2": 60 }, alta: { "1": 42 } }`
 - **Private lessons** (hour+people): `{ media: { "1h": { "1p": 70, "2p": 75 } } }`
+- **Bundles** (packs): `{ type: "bundle", components: ["forfait_adulto", "equipo_adulto"] }` — price = sum of components
+- La Pinilla products max 5 days, Baqueira/Sierra Nevada max 7 days
 
 ### Client/Server Split (CRITICAL)
 - `src/lib/pricing/calculator.ts` — server-side, imports Prisma
-- `src/lib/pricing/client.ts` — client-safe, pure functions
+- `src/lib/pricing/client.ts` — client-safe, pure functions (getDayPrice, getPrivateLessonPrice, getProductPrice, getBundleComponents)
 - Client hooks import from `client.ts`, never from `calculator.ts` (avoids Prisma in client bundle)
+
+### Auto-Package (Quotes)
+- `src/lib/quotes/auto-package.ts` — generates quote items from form data + products
+- Season-aware: uses pricing matrices for correct day-based rates
+- Upsell suggestions: après-ski, menu, locker, snowcamp, taxi categories
 
 ## React Query Hooks
 
@@ -225,6 +239,7 @@ All in `src/hooks/` — use `fetchJSON<T>()` helper that throws on non-ok:
 - Every mutation is optimistic — update UI immediately, rollback on error
 - Drag-and-drop: @dnd-kit v6 (`useDraggable`/`useDroppable`, PointerSensor 8px)
 - All UI text in SPANISH, all currency in EUR via `Intl.NumberFormat`
+- Expandable rows: ProductTable uses chevron toggle to show full pricing matrix
 
 ## Modules
 
@@ -234,14 +249,15 @@ All in `src/hooks/` — use `fetchJSON<T>()` helper that throws on non-ok:
 | Contacts | `/contacts` | Table + detail with inline edit + notes + delete |
 | Comms | `/comms` | 3-panel chat, conversation assignment, contact sidebar |
 | Pipeline | `/pipeline` | Kanban DnD, opportunity modal, pipeline selector |
-| Reservas | `/reservas` | Form + list, Groupon voucher, auto-pricing, CSV export, date range filter |
-| Presupuestos | `/presupuestos` | Quote CRUD, auto-package, print/PDF, expiry badges, convert to reservation |
-| Catálogo | `/catalogo` | Product table, season toggle, station filter, expandable pricing matrix, CSV import |
+| Reservas | `/reservas` | Form + list, Groupon voucher, auto-pricing, CSV export, date range filter, participants table |
+| Presupuestos | `/presupuestos` | Quote CRUD, auto-package (10 categories), print/PDF, expiry badges, convert to reservation |
+| Catálogo | `/catalogo` | 93 products, season toggle, station filter, expandable pricing matrix, CSV import |
 | Settings | `/settings` | Data mode, GHL OAuth, team, season calendar, price import, Groupon mappings, catalog seed |
 
 ## Railway Deployment
 - **Build:** `npm install` → postinstall (`prisma generate`) → `npm run build`
 - **Start:** `npm start` → `prisma migrate deploy` → `prisma db seed` → `next start`
 - **Key constraint:** `prisma migrate deploy` runs at start (not build) — DATABASE_URL injected at runtime
-- **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool
+- **Seed script** (`prisma/seed.ts`): uses `@prisma/adapter-pg` + `pg` Pool, imports `buildFullCatalog` from product-catalog.ts
 - **Prisma config** (`prisma.config.ts`): defines seed command — Prisma v7 ignores `package.json`
+- **Auto-deploy:** Railway watches `main` branch — push triggers build+deploy
