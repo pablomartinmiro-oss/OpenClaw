@@ -2,13 +2,12 @@
 
 import { useMemo, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTenantSettings, useTeam, useUpdateUserRole, useUpdateDataMode, useInviteTeamMember } from "@/hooks/useSettings";
+import { useTenantSettings, useTeam, useUpdateUserRole, useInviteTeamMember } from "@/hooks/useSettings";
 import { usePermissions } from "@/hooks/usePermissions";
 import { RoleGate } from "@/components/shared/RoleGate";
 import { GHLConnectionCard } from "./_components/GHLConnectionCard";
 import { TenantInfoCard } from "./_components/TenantInfoCard";
 import { TeamTable } from "./_components/TeamTable";
-import { DataModeCard } from "./_components/DataModeCard";
 import { TeamInviteCard } from "./_components/TeamInviteCard";
 import { GrouponMappingCard } from "./_components/GrouponMappingCard";
 import { SeasonCalendarCard } from "./_components/SeasonCalendarCard";
@@ -37,7 +36,6 @@ export default function SettingsPage() {
   const { data: tenantData, isLoading: tenantLoading } = useTenantSettings();
   const { data: teamData, isLoading: teamLoading } = useTeam();
   const updateRole = useUpdateUserRole();
-  const updateDataMode = useUpdateDataMode();
   const inviteMember = useInviteTeamMember();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
 
@@ -53,13 +51,6 @@ export default function SettingsPage() {
         onError: () => toast.error("Error al actualizar el rol"),
       }
     );
-  }
-
-  function handleDataModeChange(mode: "mock" | "live") {
-    updateDataMode.mutate(mode, {
-      onSuccess: () => toast.success(mode === "live" ? "Modo real activado" : "Modo demo activado"),
-      onError: (err) => toast.error(err.message),
-    });
   }
 
   function handleInvite(email: string) {
@@ -85,16 +76,6 @@ export default function SettingsPage() {
       </div>
 
       <RoleGate permission="settings:tenant">
-        {/* Data Mode Toggle — prominent, at top */}
-        <DataModeCard
-          dataMode={(tenant?.dataMode as "mock" | "live") ?? "mock"}
-          ghlConnected={!!tenant?.ghlLocationId}
-          loading={tenantLoading}
-          onToggle={handleDataModeChange}
-          isPending={updateDataMode.isPending}
-          syncStatus={tenantData?.syncStatus}
-        />
-
         <div className="grid gap-6 lg:grid-cols-2">
           <TenantInfoCard
             name={tenant?.name ?? ""}

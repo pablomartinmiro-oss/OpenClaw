@@ -12,10 +12,6 @@ export async function GET() {
   const tenantId = session.user.tenantId;
   const mode = await getDataMode(tenantId);
 
-  if (mode === "mock") {
-    return NextResponse.json({ mode: "mock", stats: null });
-  }
-
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const [
@@ -50,7 +46,7 @@ export async function GET() {
   ]);
 
   return NextResponse.json({
-    mode: "live",
+    mode,
     stats: {
       totalContacts,
       pipelineValue: pipelineValueResult._sum.monetaryValue ?? 0,

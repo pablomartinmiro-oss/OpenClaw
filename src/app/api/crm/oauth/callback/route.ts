@@ -4,6 +4,7 @@ import { exchangeCodeForTokens, verifyOAuthState } from "@/lib/ghl/oauth";
 import { encrypt } from "@/lib/encryption";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { fullSync } from "@/lib/ghl/sync";
 
 export async function GET(req: NextRequest) {
   const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || req.url;
@@ -78,6 +79,11 @@ export async function GET(req: NextRequest) {
     });
 
     log.info({ locationId: tokens.locationId }, "GHL connected successfully");
+
+    // Trigger initial sync in background — data available on first dashboard load
+    fullSync(tenantId).catch((err) => {
+      log.error({ error: err }, "Background full sync after OAuth failed");
+    });
 
     // Redirect based on where the flow started
     const successUrl = origin === "settings"

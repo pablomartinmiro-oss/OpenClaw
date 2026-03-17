@@ -16,7 +16,6 @@ interface TenantSettings {
   onboardingComplete: boolean;
   onboardingDismissed: boolean;
   isDemo: boolean;
-  dataMode: string;
   isActive: boolean;
   createdAt: string;
   syncState: string | null;
@@ -97,28 +96,6 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
-    },
-  });
-}
-
-export function useUpdateDataMode() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (dataMode: "mock" | "live") => {
-      const res = await fetch("/api/settings/tenant", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataMode }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Failed to update data mode");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tenant-settings"] });
     },
   });
 }

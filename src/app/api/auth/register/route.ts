@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
         data: {
           name: companyName,
           slug,
-          dataMode: "mock",
           onboardingComplete: false,
         },
       });

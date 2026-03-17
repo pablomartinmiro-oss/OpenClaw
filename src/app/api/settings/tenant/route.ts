@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { fullSync } from "@/lib/ghl/sync";
 
 export async function GET() {
   const session = await auth();
@@ -27,7 +26,6 @@ export async function GET() {
           onboardingComplete: true,
           onboardingDismissed: true,
           isDemo: true,
-          dataMode: true,
           isActive: true,
           syncState: true,
           syncProgressMsg: true,
@@ -61,48 +59,17 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { dataMode, onboardingDismissed } = body as { dataMode?: string; onboardingDismissed?: boolean };
-
-    if (dataMode !== undefined && dataMode !== "mock" && dataMode !== "live") {
-      return NextResponse.json({ error: "dataMode must be 'mock' or 'live'" }, { status: 400 });
-    }
-
-    // If switching to live, check GHL is connected
-    if (dataMode === "live") {
-      const tenant = await prisma.tenant.findUnique({
-        where: { id: tenantId },
-        select: { ghlAccessToken: true },
-      });
-      if (!tenant?.ghlAccessToken) {
-        return NextResponse.json({ error: "Conecta GoHighLevel antes de activar el modo real" }, { status: 400 });
-      }
-    }
+    const { onboardingDismissed } = body as { onboardingDismissed?: boolean };
 
     const updated = await prisma.tenant.update({
       where: { id: tenantId },
       data: {
-        ...(dataMode !== undefined ? { dataMode } : {}),
         ...(onboardingDismissed !== undefined ? { onboardingDismissed } : {}),
       },
-      select: { id: true, dataMode: true, onboardingDismissed: true },
+      select: { id: true, onboardingDismissed: true },
     });
 
-    // Trigger full sync when switching to live for the first time
-    if (dataMode === "live") {
-      const syncStatus = await prisma.syncStatus.findUnique({
-        where: { tenantId },
-      });
-
-      if (!syncStatus?.lastFullSync) {
-        log.info({ tenantId }, "First time live mode — triggering full sync");
-        // Run sync in background (don't block the response)
-        fullSync(tenantId).catch((err) => {
-          log.error({ tenantId, error: err }, "Background full sync failed");
-        });
-      }
-    }
-
-    log.info({ dataMode: updated.dataMode }, "Tenant settings updated");
+    log.info("Tenant settings updated");
     return NextResponse.json({ tenant: updated });
   } catch (error) {
     log.error({ error }, "Failed to update tenant settings");

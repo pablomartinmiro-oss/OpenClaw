@@ -17,9 +17,9 @@ export async function GET() {
     // 1. Process sync queue (failed writes)
     await processSyncQueue();
 
-    // 2. Find all tenants in live mode
+    // 2. Find all tenants with GHL connected
     const liveTenants = await prisma.tenant.findMany({
-      where: { dataMode: "live", isActive: true },
+      where: { ghlAccessToken: { not: null }, isActive: true, isDemo: false },
       select: { id: true, name: true },
     });
 
