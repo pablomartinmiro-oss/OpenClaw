@@ -27,4 +27,5 @@ export interface SessionUser {
   roleName: string;
   permissions: PermissionKey[];
   onboardingComplete: boolean;
+  isDemo: boolean;
 }

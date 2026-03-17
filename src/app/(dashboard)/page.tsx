@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useReservationStats } from "@/hooks/useReservations";
 import { StatCard } from "./_components/StatCard";
+import { OnboardingCards } from "./_components/OnboardingCards";
 import { STATIONS } from "./reservas/_components/constants";
 
 function formatCurrency(value: number): string {
@@ -99,6 +100,9 @@ export default function DashboardHome() {
           )}
         </p>
       </div>
+
+      {/* Onboarding cards for new real tenants */}
+      <OnboardingCards />
 
       {/* GHL Live Stats — only shown in live mode */}
       {isLive && dashStats.stats && (

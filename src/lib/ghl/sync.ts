@@ -112,6 +112,10 @@ export async function fullSync(
     create: { tenantId, syncInProgress: true },
     update: { syncInProgress: true, lastError: null },
   });
+  await prisma.tenant.update({
+    where: { id: tenantId },
+    data: { syncState: "syncing", syncProgressMsg: "Iniciando sincronización...", lastSyncError: null },
+  });
 
   try {
     const ghl = await getGHLClient(tenantId);
@@ -155,6 +159,15 @@ export async function fullSync(
         syncInProgress: false,
       },
     });
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        syncState: "complete",
+        syncProgressMsg: `${progress.contacts} contactos, ${progress.conversations} conversaciones, ${progress.opportunities} oportunidades`,
+        lastSyncAt: new Date(),
+        lastSyncError: null,
+      },
+    });
 
     log.info(
       { tenantId, ...progress },
@@ -169,6 +182,10 @@ export async function fullSync(
     await prisma.syncStatus.update({
       where: { tenantId },
       data: { syncInProgress: false, lastError: msg },
+    });
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { syncState: "error", lastSyncError: msg },
     });
 
     log.error({ tenantId, error: msg }, "Full sync failed");
@@ -213,6 +230,13 @@ async function syncAllContacts(
     }
 
     onProgress?.(progress);
+
+    // Update tenant sync progress for UI polling
+    const totalLabel = progress.contactsTotal ? `/${progress.contactsTotal}` : "";
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { syncProgressMsg: `Contactos: ${progress.contacts}${totalLabel}` },
+    });
 
     // GHL pagination uses startAfterId or startAfter
     if (res.meta?.startAfterId) {

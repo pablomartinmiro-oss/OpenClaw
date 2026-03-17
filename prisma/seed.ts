@@ -2,6 +2,14 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcryptjs";
 import { buildFullCatalog, SEASON_CALENDAR } from "../src/lib/constants/product-catalog";
+import {
+  DEMO_CONTACTS,
+  DEMO_RESERVATIONS,
+  DEMO_QUOTES,
+  DEMO_DEALS,
+  DEMO_CONVERSATIONS,
+  DEMO_CAPACITY,
+} from "../src/lib/constants/demo-seed-data";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -41,44 +49,13 @@ const DEFAULT_ROLES: Record<string, string[]> = {
   ],
 };
 
-// ==================== MOCK QUOTES ====================
-const MOCK_QUOTES = [
-  { clientName: "María García López", clientEmail: "maria.garcia@email.com", clientPhone: "+34 612 345 678", clientNotes: "Primera vez esquiando. Quieren algo cómodo y con clases para los niños.", destination: "baqueira", checkIn: new Date("2026-03-20"), checkOut: new Date("2026-03-25"), adults: 2, children: 2, wantsAccommodation: false, wantsForfait: true, wantsClases: true, wantsEquipment: true, status: "nuevo" },
-  { clientName: "Carlos Fernández", clientEmail: "carlos.f@email.com", clientPhone: "+34 678 901 234", clientNotes: "Grupo de amigos, nivel intermedio.", destination: "sierra_nevada", checkIn: new Date("2026-04-01"), checkOut: new Date("2026-04-04"), adults: 4, children: 0, wantsAccommodation: false, wantsForfait: true, wantsClases: false, wantsEquipment: true, status: "nuevo" },
-  { clientName: "Ana Martínez Ruiz", clientEmail: "ana.martinez@email.com", clientPhone: "+34 655 123 456", clientNotes: "Viaje de pareja.", destination: "baqueira", checkIn: new Date("2026-03-28"), checkOut: new Date("2026-03-31"), adults: 2, children: 0, wantsAccommodation: false, wantsForfait: false, wantsClases: false, wantsEquipment: true, status: "en_proceso" },
-  { clientName: "Pedro Sánchez Gómez", clientEmail: "pedro.sg@email.com", clientPhone: "+34 699 876 543", clientNotes: "Familia con presupuesto ajustado.", destination: "formigal", checkIn: new Date("2026-04-05"), checkOut: new Date("2026-04-10"), adults: 2, children: 3, wantsAccommodation: false, wantsForfait: false, wantsClases: true, wantsEquipment: true, status: "nuevo" },
-  { clientName: "Laura Díaz Navarro", clientEmail: "laura.diaz@email.com", clientPhone: "+34 633 456 789", clientNotes: "Solo quieren alquiler.", destination: "alto_campoo", checkIn: new Date("2026-03-22"), checkOut: new Date("2026-03-24"), adults: 3, children: 1, wantsAccommodation: false, wantsForfait: false, wantsClases: false, wantsEquipment: true, status: "enviado" },
-  { clientName: "Javier Romero Torres", clientEmail: "javi.romero@email.com", clientPhone: "+34 611 222 333", clientNotes: "Viaje de empresa. 6 adultos.", destination: "sierra_nevada", checkIn: new Date("2026-04-12"), checkOut: new Date("2026-04-15"), adults: 6, children: 0, wantsAccommodation: false, wantsForfait: true, wantsClases: false, wantsEquipment: true, status: "nuevo" },
-];
-
-async function main() {
-  const tenant = await prisma.tenant.upsert({
-    where: { slug: "demo" },
-    update: {},
-    create: { name: "Skicenter Spain", slug: "demo", onboardingComplete: true },
-  });
-
-  const roles = {
-    owner: await prisma.role.upsert({ where: { name_tenantId: { name: "Owner / Manager", tenantId: tenant.id } }, update: {}, create: { name: "Owner / Manager", tenantId: tenant.id, isSystem: true, permissions: DEFAULT_ROLES["Owner / Manager"] } }),
-    sales: await prisma.role.upsert({ where: { name_tenantId: { name: "Sales Rep", tenantId: tenant.id } }, update: {}, create: { name: "Sales Rep", tenantId: tenant.id, isSystem: true, permissions: DEFAULT_ROLES["Sales Rep"] } }),
-    marketing: await prisma.role.upsert({ where: { name_tenantId: { name: "Marketing", tenantId: tenant.id } }, update: {}, create: { name: "Marketing", tenantId: tenant.id, isSystem: true, permissions: DEFAULT_ROLES["Marketing"] } }),
-    va: await prisma.role.upsert({ where: { name_tenantId: { name: "VA / Admin", tenantId: tenant.id } }, update: {}, create: { name: "VA / Admin", tenantId: tenant.id, isSystem: true, permissions: DEFAULT_ROLES["VA / Admin"] } }),
-  };
-
-  await prisma.user.upsert({ where: { email_tenantId: { email: "admin@demo.com", tenantId: tenant.id } }, update: {}, create: { email: "admin@demo.com", name: "Demo Admin", passwordHash: await hash("demo1234", 12), tenantId: tenant.id, roleId: roles.owner.id } });
-  await prisma.user.upsert({ where: { email_tenantId: { email: "sales@demo.com", tenantId: tenant.id } }, update: {}, create: { email: "sales@demo.com", name: "Demo Sales Rep", passwordHash: await hash("demo1234", 12), tenantId: tenant.id, roleId: roles.sales.id } });
-
-  for (const mod of ["comms", "pipelines", "analytics", "contacts"]) {
-    await prisma.moduleConfig.upsert({ where: { tenantId_module: { tenantId: tenant.id, module: mod } }, update: {}, create: { tenantId: tenant.id, module: mod, isEnabled: true } });
-  }
-
-  // ==================== PRODUCTS (Full 2025/2026 Catalog) ====================
+async function seedProducts(tenantId: string) {
   const PRODUCTS = buildFullCatalog();
-  await prisma.product.deleteMany({ where: { tenantId: tenant.id } });
+  await prisma.product.deleteMany({ where: { tenantId } });
   for (const product of PRODUCTS) {
     await prisma.product.create({
       data: {
-        tenantId: tenant.id,
+        tenantId,
         category: product.category,
         name: product.name,
         station: product.station,
@@ -94,14 +71,15 @@ async function main() {
       },
     });
   }
-  console.log(`Seeded ${PRODUCTS.length} products (complete 2025/2026 Skicenter catalog)`);
+  return PRODUCTS.length;
+}
 
-  // ==================== SEASON CALENDAR ====================
-  await prisma.seasonCalendar.deleteMany({ where: { tenantId: tenant.id } });
+async function seedSeasonCalendar(tenantId: string) {
+  await prisma.seasonCalendar.deleteMany({ where: { tenantId } });
   for (const entry of SEASON_CALENDAR) {
     await prisma.seasonCalendar.create({
       data: {
-        tenantId: tenant.id,
+        tenantId,
         station: entry.station,
         season: entry.season,
         startDate: new Date(entry.startDate),
@@ -110,53 +88,313 @@ async function main() {
       },
     });
   }
-  console.log(`Seeded ${SEASON_CALENDAR.length} season calendar entries`);
+  return SEASON_CALENDAR.length;
+}
 
-  // ==================== MOCK QUOTES ====================
-  const existingQuotes = await prisma.quote.count({ where: { tenantId: tenant.id } });
-  if (existingQuotes === 0) {
-    for (const quote of MOCK_QUOTES) {
-      await prisma.quote.create({ data: { tenantId: tenant.id, ...quote } });
-    }
-    console.log(`Seeded ${MOCK_QUOTES.length} mock quotes`);
-  }
+async function seedDemoData(tenantId: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // ==================== MOCK RESERVATIONS ====================
-  const existingReservations = await prisma.reservation.count({ where: { tenantId: tenant.id } });
-  if (existingReservations === 0) {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-    const MOCK_RESERVATIONS = [
-      { clientName: "Elena Rodríguez", clientPhone: "+34 611 223 344", clientEmail: "elena.r@email.com", couponCode: "GRP-8834", source: "groupon", station: "baqueira", activityDate: today, schedule: "10:00-13:00", totalPrice: 183, status: "confirmada", paymentMethod: "groupon", notes: "Principiante absoluta", emailSentAt: new Date(), whatsappSentAt: new Date(), notificationType: "confirmacion" },
-      { clientName: "Roberto Jiménez", clientPhone: "+34 622 334 455", clientEmail: "roberto.j@email.com", couponCode: "GRP-9921", source: "groupon", station: "baqueira", activityDate: today, schedule: "10:00-13:00", totalPrice: 183, status: "confirmada", paymentMethod: "groupon", emailSentAt: new Date(), whatsappSentAt: new Date(), notificationType: "confirmacion" },
-      { clientName: "Fernando Vega", clientPhone: "+34 644 556 677", clientEmail: "fernando.v@email.com", couponCode: "GRP-5567", source: "groupon", station: "baqueira", activityDate: tomorrow, schedule: "10:00-13:00", totalPrice: 275, status: "pendiente", paymentMethod: "groupon" },
-      { clientName: "Diego Navarro", clientPhone: "+34 666 778 899", clientEmail: "diego.n@email.com", source: "caja", station: "sierra_nevada", activityDate: today, schedule: "10:00-14:00", totalPrice: 120, status: "confirmada", paymentMethod: "efectivo", emailSentAt: new Date(), notificationType: "confirmacion" },
-      { clientName: "Patricia Herrera", clientPhone: "+34 688 990 011", clientEmail: "patricia.h@email.com", source: "caja", station: "baqueira", activityDate: tomorrow, schedule: "10:00-13:00", totalPrice: 275, status: "pendiente" },
-    ];
-    for (const reservation of MOCK_RESERVATIONS) {
-      await prisma.reservation.create({ data: { tenantId: tenant.id, ...reservation } });
-    }
-    console.log(`Seeded ${MOCK_RESERVATIONS.length} reservations`);
+  // ==================== CONTACTS (50 as CachedContacts) ====================
+  await prisma.cachedContact.deleteMany({ where: { tenantId } });
+  const contactIds: string[] = [];
+  for (let i = 0; i < DEMO_CONTACTS.length; i++) {
+    const c = DEMO_CONTACTS[i];
+    const id = `demo-contact-${String(i).padStart(3, "0")}`;
+    contactIds.push(id);
+    await prisma.cachedContact.create({
+      data: {
+        id,
+        tenantId,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        name: `${c.firstName} ${c.lastName}`,
+        email: c.email,
+        phone: c.phone,
+        tags: c.tags,
+        source: c.source,
+        dateAdded: new Date(today.getTime() - Math.random() * 30 * 86400000),
+        lastActivity: new Date(today.getTime() - Math.random() * 7 * 86400000),
+        dnd: false,
+        raw: {},
+        cachedAt: new Date(),
+      },
+    });
   }
+  console.log(`Seeded ${contactIds.length} demo contacts`);
+
+  // ==================== RESERVATIONS (50) ====================
+  await prisma.reservation.deleteMany({ where: { tenantId } });
+  for (const r of DEMO_RESERVATIONS) {
+    const c = DEMO_CONTACTS[r.contactIndex];
+    const activityDate = new Date(today);
+    activityDate.setDate(activityDate.getDate() + r.daysOffset);
+
+    await prisma.reservation.create({
+      data: {
+        tenantId,
+        ghlContactId: contactIds[r.contactIndex],
+        clientName: `${c.firstName} ${c.lastName}`,
+        clientPhone: c.phone,
+        clientEmail: c.email,
+        couponCode: r.couponCode ?? null,
+        source: r.source,
+        station: r.station,
+        activityDate,
+        schedule: r.schedule,
+        totalPrice: r.totalPrice,
+        status: r.status,
+        paymentMethod: r.paymentMethod ?? null,
+        notes: r.notes ?? null,
+        services: [{ type: r.services, quantity: 1 }],
+        emailSentAt: r.status === "confirmada" ? new Date() : null,
+        whatsappSentAt: r.status === "confirmada" ? new Date() : null,
+        notificationType: r.status === "confirmada" ? "confirmacion" : null,
+        voucherCouponCode: r.couponCode ?? null,
+        voucherRedeemed: r.source === "groupon" && r.status === "confirmada",
+        voucherRedeemedAt:
+          r.source === "groupon" && r.status === "confirmada"
+            ? new Date()
+            : null,
+        voucherPricePaid:
+          r.source === "groupon" ? r.totalPrice : null,
+      },
+    });
+  }
+  console.log(`Seeded ${DEMO_RESERVATIONS.length} demo reservations`);
+
+  // ==================== QUOTES (12) ====================
+  await prisma.quote.deleteMany({ where: { tenantId } });
+  for (const q of DEMO_QUOTES) {
+    const c = DEMO_CONTACTS[q.contactIndex];
+    const checkIn = new Date(today);
+    checkIn.setDate(checkIn.getDate() + q.checkIn);
+    const checkOut = new Date(today);
+    checkOut.setDate(checkOut.getDate() + q.checkOut);
+
+    await prisma.quote.create({
+      data: {
+        tenantId,
+        ghlContactId: contactIds[q.contactIndex],
+        clientName: `${c.firstName} ${c.lastName}`,
+        clientEmail: c.email,
+        clientPhone: c.phone,
+        clientNotes: q.notes ?? null,
+        destination: q.destination,
+        checkIn,
+        checkOut,
+        adults: q.adults,
+        children: q.children,
+        wantsForfait: q.wantsForfait,
+        wantsClases: q.wantsClases,
+        wantsEquipment: q.wantsEquipment,
+        status: q.status,
+        totalAmount: q.totalAmount,
+        sentAt: q.status === "enviado" || q.status === "aceptado"
+          ? new Date(today.getTime() - 86400000)
+          : null,
+        expiresAt: new Date(today.getTime() + 14 * 86400000),
+      },
+    });
+  }
+  console.log(`Seeded ${DEMO_QUOTES.length} demo quotes`);
+
+  // ==================== PIPELINE (25 deals) ====================
+  await prisma.cachedPipeline.deleteMany({ where: { tenantId } });
+  await prisma.cachedOpportunity.deleteMany({ where: { tenantId } });
+
+  const STAGE_MAP: Record<string, { id: string; name: string; position: number }> = {
+    nuevo_lead: { id: "demo-stage-1", name: "Nuevo Lead", position: 0 },
+    contactado: { id: "demo-stage-2", name: "Contactado", position: 1 },
+    presupuesto_enviado: { id: "demo-stage-3", name: "Presupuesto Enviado", position: 2 },
+    aceptado: { id: "demo-stage-4", name: "Aceptado", position: 3 },
+    cerrado: { id: "demo-stage-5", name: "Cerrado", position: 4 },
+  };
+
+  await prisma.cachedPipeline.create({
+    data: {
+      id: "demo-pipeline-1",
+      tenantId,
+      name: "Pipeline Comercial",
+      stages: Object.values(STAGE_MAP),
+      raw: {},
+      cachedAt: new Date(),
+    },
+  });
+
+  for (let i = 0; i < DEMO_DEALS.length; i++) {
+    const d = DEMO_DEALS[i];
+    const c = DEMO_CONTACTS[d.contactIndex];
+    const stage = STAGE_MAP[d.stage];
+    await prisma.cachedOpportunity.create({
+      data: {
+        id: `demo-opp-${String(i).padStart(3, "0")}`,
+        tenantId,
+        pipelineId: "demo-pipeline-1",
+        pipelineStageId: stage.id,
+        name: d.name,
+        contactId: contactIds[d.contactIndex],
+        contactName: `${c.firstName} ${c.lastName}`,
+        monetaryValue: d.value,
+        status: d.stage === "cerrado" ? "won" : "open",
+        raw: {},
+        cachedAt: new Date(),
+      },
+    });
+  }
+  console.log(`Seeded ${DEMO_DEALS.length} demo pipeline deals`);
+
+  // ==================== CONVERSATIONS (20) ====================
+  await prisma.cachedConversation.deleteMany({ where: { tenantId } });
+  for (let i = 0; i < DEMO_CONVERSATIONS.length; i++) {
+    const conv = DEMO_CONVERSATIONS[i];
+    const c = DEMO_CONTACTS[conv.contactIndex];
+    const lastMsg = conv.messages[conv.messages.length - 1];
+    const lastMsgDate = new Date(Date.now() - lastMsg.minutesAgo * 60000);
+
+    await prisma.cachedConversation.create({
+      data: {
+        id: `demo-conv-${String(i).padStart(3, "0")}`,
+        tenantId,
+        contactId: contactIds[conv.contactIndex],
+        contactName: `${c.firstName} ${c.lastName}`,
+        contactPhone: c.phone,
+        contactEmail: c.email,
+        lastMessageBody: lastMsg.body,
+        lastMessageDate: lastMsgDate,
+        lastMessageType: conv.type,
+        unreadCount: lastMsg.direction === "inbound" ? 1 : 0,
+        raw: { messages: conv.messages.map((m) => ({
+          ...m,
+          dateAdded: new Date(Date.now() - m.minutesAgo * 60000).toISOString(),
+        }))},
+        cachedAt: new Date(),
+      },
+    });
+  }
+  console.log(`Seeded ${DEMO_CONVERSATIONS.length} demo conversations`);
 
   // ==================== STATION CAPACITY ====================
-  const existingCapacity = await prisma.stationCapacity.count({ where: { tenantId: tenant.id } });
-  if (existingCapacity === 0) {
-    const stations = ["baqueira", "sierra_nevada", "grandvalira", "formigal", "alto_campoo", "la_pinilla"];
-    const serviceTypes = [{ type: "cursillo_adulto", max: 50 }, { type: "cursillo_infantil", max: 30 }, { type: "clase_particular", max: 10 }];
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(today); date.setDate(date.getDate() + d);
-      for (const station of stations) {
-        for (const svc of serviceTypes) {
-          await prisma.stationCapacity.create({ data: { tenantId: tenant.id, station, date, serviceType: svc.type, maxCapacity: svc.max, booked: d === 0 ? Math.floor(Math.random() * svc.max * 0.8) : Math.floor(Math.random() * svc.max * 0.3) } });
-        }
-      }
+  await prisma.stationCapacity.deleteMany({ where: { tenantId } });
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() + d);
+    for (const cap of DEMO_CAPACITY) {
+      const factor = d === 0 ? 1 : 0.3 + Math.random() * 0.3;
+      await prisma.stationCapacity.create({
+        data: {
+          tenantId,
+          station: cap.station,
+          date,
+          serviceType: "cursillo_adulto",
+          maxCapacity: cap.cursillo_max,
+          booked: d === 0
+            ? cap.cursillo_booked
+            : Math.floor(cap.cursillo_max * factor),
+        },
+      });
+      await prisma.stationCapacity.create({
+        data: {
+          tenantId,
+          station: cap.station,
+          date,
+          serviceType: "clase_particular",
+          maxCapacity: cap.clase_max,
+          booked: d === 0
+            ? cap.clase_booked
+            : Math.floor(cap.clase_max * factor),
+        },
+      });
     }
-    console.log("Seeded station capacity for 7 days");
+  }
+  console.log("Seeded station capacity");
+}
+
+async function main() {
+  // ==================== DEMO TENANT ====================
+  const demoTenant = await prisma.tenant.upsert({
+    where: { slug: "demo" },
+    update: { isDemo: true, dataMode: "mock" },
+    create: {
+      name: "Skicenter Demo",
+      slug: "demo",
+      onboardingComplete: true,
+      isDemo: true,
+      dataMode: "mock",
+    },
+  });
+
+  const roles = {
+    owner: await prisma.role.upsert({
+      where: { name_tenantId: { name: "Owner / Manager", tenantId: demoTenant.id } },
+      update: {},
+      create: { name: "Owner / Manager", tenantId: demoTenant.id, isSystem: true, permissions: DEFAULT_ROLES["Owner / Manager"] },
+    }),
+    sales: await prisma.role.upsert({
+      where: { name_tenantId: { name: "Sales Rep", tenantId: demoTenant.id } },
+      update: {},
+      create: { name: "Sales Rep", tenantId: demoTenant.id, isSystem: true, permissions: DEFAULT_ROLES["Sales Rep"] },
+    }),
+    marketing: await prisma.role.upsert({
+      where: { name_tenantId: { name: "Marketing", tenantId: demoTenant.id } },
+      update: {},
+      create: { name: "Marketing", tenantId: demoTenant.id, isSystem: true, permissions: DEFAULT_ROLES["Marketing"] },
+    }),
+    va: await prisma.role.upsert({
+      where: { name_tenantId: { name: "VA / Admin", tenantId: demoTenant.id } },
+      update: {},
+      create: { name: "VA / Admin", tenantId: demoTenant.id, isSystem: true, permissions: DEFAULT_ROLES["VA / Admin"] },
+    }),
+  };
+
+  // 3 Demo users
+  const pw = await hash("demo123", 12);
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "demo@skicenter.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "demo@skicenter.com", name: "Demo Admin", passwordHash: pw, tenantId: demoTenant.id, roleId: roles.owner.id },
+  });
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "natalia@demo.skicenter.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "natalia@demo.skicenter.com", name: "Natalia García", passwordHash: pw, tenantId: demoTenant.id, roleId: roles.sales.id },
+  });
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "manager@demo.skicenter.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "manager@demo.skicenter.com", name: "Carlos Martínez", passwordHash: pw, tenantId: demoTenant.id, roleId: roles.va.id },
+  });
+
+  // Keep old demo users for backward compat
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "admin@demo.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "admin@demo.com", name: "Demo Admin (legacy)", passwordHash: await hash("demo1234", 12), tenantId: demoTenant.id, roleId: roles.owner.id },
+  });
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "sales@demo.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "sales@demo.com", name: "Demo Sales (legacy)", passwordHash: await hash("demo1234", 12), tenantId: demoTenant.id, roleId: roles.sales.id },
+  });
+
+  for (const mod of ["comms", "pipelines", "analytics", "contacts"]) {
+    await prisma.moduleConfig.upsert({
+      where: { tenantId_module: { tenantId: demoTenant.id, module: mod } },
+      update: {},
+      create: { tenantId: demoTenant.id, module: mod, isEnabled: true },
+    });
   }
 
-  console.log("Seed complete: Skicenter demo with full 2025/2026 catalog + season calendar");
+  // Seed products + season calendar + curated demo data
+  const productCount = await seedProducts(demoTenant.id);
+  console.log(`Seeded ${productCount} products for demo tenant`);
+
+  const calendarCount = await seedSeasonCalendar(demoTenant.id);
+  console.log(`Seeded ${calendarCount} season calendar entries for demo tenant`);
+
+  await seedDemoData(demoTenant.id);
+
+  console.log("Demo tenant seed complete");
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());

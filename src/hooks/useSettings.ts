@@ -14,9 +14,15 @@ interface TenantSettings {
   ghlConnectedAt: string | null;
   ghlTokenExpiry: string | null;
   onboardingComplete: boolean;
+  onboardingDismissed: boolean;
+  isDemo: boolean;
   dataMode: string;
   isActive: boolean;
   createdAt: string;
+  syncState: string | null;
+  syncProgressMsg: string | null;
+  lastSyncAt: string | null;
+  lastSyncError: string | null;
 }
 
 interface TeamUser {

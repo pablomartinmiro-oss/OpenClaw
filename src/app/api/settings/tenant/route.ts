@@ -25,8 +25,14 @@ export async function GET() {
           ghlConnectedAt: true,
           ghlTokenExpiry: true,
           onboardingComplete: true,
+          onboardingDismissed: true,
+          isDemo: true,
           dataMode: true,
           isActive: true,
+          syncState: true,
+          syncProgressMsg: true,
+          lastSyncAt: true,
+          lastSyncError: true,
           createdAt: true,
         },
       }),
@@ -55,7 +61,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { dataMode } = body as { dataMode?: string };
+    const { dataMode, onboardingDismissed } = body as { dataMode?: string; onboardingDismissed?: boolean };
 
     if (dataMode !== undefined && dataMode !== "mock" && dataMode !== "live") {
       return NextResponse.json({ error: "dataMode must be 'mock' or 'live'" }, { status: 400 });
@@ -74,8 +80,11 @@ export async function PATCH(request: NextRequest) {
 
     const updated = await prisma.tenant.update({
       where: { id: tenantId },
-      data: { ...(dataMode !== undefined ? { dataMode } : {}) },
-      select: { id: true, dataMode: true },
+      data: {
+        ...(dataMode !== undefined ? { dataMode } : {}),
+        ...(onboardingDismissed !== undefined ? { onboardingDismissed } : {}),
+      },
+      select: { id: true, dataMode: true, onboardingDismissed: true },
     });
 
     // Trigger full sync when switching to live for the first time

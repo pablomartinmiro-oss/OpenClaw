@@ -14,6 +14,7 @@ import {
 import { usePipelines, useOpportunities, useMoveOpportunity } from "@/hooks/useGHL";
 import { KanbanSkeleton } from "@/components/shared/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { KanbanColumn } from "./_components/KanbanColumn";
 import { KanbanCard } from "./_components/KanbanCard";
 import { PipelineSelector } from "./_components/PipelineSelector";
@@ -92,6 +93,7 @@ export default function PipelinePage() {
   const loading = pipelinesLoading || oppsLoading;
 
   return (
+    <GHLEmptyState message="No hay pipelines. Conecta GoHighLevel para ver tus oportunidades.">
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
@@ -152,5 +154,6 @@ export default function PipelinePage() {
         />
       )}
     </div>
+    </GHLEmptyState>
   );
 }

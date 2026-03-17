@@ -6,6 +6,7 @@ import { MessageSquare } from "lucide-react";
 import { useConversations, useMessages, useSendMessage, useAssignConversation, useContact } from "@/hooks/useGHL";
 import { usePermissions } from "@/hooks/usePermissions";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { ConversationList } from "./_components/ConversationList";
 import { MessageThread } from "./_components/MessageThread";
 import { MessageInput } from "./_components/MessageInput";
@@ -57,6 +58,7 @@ export default function CommsPage() {
   }
 
   return (
+    <GHLEmptyState message="No hay conversaciones. Conecta GoHighLevel para gestionar tus comunicaciones.">
     <div className="-m-6 flex h-[calc(100vh-3.5rem)]">
       {/* Left panel: Conversation list */}
       <div className="w-80 shrink-0">
@@ -119,5 +121,6 @@ export default function CommsPage() {
         </div>
       )}
     </div>
+    </GHLEmptyState>
   );
 }

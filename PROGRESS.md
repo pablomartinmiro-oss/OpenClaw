@@ -1,11 +1,11 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE S — Complete (19 phases shipped)
-- **Step:** All phases A-S complete. Full-featured CRM dashboard with 93-product catalog, expandable pricing, seed UI.
+- **Phase:** PHASE T — Demo/Real Separation (20 phases shipped)
+- **Step:** Clean demo/real separation, onboarding cards, GHL sync progress, role-based sidebar, token refresh fix.
 - **Live URL:** https://crm-dash-prod.up.railway.app
-- **Last pushed commit:** 033fbd7 (2026-03-17)
-- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R+S not yet deployed
+- **Last pushed commit:** (pending push)
+- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R-T not yet deployed
 - **Date:** 2026-03-17
 
 ## What the App Does Today
@@ -148,11 +148,25 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - PricingMatrixRow component: day-based matrix (1-7 days × media/alta), private lesson matrix (hours × people), bundle component list
 - Seed endpoint already existed from Phase R — now accessible via UI button
 
+### Phase T: Demo/Real Separation + Onboarding (2026-03-17) ✅
+- **Permanent demo tenant** (`isDemo: true`): 3 demo users (demo@skicenter.com / natalia@demo.skicenter.com / manager@demo.skicenter.com, pw: demo123)
+- **Curated demo data**: 50 contacts, 50 reservations (35 today + 15 historical), 12 quotes, 25 pipeline deals, 20 WhatsApp conversations, station capacity
+- **Demo banner**: persistent coral banner "Modo demostración — los datos son ficticios" with "Crear tu cuenta real →" CTA
+- **Role-based sidebar**: Owner sees all, Sales Rep sees Dashboard/Reservas/Comunicaciones/Catálogo only
+- **Empty states**: GHLEmptyState wrapper for Contacts/Comms/Pipeline — shows "Conectar GoHighLevel" CTA when not connected
+- **Onboarding cards**: 3-step guide on Dashboard for new real tenants (Catálogo → Presupuesto → Reserva) with dismiss
+- **Sync progress on Tenant**: `syncState`, `syncProgressMsg`, `lastSyncAt`, `lastSyncError` fields — updated during fullSync
+- **Token auto-refresh fix**: if refresh token also expired, mark tenant as disconnected (clear tokens, set syncState=error)
+- **Clean-tenant endpoint**: POST `/api/admin/clean-tenant` — removes reservations, quotes, capacity from current tenant
+- **Reset-demo endpoint**: POST `/api/admin/reset-demo` — wipes and re-seeds all demo data (demo tenant only)
+- **Schema migration**: `20260317000000_demo_onboarding_sync` — adds isDemo, onboarding steps, sync progress fields to Tenant
+
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
 2. `20260316100000_phase2_auth_voucher_datamode` — Auth fields, voucher fields, dataMode, GrouponProductMapping
 3. `20260316200000_ghl_cache_sync` — Cache tables, SyncQueue, SyncStatus
 4. `20260316300000_pricing_engine` — Product refactor (destination→station, new fields), SeasonCalendar table
+5. `20260317000000_demo_onboarding_sync` — isDemo, onboarding steps (1-3 + dismissed), sync progress fields on Tenant
 
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before migrations
@@ -160,10 +174,9 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Voucher section only visible when "CUPÓN GROUPON" source is selected
 - Cron endpoint (`/api/cron/sync`) needs Railway cron job configured (every 5 min)
 - Permission checks removed — auth is session-only (no granular RBAC at API level)
-- GHL OAuth tokens expire after 24h — auto-refresh works but hasn't been tested under real load
-- Mock mode contacts are hardcoded (20 contacts) — pagination returns max 101 via `limit` param
-- Phases R+S pushed to git but NOT yet deployed to Railway — need `git push` to trigger Railway deploy
-- Product catalog seed on Railway requires clicking "Sembrar Catálogo" in Settings after deploy (or `fetch('/api/admin/seed-products', {method:'POST'})` in browser console)
+- Phases R-T pushed to git but NOT yet deployed to Railway
+- Product catalog seed on Railway requires clicking "Sembrar Catálogo" in Settings after deploy
+- Demo data uses CachedContact/CachedConversation/CachedOpportunity/CachedPipeline tables (same as GHL data)
 
 ## Pending Work (Operational — Not Code)
 - **Deploy phases R+S to Railway** — push is done, Railway auto-deploys from main
@@ -198,7 +211,12 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 ## Auto-Audit Results
 
-### Phase S Final Audit (2026-03-17) — Latest
+### Phase T Final Audit (2026-03-17) — Latest
+- ✅ Type Check: 0 errors
+- ✅ Build: compiled clean (48+ routes)
+- ✅ Pending push
+
+### Phase S Audit (2026-03-17)
 - ✅ Type Check: 0 errors
 - ✅ Build: compiled clean (48+ routes)
 - ✅ Pushed: commit 033fbd7

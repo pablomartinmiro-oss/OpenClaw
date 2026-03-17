@@ -102,11 +102,17 @@ export class GHLClient {
         // Token expired -> refresh
         if (error.response?.status === 401 && config._retryCount === 0) {
           this.log.info("Access token expired, refreshing");
-          const newTokens = await this.refreshTokens();
-          config.headers.Authorization = `Bearer ${newTokens.access_token}`;
-          this.http.defaults.headers.Authorization = `Bearer ${newTokens.access_token}`;
-          config._retryCount = 1;
-          return this.http.request(config);
+          try {
+            const newTokens = await this.refreshTokens();
+            config.headers.Authorization = `Bearer ${newTokens.access_token}`;
+            this.http.defaults.headers.Authorization = `Bearer ${newTokens.access_token}`;
+            config._retryCount = 1;
+            return this.http.request(config);
+          } catch (refreshError) {
+            this.log.error("Refresh token also expired — marking tenant as disconnected");
+            await this.markDisconnected();
+            throw refreshError;
+          }
         }
 
         // Rate limited or server error -> exponential backoff
@@ -166,6 +172,23 @@ export class GHLClient {
 
     this.log.info("GHL tokens refreshed");
     return tokens;
+  }
+
+  private async markDisconnected() {
+    try {
+      await prisma.tenant.update({
+        where: { id: this.tenantId },
+        data: {
+          ghlAccessToken: null,
+          ghlRefreshToken: null,
+          ghlTokenExpiry: null,
+          syncState: "error",
+          lastSyncError: "Token de GHL expirado. Reconecta tu cuenta.",
+        },
+      });
+    } catch (dbError) {
+      this.log.error({ error: dbError }, "Failed to mark tenant as disconnected");
+    }
   }
 
   // ==================== CONTACTS ====================

@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { useContacts } from "@/hooks/useGHL";
 import { TableSkeleton } from "@/components/shared/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { ContactsTable } from "./_components/ContactsTable";
 import { ContactsSearch } from "./_components/ContactsSearch";
 import { SourceFilter } from "./_components/SourceFilter";
@@ -41,6 +42,7 @@ export default function ContactsPage() {
   }, [contacts, search, sourceFilter]);
 
   return (
+    <GHLEmptyState message="No hay contactos. Conecta GoHighLevel para importar tus contactos.">
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
@@ -81,5 +83,6 @@ export default function ContactsPage() {
         </div>
       )}
     </div>
+    </GHLEmptyState>
   );
 }

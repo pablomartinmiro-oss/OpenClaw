@@ -53,6 +53,8 @@ Browser → Middleware (JWT check via getToken()) → Next.js Route
       │   └── webhooks/            — POST (HMAC verified, updates cache)
       ├── /api/admin/ghl/*         — Admin sync tools (full-sync, sync-status, test, create-fields)
       ├── /api/admin/seed-products — POST seed full 93-product catalog + season calendar
+      ├── /api/admin/clean-tenant  — POST remove reservations/quotes/capacity from current tenant
+      ├── /api/admin/reset-demo    — POST wipe + re-seed all demo data (demo tenant only)
       ├── /api/cron/sync           — Background sync (public, for external cron)
       ├── /api/dashboard/stats     — Cached stats for dashboard
       ├── /api/pricing             — POST price calculation (season-aware matrix lookup)
@@ -70,6 +72,9 @@ Browser → Middleware (JWT check via getToken()) → Next.js Route
 
 ```
 Tenant (company)
+  ├── isDemo flag (permanent demo tenant vs real)
+  ├── onboardingStep1/2/3 + onboardingDismissed (new tenant guide)
+  ├── syncState/syncProgressMsg/lastSyncAt/lastSyncError (sync progress)
   ├── Users (team members, each with Role)
   ├── Roles (Owner, Manager, Sales Rep, VA/Admin — with permissions array)
   ├── ModuleConfigs (per-module settings)
@@ -81,10 +86,10 @@ Tenant (company)
   ├── StationCapacity (per station/date)
   ├── Notifications
   ├── GHL Connection (encrypted OAuth tokens, locationId)
-  ├── CachedContacts (synced from GHL)
-  ├── CachedConversations (synced from GHL, assignedTo in raw JSON)
-  ├── CachedOpportunities (synced from GHL)
-  ├── CachedPipelines (synced from GHL)
+  ├── CachedContacts (synced from GHL or demo seed)
+  ├── CachedConversations (synced from GHL or demo seed)
+  ├── CachedOpportunities (synced from GHL or demo seed)
+  ├── CachedPipelines (synced from GHL or demo seed)
   ├── SyncStatus (last sync times, counts, in-progress flag)
   └── SyncQueue (failed write retries with exponential backoff)
 ```
@@ -95,7 +100,7 @@ Tenant (company)
 
 ### Auth Flow
 - NextAuth v5 with credentials provider + JWT strategy
-- Session: `{ id, email, name, tenantId, roleId, roleName, permissions, onboardingComplete }`
+- Session: `{ id, email, name, tenantId, roleId, roleName, permissions, onboardingComplete, isDemo }`
 - Edge middleware uses `getToken()` from `next-auth/jwt` — NOT `auth()` (Prisma → node:path → edge crash)
 - Cookie: `__Secure-authjs.session-token` (HTTPS) or `authjs.session-token` (HTTP)
 
@@ -240,6 +245,10 @@ All in `src/hooks/` — use `fetchJSON<T>()` helper that throws on non-ok:
 - Drag-and-drop: @dnd-kit v6 (`useDraggable`/`useDroppable`, PointerSensor 8px)
 - All UI text in SPANISH, all currency in EUR via `Intl.NumberFormat`
 - Expandable rows: ProductTable uses chevron toggle to show full pricing matrix
+- **DemoBanner**: persistent coral banner for demo tenants (`session.user.isDemo`)
+- **GHLEmptyState**: wrapper for GHL-dependent pages — shows "Conectar GHL" CTA when not connected
+- **OnboardingCards**: 3-step guide for new real tenants (Catálogo → Presupuesto → Reserva)
+- **Role-based sidebar**: NavItems have optional `roles` array — filtered by `session.user.roleName`
 
 ## Modules
 

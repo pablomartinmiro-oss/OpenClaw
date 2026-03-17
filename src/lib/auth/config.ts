@@ -16,6 +16,7 @@ declare module "next-auth" {
       roleName: string;
       permissions: PermissionKey[];
       onboardingComplete: boolean;
+      isDemo: boolean;
     };
   }
 
@@ -25,6 +26,7 @@ declare module "next-auth" {
     roleName: string;
     permissions: PermissionKey[];
     onboardingComplete: boolean;
+    isDemo: boolean;
   }
 }
 
@@ -35,6 +37,7 @@ declare module "@auth/core/jwt" {
     roleName: string;
     permissions: PermissionKey[];
     onboardingComplete: boolean;
+    isDemo: boolean;
   }
 }
 
@@ -118,6 +121,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           roleName: user.role.name,
           permissions: permissions as PermissionKey[],
           onboardingComplete: user.tenant.onboardingComplete,
+          isDemo: user.tenant.isDemo,
         };
       },
     }),
@@ -131,6 +135,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.roleName = user.roleName;
         token.permissions = user.permissions;
         token.onboardingComplete = user.onboardingComplete;
+        token.isDemo = user.isDemo;
       }
       return token;
     },
@@ -141,6 +146,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.roleName = token.roleName;
       session.user.permissions = token.permissions;
       session.user.onboardingComplete = token.onboardingComplete;
+      session.user.isDemo = token.isDemo;
       return session;
     },
   },

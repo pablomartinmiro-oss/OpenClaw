@@ -10,9 +10,9 @@ You are an autonomous senior full-stack engineer building a multi-tenant Skicent
 - **Deploy:** Railway (Docker + Postgres + Redis)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Last pushed:** commit 033fbd7 (2026-03-17) — phases R+S
+- **Last pushed:** (pending) — phases R+S+T
 - **Last deployed:** commit fc2e8d0 (2026-03-16) — Railway auto-deploys from main
-- **Phases completed:** A through S (19 phases)
+- **Phases completed:** A through T (20 phases)
 
 ## Key Docs
 
@@ -42,10 +42,11 @@ You are an autonomous senior full-stack engineer building a multi-tenant Skicent
 ## Auth System
 
 - **NextAuth v5** with credentials provider + JWT strategy
-- Session: `{ id, email, name, tenantId, roleId, roleName, permissions, onboardingComplete }`
+- Session: `{ id, email, name, tenantId, roleId, roleName, permissions, onboardingComplete, isDemo }`
 - Edge middleware uses `getToken()` from `next-auth/jwt` — NOT `auth()` (Prisma → edge crash)
 - Cookie: `__Secure-authjs.session-token` (HTTPS) or `authjs.session-token` (HTTP)
 - 4 roles: Owner (all), Manager (all), Sales Rep (view+create), VA/Admin (view only)
+- **Role-based sidebar**: Owner sees all, Manager sees all except Ajustes, Rep sees Dashboard/Reservas/Comunicaciones/Catálogo
 - **API auth is session + tenant only** — `hasPermission()` was removed from all routes (DB roles lack populated permissions)
 - Client-side RBAC: `RoleGate` component + `usePermissions()` hook still work for UI gating
 
@@ -109,7 +110,8 @@ Warm/premium aesthetic inspired by kinso.ai:
 - **GHL token expiry** — 24h refresh built in GHLClient but untested under real load
 - **Mock contacts hardcoded** — MockGHLClient returns 20 fake contacts; pagination uses `limit` param (max 101)
 - **Permission checks removed** — DB roles lack populated permissions → all API routes are session+tenant only
-- **Phases R+S not deployed** — pushed to git (033fbd7) but Railway last deployed fc2e8d0
+- **Phases R-T not deployed** — pushed to git but Railway last deployed fc2e8d0
+- **Token auto-refresh** — if refresh token expires, tenant marked disconnected (tokens cleared, syncState=error)
 - **Cron not configured** — `/api/cron/sync` needs Railway cron job (every 5 min)
 - **ANTHROPIC_API_KEY** — must be set on Railway env vars for voucher reader
 
@@ -129,8 +131,15 @@ Warm/premium aesthetic inspired by kinso.ai:
 
 ## Demo Mode
 
-- Seed: `npx prisma db seed`
-- Login: `admin@demo.com` / `demo1234` (Owner), `sales@demo.com` / `demo1234` (Sales Rep)
+- **Permanent demo tenant**: `isDemo: true` flag on Tenant, seeded via `npx prisma db seed`
+- **Demo users**: demo@skicenter.com (Owner), natalia@demo.skicenter.com (Sales Rep), manager@demo.skicenter.com (Manager) — all pw: `demo123`
+- **Legacy users**: admin@demo.com / demo1234 (Owner), sales@demo.com / demo1234 (Sales Rep)
+- **Demo data**: 50 contacts, 50 reservations, 12 quotes, 25 pipeline deals, 20 conversations, station capacity
+- **Demo banner**: persistent coral banner "Modo demostración" with "Crear tu cuenta real →" CTA
+- **Reset demo**: POST `/api/admin/reset-demo` — wipes and re-seeds all demo data (demo tenant only)
+- **Clean tenant**: POST `/api/admin/clean-tenant` — removes reservations/quotes/capacity from current tenant
+- **GHLEmptyState**: wrapper for Contacts/Comms/Pipeline — shows "Conectar GHL" CTA when not connected (skipped for demo)
+- **OnboardingCards**: 3-step guide on Dashboard for new real tenants (Catálogo → Presupuesto → Reserva)
 - Mock GHL: `ENABLE_MOCK_GHL=true`
 - Seed catalog on live: Settings → "Sembrar Catálogo" or `fetch('/api/admin/seed-products', {method:'POST'})`
 
@@ -144,13 +153,13 @@ src/
 │   └── api/             — 32+ route files (auth, crm, admin, products, quotes, reservations, pricing, settings, voucher, health)
 ├── components/
 │   ├── layout/          — Sidebar, Topbar, MobileNav
-│   ├── shared/          — RoleGate, EmptyState, ErrorBoundary
+│   ├── shared/          — RoleGate, EmptyState, ErrorBoundary, DemoBanner, GHLEmptyState
 │   └── ui/              — shadcn/ui components
 ├── hooks/               — React Query hooks (useGHL, useReservations, useQuotes, useProducts, usePricing, useSettings, useVoucher, useSeasonCalendar, usePermissions)
 ├── lib/
 │   ├── auth/            — NextAuth config, permissions
 │   ├── cache/           — Redis client, keys, TTLs
-│   ├── constants/       — product-catalog.ts (93 products), skicenter.ts (age brackets, skill levels)
+│   ├── constants/       — product-catalog.ts (93 products), skicenter.ts (age brackets), demo-seed-data.ts (curated demo data)
 │   ├── data/            — getDataMode.ts
 │   ├── ghl/             — GHLClient (live), MockGHLClient, sync service
 │   ├── pricing/         — types.ts, client.ts (pure), calculator.ts (server)
@@ -158,8 +167,8 @@ src/
 ├── generated/prisma/    — Prisma generated client (do not edit)
 prisma/
 ├── schema.prisma        — 20+ models
-├── seed.ts              — Demo data seeder (imports buildFullCatalog)
-└── migrations/          — 4 migrations
+├── seed.ts              — Demo tenant + data seeder (imports buildFullCatalog + demo-seed-data)
+└── migrations/          — 5 migrations
 ```
 
 ## Future Work (NOT NOW)

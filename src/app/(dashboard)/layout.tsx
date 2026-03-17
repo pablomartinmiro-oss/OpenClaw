@@ -9,6 +9,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GHLStatusBanner } from "@/components/shared/GHLStatusBanner";
+import { DemoBanner } from "@/components/shared/DemoBanner";
 
 export default function DashboardLayout({
   children,
@@ -47,6 +48,7 @@ export default function DashboardLayout({
               </div>
             </div>
 
+            <DemoBanner />
             <GHLStatusBanner />
 
             <main className="flex-1 overflow-auto bg-surface p-6">

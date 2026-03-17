@@ -27,6 +27,21 @@ model Tenant {
   // Data mode
   dataMode        String    @default("mock") // "mock" or "live"
 
+  // Demo tenant flag
+  isDemo          Boolean   @default(false)
+
+  // Onboarding steps (for real tenants)
+  onboardingStep1 Boolean   @default(false) // Has products
+  onboardingStep2 Boolean   @default(false) // Has quotes
+  onboardingStep3 Boolean   @default(false) // Has reservations
+  onboardingDismissed Boolean @default(false)
+
+  // Sync progress (shown in UI during full sync)
+  syncState       String?   // "syncing" | "complete" | "error" | null
+  syncProgressMsg String?   // "Contactos: 2400/5000"
+  lastSyncAt      DateTime?
+  lastSyncError   String?
+
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

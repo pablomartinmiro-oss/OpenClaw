@@ -25,9 +25,15 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   permission: PermissionKey | null;
+  /** Roles allowed to see this item. Empty = all roles */
+  roles?: string[];
   badge?: number;
 }
 
+// Role-based visibility:
+// Owner/Manager: everything
+// Sales Rep: Dashboard, Reservas, Comunicaciones, Catálogo
+// VA/Admin + Marketing: permission-based filtering handles it
 const NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
@@ -40,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/presupuestos",
     icon: FileText,
     permission: null,
+    roles: ["Owner / Manager"],
   },
   {
     label: "Reservas",
@@ -64,18 +71,21 @@ const NAV_ITEMS: NavItem[] = [
     href: "/contacts",
     icon: Users,
     permission: "contacts:view",
+    roles: ["Owner / Manager"],
   },
   {
     label: "Pipeline",
     href: "/pipelines",
     icon: Kanban,
     permission: "pipelines:view",
+    roles: ["Owner / Manager"],
   },
   {
     label: "Ajustes",
     href: "/settings",
     icon: Settings,
     permission: "settings:team",
+    roles: ["Owner / Manager"],
   },
 ];
 
@@ -87,11 +97,17 @@ interface SidebarProps {
 export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-  const { can } = usePermissions();
+  const { can, roleName } = usePermissions();
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => item.permission === null || can(item.permission)
-  );
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    // Permission check
+    if (item.permission !== null && !can(item.permission)) return false;
+    // Role check: if roles defined, user's role must be in the list
+    if (item.roles && item.roles.length > 0 && !item.roles.includes(roleName)) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <aside
