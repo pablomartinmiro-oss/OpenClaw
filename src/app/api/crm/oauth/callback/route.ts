@@ -46,6 +46,23 @@ export async function GET(req: NextRequest) {
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code);
 
+    // Check if another tenant already owns this GHL location
+    const existingTenant = await prisma.tenant.findUnique({
+      where: { ghlLocationId: tokens.locationId },
+      select: { id: true, name: true },
+    });
+
+    if (existingTenant && existingTenant.id !== tenantId) {
+      log.error(
+        { locationId: tokens.locationId, existingTenantId: existingTenant.id },
+        "GHL location already connected to another tenant"
+      );
+      const errorRedirect = origin === "settings" ? "/settings" : "/onboarding";
+      return NextResponse.redirect(
+        new URL(`${errorRedirect}?error=location_taken`, baseUrl)
+      );
+    }
+
     // Store encrypted tokens on tenant
     await prisma.tenant.update({
       where: { id: tenantId },

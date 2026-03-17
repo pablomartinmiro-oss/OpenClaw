@@ -17,6 +17,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing_params: "Faltan parámetros en la respuesta de GHL. Intenta de nuevo.",
   invalid_state: "Estado de seguridad inválido. Intenta de nuevo.",
   invalid_tenant: "Tenant no encontrado. Cierra sesión e intenta de nuevo.",
+  location_taken: "Esta ubicación de GHL ya está conectada a otra cuenta.",
 };
 
 export function ConnectGHLStep({ paramConnected, error }: ConnectGHLStepProps) {
