@@ -127,7 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.sub = user.id;
         token.tenantId = user.tenantId;
@@ -137,6 +137,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.onboardingComplete = user.onboardingComplete;
         token.isDemo = user.isDemo;
       }
+
+      // Re-check onboardingComplete from DB on every token refresh
+      // so the middleware sees the updated value after onboarding completes
+      if (trigger !== "signIn" && token.tenantId && !token.onboardingComplete) {
+        try {
+          const tenant = await prisma.tenant.findUnique({
+            where: { id: token.tenantId },
+            select: { onboardingComplete: true },
+          });
+          if (tenant?.onboardingComplete) {
+            token.onboardingComplete = true;
+          }
+        } catch {
+          // Ignore — keep stale value rather than break auth
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
