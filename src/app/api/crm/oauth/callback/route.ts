@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { AxiosError } from "axios";
 import { exchangeCodeForTokens, verifyOAuthState } from "@/lib/ghl/oauth";
 import { encrypt } from "@/lib/encryption";
 import { prisma } from "@/lib/db";
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { tenantId, origin } = stateData;
+  const log = logger.child({ tenantId, origin, path: "/api/crm/oauth/callback" });
 
   try {
     // Verify tenant exists
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!tenant) {
-      logger.error({ tenantId }, "GHL OAuth callback: tenant not found");
+      log.error("Tenant not found");
       return NextResponse.redirect(
         new URL("/onboarding?error=invalid_tenant", baseUrl)
       );
@@ -58,25 +60,30 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    logger.info(
-      { tenantId, locationId: tokens.locationId },
-      "GHL connected successfully"
-    );
+    log.info({ locationId: tokens.locationId }, "GHL connected successfully");
 
     // Redirect based on where the flow started
-    if (origin === "settings") {
-      return NextResponse.redirect(
-        new URL("/settings?ghl_connected=true", baseUrl)
-      );
-    }
-
-    return NextResponse.redirect(
-      new URL("/onboarding?ghl_connected=true", baseUrl)
-    );
+    const successUrl = origin === "settings"
+      ? "/settings?ghl_connected=true"
+      : "/onboarding?ghl_connected=true";
+    return NextResponse.redirect(new URL(successUrl, baseUrl));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
-    logger.error({ error: message, tenantId }, "GHL OAuth callback failed");
+    const message = error instanceof Error ? error.message : "Unknown error";
+
+    // Log full details for axios errors (GHL API rejections)
+    if (error instanceof AxiosError) {
+      log.error(
+        {
+          status: error.response?.status,
+          ghlResponse: error.response?.data,
+          message,
+        },
+        "GHL OAuth callback failed — token exchange HTTP %d",
+        error.response?.status ?? 0
+      );
+    } else {
+      log.error({ error: message }, "GHL OAuth callback failed");
+    }
 
     const errorRedirect = origin === "settings" ? "/settings" : "/onboarding";
     return NextResponse.redirect(

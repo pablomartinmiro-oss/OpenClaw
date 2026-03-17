@@ -1,5 +1,6 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import crypto from "crypto";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import type { GHLTokenResponse } from "./types";
 
@@ -65,17 +66,10 @@ export function verifyOAuthState(
 }
 
 export function getAuthorizeUrl(state: string): string {
-  const clientId = process.env.GHL_CLIENT_ID;
-  const redirectUri = process.env.GHL_REDIRECT_URI;
-
-  if (!clientId || !redirectUri) {
-    throw new Error("GHL_CLIENT_ID and GHL_REDIRECT_URI must be set");
-  }
-
   const params = new URLSearchParams({
     response_type: "code",
-    client_id: clientId,
-    redirect_uri: redirectUri,
+    client_id: env.GHL_CLIENT_ID,
+    redirect_uri: env.GHL_REDIRECT_URI,
     scope: SCOPES,
     state,
   });
@@ -86,33 +80,44 @@ export function getAuthorizeUrl(state: string): string {
 export async function exchangeCodeForTokens(
   code: string
 ): Promise<GHLTokenResponse> {
-  const clientId = process.env.GHL_CLIENT_ID;
-  const clientSecret = process.env.GHL_CLIENT_SECRET;
-  const redirectUri = process.env.GHL_REDIRECT_URI;
+  const log = logger.child({ fn: "exchangeCodeForTokens" });
 
-  if (!clientId || !clientSecret || !redirectUri) {
-    throw new Error("GHL OAuth env vars not configured");
-  }
-
-  logger.info("Exchanging authorization code for tokens");
-
-  // GHL token endpoint requires x-www-form-urlencoded
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: redirectUri,
-  });
-
-  const res = await axios.post(GHL_TOKEN_URL, body.toString(), {
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-
-  logger.info(
-    { locationId: res.data.locationId },
-    "GHL tokens obtained successfully"
+  log.info(
+    { redirectUri: env.GHL_REDIRECT_URI },
+    "Exchanging authorization code for tokens"
   );
 
-  return res.data as GHLTokenResponse;
+  const body = new URLSearchParams({
+    client_id: env.GHL_CLIENT_ID,
+    client_secret: env.GHL_CLIENT_SECRET,
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: env.GHL_REDIRECT_URI,
+  });
+
+  try {
+    const res = await axios.post(GHL_TOKEN_URL, body.toString(), {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    log.info(
+      { locationId: res.data.locationId },
+      "GHL tokens obtained successfully"
+    );
+
+    return res.data as GHLTokenResponse;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      log.error(
+        {
+          status: err.response?.status,
+          body: err.response?.data,
+          redirectUri: env.GHL_REDIRECT_URI,
+        },
+        "GHL token exchange failed — HTTP %d",
+        err.response?.status ?? 0
+      );
+    }
+    throw err;
+  }
 }
