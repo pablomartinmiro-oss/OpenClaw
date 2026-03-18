@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { FileText, Send, TrendingUp, Euro, Users, MessageCircle, BarChart3, CalendarCheck, Snowflake } from "lucide-react";
+import {
+  FileText, Send, TrendingUp, Euro, Users, MessageCircle,
+  BarChart3, CalendarCheck, Snowflake, Target, Trophy, XCircle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useReservationStats } from "@/hooks/useReservations";
@@ -35,14 +38,31 @@ const RESERVATION_STATUS_COLORS: Record<string, string> = {
   cancelada: "bg-gray-400",
 };
 
+interface PipelineBreakdown {
+  pipelineId: string;
+  pipelineName: string;
+  count: number;
+  value: number;
+}
+
+interface LeadSource {
+  source: string;
+  count: number;
+}
+
 interface DashboardStats {
   ghlConnected: boolean;
   ghlError: string | null;
   stats: {
     totalContacts: number;
+    totalOpportunities: number;
     pipelineValue: number;
     activeConversations: number;
     pipelineCount: number;
+    wonDeals: number;
+    lostDeals: number;
+    pipelineBreakdown: PipelineBreakdown[];
+    leadSources: LeadSource[];
     recentContacts: { id: string; name: string | null; email: string | null; source: string | null; updatedAt: string }[];
     recentOpportunities: { id: string; name: string | null; monetaryValue: number | null; status: string | null; updatedAt: string }[];
     lastSync: string | null;
@@ -68,20 +88,11 @@ export default function DashboardHome() {
 
   const allQuotes = useMemo(() => quotes ?? [], [quotes]);
   const hasGHLData = dashStats?.ghlConnected && dashStats.stats;
+  const stats = dashStats?.stats;
 
   const sent = allQuotes.filter((q) => q.status === "enviado" || q.status === "aceptado");
   const accepted = allQuotes.filter((q) => q.status === "aceptado");
   const conversionRate = sent.length > 0 ? Math.round((accepted.length / sent.length) * 100) : 0;
-
-  const byDestination = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const q of allQuotes) {
-      map[q.destination] = (map[q.destination] || 0) + 1;
-    }
-    return Object.entries(map).sort((a, b) => b[1] - a[1]);
-  }, [allQuotes]);
-
-  const maxDestCount = Math.max(1, ...byDestination.map(([, c]) => c));
 
   const dailyVolume = resStats?.dailyVolume ?? [];
   const maxDayCount = Math.max(1, ...dailyVolume.map((d) => d.count));
@@ -89,43 +100,113 @@ export default function DashboardHome() {
   const recentQuotes = allQuotes.slice(0, 3);
   const recentReservations = resStats?.recentReservations ?? [];
 
+  // Pipeline breakdown chart
+  const pipelineBreakdown = stats?.pipelineBreakdown ?? [];
+  const maxPipelineCount = Math.max(1, ...pipelineBreakdown.map((p) => p.count));
+
+  // Lead sources chart
+  const leadSources = stats?.leadSources ?? [];
+  const maxSourceCount = Math.max(1, ...leadSources.map((s) => s.count));
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Dashboard</h1>
         <p className="text-sm text-text-secondary">
           Resumen de actividad de Skicenter
-          {hasGHLData && dashStats.stats?.lastSync && (
+          {hasGHLData && stats?.lastSync && (
             <span className="ml-2 text-xs text-sage">
-              Sincronizado: {new Date(dashStats.stats.lastSync).toLocaleString("es-ES")}
+              Sincronizado: {new Date(stats.lastSync).toLocaleString("es-ES")}
             </span>
           )}
         </p>
       </div>
 
-      {/* Onboarding cards for new real tenants */}
       <OnboardingCards />
 
-      {/* GHL Live Stats — only shown in live mode */}
-      {hasGHLData && dashStats.stats && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard title="Contactos GHL" value={dashStats.stats.totalContacts.toLocaleString("es-ES")} description="en GoHighLevel" icon={Users} loading={statsLoading} iconColor="text-coral" iconBg="bg-coral-light" />
-          <StatCard title="Valor Pipeline" value={formatCurrency(dashStats.stats.pipelineValue)} description="oportunidades abiertas" icon={BarChart3} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
-          <StatCard title="Conversaciones Activas" value={dashStats.stats.activeConversations} description="últimos 7 días" icon={MessageCircle} loading={statsLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" />
+      {/* GHL KPI Cards */}
+      {hasGHLData && stats && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard title="Contactos" value={stats.totalContacts.toLocaleString("es-ES")} description="en GoHighLevel" icon={Users} loading={statsLoading} iconColor="text-coral" iconBg="bg-coral-light" />
+          <StatCard title="Oportunidades" value={stats.totalOpportunities.toLocaleString("es-ES")} description={`${stats.pipelineCount} pipelines`} icon={Target} loading={statsLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" />
+          <StatCard title="Valor Pipeline" value={formatCurrency(stats.pipelineValue)} description="oportunidades abiertas" icon={BarChart3} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
+          <StatCard title="Conversaciones" value={stats.activeConversations} description="últimos 7 días" icon={MessageCircle} loading={statsLoading} iconColor="text-gold" iconBg="bg-gold-light" />
         </div>
       )}
 
-      {/* Reservation + Quote KPI Cards */}
+      {/* Deals won/lost + Reservation KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {hasGHLData && stats && (
+          <>
+            <StatCard title="Deals Ganados" value={stats.wonDeals} description="cerrados con éxito" icon={Trophy} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
+            <StatCard title="Deals Perdidos" value={stats.lostDeals} description="no convertidos" icon={XCircle} loading={statsLoading} iconColor="text-muted-red" iconBg="bg-red-50" />
+          </>
+        )}
         <StatCard title="Reservas Hoy" value={resStats?.today.total ?? 0} description={`${resStats?.today.confirmed ?? 0} confirmadas`} icon={CalendarCheck} loading={resStatsLoading} iconColor="text-coral" iconBg="bg-coral-light" />
         <StatCard title="Ingresos Semanales" value={formatCurrency(resStats?.weekly.totalRevenue ?? 0)} description={`${resStats?.weekly.totalReservations ?? 0} reservas`} icon={Euro} loading={resStatsLoading} iconColor="text-sage" iconBg="bg-sage-light" />
-        <StatCard title="Presupuestos" value={allQuotes.length} description={`${sent.length} enviados`} icon={FileText} loading={quotesLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" />
-        <StatCard title="Tasa Conversión" value={`${conversionRate}%`} description={`${accepted.length} aceptados`} icon={TrendingUp} loading={quotesLoading} iconColor="text-gold" iconBg="bg-gold-light" />
       </div>
 
-      {/* Charts */}
+      {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Weekly volume — real data */}
+        {/* Oportunidades por Pipeline */}
+        {pipelineBreakdown.length > 0 && (
+          <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary">Oportunidades por Pipeline</h2>
+              <span className="text-xs text-text-secondary">{stats?.totalOpportunities.toLocaleString("es-ES")} total</span>
+            </div>
+            <div className="space-y-3">
+              {pipelineBreakdown.map((p, i) => {
+                const pct = (p.count / maxPipelineCount) * 100;
+                const colors = ["bg-coral", "bg-sage", "bg-gold", "bg-soft-blue", "bg-muted-red", "bg-coral/60", "bg-sage/60"];
+                return (
+                  <div key={p.pipelineId}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-sm text-text-primary">{p.pipelineName}</span>
+                      <span className="text-xs font-medium text-text-secondary">
+                        {p.count} · {formatCurrency(p.value)}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Leads por Origen */}
+        {leadSources.length > 0 && (
+          <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-text-primary">Leads por Origen</h2>
+              <span className="text-xs text-text-secondary">{stats?.totalContacts.toLocaleString("es-ES")} contactos</span>
+            </div>
+            <div className="space-y-3">
+              {leadSources.map((s, i) => {
+                const pct = (s.count / maxSourceCount) * 100;
+                const colors = ["bg-sage", "bg-coral", "bg-gold", "bg-soft-blue", "bg-muted-red"];
+                return (
+                  <div key={s.source}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-sm text-text-primary">{s.source}</span>
+                      <span className="text-xs font-medium text-text-secondary">{s.count.toLocaleString("es-ES")}</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Reservas esta semana + Presupuestos */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">Reservas Esta Semana</h2>
@@ -148,31 +229,25 @@ export default function DashboardHome() {
           </div>
         </div>
 
-        {/* By destination */}
+        {/* Presupuestos KPIs */}
         <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Por Destino</h2>
-            <span className="text-xs text-text-secondary">{allQuotes.length} presupuestos</span>
+            <h2 className="text-base font-semibold text-text-primary">Presupuestos</h2>
+            <span className="text-xs text-text-secondary">{allQuotes.length} total</span>
           </div>
-          <div className="space-y-3">
-            {byDestination.map(([dest, count], i) => {
-              const pct = (count / maxDestCount) * 100;
-              const colors = ["bg-coral", "bg-sage", "bg-gold", "bg-soft-blue", "bg-muted-red"];
-              return (
-                <div key={dest}>
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-sm text-text-primary">{getStationLabel(dest)}</span>
-                    <span className="text-xs font-medium text-text-secondary">{count}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-            {byDestination.length === 0 && !quotesLoading && (
-              <p className="py-8 text-center text-sm text-text-secondary">Sin datos</p>
-            )}
+          <div className="grid grid-cols-3 gap-4 py-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-text-primary">{sent.length}</p>
+              <p className="text-xs text-text-secondary">Enviados</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-sage">{accepted.length}</p>
+              <p className="text-xs text-text-secondary">Aceptados</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-coral">{conversionRate}%</p>
+              <p className="text-xs text-text-secondary">Conversión</p>
+            </div>
           </div>
         </div>
       </div>
@@ -213,21 +288,19 @@ export default function DashboardHome() {
           <h2 className="text-base font-semibold text-text-primary">Actividad Reciente</h2>
         </div>
         <div className="space-y-3">
-          {/* GHL recent activity */}
-          {hasGHLData && dashStats.stats?.recentOpportunities.map((opp) => (
+          {hasGHLData && stats?.recentOpportunities.map((opp) => (
             <div key={opp.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
-                <div className="h-2.5 w-2.5 rounded-full bg-sage" />
+                <div className={`h-2.5 w-2.5 rounded-full ${opp.status === "won" ? "bg-sage" : opp.status === "lost" ? "bg-muted-red" : "bg-soft-blue"}`} />
                 <div>
                   <p className="text-sm font-medium text-text-primary">{opp.name}</p>
-                  <p className="text-xs text-text-secondary">Oportunidad · {opp.status}</p>
+                  <p className="text-xs text-text-secondary">Oportunidad · {opp.status === "won" ? "Ganada" : opp.status === "lost" ? "Perdida" : "Abierta"}</p>
                 </div>
               </div>
               <span className="text-xs font-medium text-text-secondary">{opp.monetaryValue ? formatCurrency(opp.monetaryValue) : "—"}</span>
             </div>
           ))}
 
-          {/* Recent reservations */}
           {recentReservations.map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
@@ -243,7 +316,6 @@ export default function DashboardHome() {
             </div>
           ))}
 
-          {/* Recent quotes */}
           {recentQuotes.map((quote) => (
             <div key={quote.id} className="flex items-center justify-between rounded-lg border border-border p-3">
               <div className="flex items-center gap-3">
