@@ -37,6 +37,38 @@ export async function GET() {
       prisma.syncStatus.findUnique({ where: { tenantId } }),
     ]);
 
+    // Recovery: if sync has been "in progress" for >15 min, it's stuck — reset it
+    if (syncStatus?.syncInProgress) {
+      const lastUpdate = syncStatus.lastFullSync ?? syncStatus.lastIncrSync;
+      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const isStale = !lastUpdate || new Date(lastUpdate) < fifteenMinAgo;
+      if (isStale) {
+        log.warn({ tenantId }, "Resetting stale sync — stuck for >15 min");
+        await prisma.syncStatus.update({
+          where: { tenantId },
+          data: { syncInProgress: false, lastError: "Sincronización anterior interrumpida" },
+        });
+        await prisma.tenant.update({
+          where: { id: tenantId },
+          data: { syncState: "error", lastSyncError: "Sincronización anterior interrumpida. Pulsa Sincronizar de nuevo." },
+        });
+        // Re-read the updated state
+        const [updatedTenant, updatedSync] = await Promise.all([
+          prisma.tenant.findUniqueOrThrow({
+            where: { id: tenantId },
+            select: {
+              id: true, name: true, slug: true, ghlLocationId: true, ghlConnectedAt: true,
+              ghlTokenExpiry: true, onboardingComplete: true, onboardingDismissed: true,
+              isDemo: true, isActive: true, syncState: true, syncProgressMsg: true,
+              lastSyncAt: true, lastSyncError: true, createdAt: true,
+            },
+          }),
+          prisma.syncStatus.findUnique({ where: { tenantId } }),
+        ]);
+        return NextResponse.json({ tenant: updatedTenant, syncStatus: updatedSync });
+      }
+    }
+
     log.info("Tenant settings fetched");
     return NextResponse.json({ tenant, syncStatus });
   } catch (error) {

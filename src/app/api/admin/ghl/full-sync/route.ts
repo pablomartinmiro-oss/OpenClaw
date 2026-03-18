@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { fullSync } from "@/lib/ghl/sync";
+import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 const log = logger.child({ route: "/api/admin/ghl/full-sync" });
@@ -13,31 +14,34 @@ export async function POST() {
 
   const tenantId = session.user.tenantId;
 
-  try {
-    log.info({ tenantId }, "Starting full GHL sync");
-    const result = await fullSync(tenantId);
-
-    if (result.status === "failed") {
-      return NextResponse.json(
-        {
-          error: "Error en sincronización",
-          details: result.error,
-          progress: result,
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: "Sincronización completa",
-      ...result,
-    });
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    log.error({ tenantId, error: msg }, "Full sync endpoint failed");
+  // Check if sync is already in progress
+  const syncStatus = await prisma.syncStatus.findUnique({
+    where: { tenantId },
+  });
+  if (syncStatus?.syncInProgress) {
     return NextResponse.json(
-      { error: "Error en sincronización", details: msg },
-      { status: 500 }
+      { message: "Sincronización ya en progreso" },
+      { status: 202 }
     );
   }
+
+  // Fire-and-forget: start sync in background, return immediately
+  log.info({ tenantId }, "Starting full GHL sync (background)");
+
+  fullSync(tenantId)
+    .then((result) => {
+      log.info(
+        { tenantId, status: result.status, contacts: result.contacts, opportunities: result.opportunities },
+        "Background sync finished"
+      );
+    })
+    .catch((error) => {
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      log.error({ tenantId, error: msg }, "Background sync failed");
+    });
+
+  return NextResponse.json(
+    { message: "Sincronización iniciada", status: "syncing" },
+    { status: 202 }
+  );
 }

@@ -99,6 +99,7 @@ export default function SettingsPage() {
           loading={tenantLoading}
           syncStatus={tenantData?.syncStatus}
           syncState={tenant?.syncState}
+          syncProgressMsg={tenant?.syncProgressMsg}
           lastSyncError={tenant?.lastSyncError}
         />
       </RoleGate>

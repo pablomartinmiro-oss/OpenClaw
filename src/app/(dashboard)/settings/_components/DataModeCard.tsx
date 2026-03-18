@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 interface SyncStatus {
   lastFullSync: string | null;
@@ -19,11 +21,20 @@ interface SyncStatusCardProps {
   loading: boolean;
   syncStatus?: SyncStatus | null;
   syncState?: string | null;
+  syncProgressMsg?: string | null;
   lastSyncError?: string | null;
 }
 
-export function SyncStatusCard({ ghlConnected, loading, syncStatus, syncState, lastSyncError }: SyncStatusCardProps) {
+export function SyncStatusCard({
+  ghlConnected,
+  loading,
+  syncStatus,
+  syncState,
+  syncProgressMsg,
+  lastSyncError,
+}: SyncStatusCardProps) {
   const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
 
   if (loading) {
     return (
@@ -40,20 +51,47 @@ export function SyncStatusCard({ ghlConnected, loading, syncStatus, syncState, l
 
   const lastSync = syncStatus?.lastFullSync ?? syncStatus?.lastIncrSync;
   const isError = syncState === "error";
-  const isSyncing = syncStatus?.syncInProgress || syncing;
+  const isSyncing = syncStatus?.syncInProgress || syncState === "syncing" || syncing;
 
   const handleManualSync = async () => {
     setSyncing(true);
     try {
       const res = await fetch("/api/admin/ghl/full-sync", { method: "POST" });
-      if (!res.ok) {
+      if (!res.ok && res.status !== 202) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Error de sincronización");
       }
-    } finally {
+      toast.success("Sincronización iniciada — esto puede tardar unos minutos");
+
+      // Poll sync status every 3 seconds until done
+      const pollInterval = setInterval(async () => {
+        await queryClient.invalidateQueries({ queryKey: ["tenant-settings"] });
+      }, 3000);
+
+      // Stop polling after 10 minutes max
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setSyncing(false);
+      }, 600000);
+
+      // Also check periodically if sync is done
+      const checkDone = setInterval(async () => {
+        const data = queryClient.getQueryData<{ tenant: { syncState: string | null } }>(["tenant-settings"]);
+        if (data?.tenant?.syncState && data.tenant.syncState !== "syncing") {
+          clearInterval(pollInterval);
+          clearInterval(checkDone);
+          setSyncing(false);
+          if (data.tenant.syncState === "complete") {
+            toast.success("Sincronización completa");
+          } else if (data.tenant.syncState === "error") {
+            toast.error("Error en la sincronización");
+          }
+        }
+      }, 3500);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Error desconocido";
+      toast.error(msg);
       setSyncing(false);
-      // Reload page to refresh sync status
-      window.location.reload();
     }
   };
 
@@ -83,6 +121,11 @@ export function SyncStatusCard({ ghlConnected, loading, syncStatus, syncState, l
 
           {isError && lastSyncError && (
             <p className="text-sm text-muted-red">{lastSyncError}</p>
+          )}
+
+          {/* Show live progress message while syncing */}
+          {isSyncing && syncProgressMsg && (
+            <p className="text-sm font-medium text-gold">{syncProgressMsg}</p>
           )}
 
           {syncStatus && (
