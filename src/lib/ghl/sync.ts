@@ -6,7 +6,6 @@ import type { GHLContact, GHLConversation, GHLOpportunity, GHLPipeline } from ".
 
 type JsonValue = Prisma.InputJsonValue;
 
-/** Strip id from a cache record for use in Prisma update */
 function stripId<T extends { id: string }>(data: T): Omit<T, "id"> {
   const { id: _, ...rest } = data;
   return rest;
@@ -108,7 +107,6 @@ export async function fullSync(
     status: "in_progress",
   };
 
-  // Mark sync in progress
   await prisma.syncStatus.upsert({
     where: { tenantId },
     create: { tenantId, syncInProgress: true },
@@ -118,24 +116,15 @@ export async function fullSync(
     where: { id: tenantId },
     data: { syncState: "syncing", syncProgressMsg: "Iniciando sincronización...", lastSyncError: null },
   });
-  console.log("[SYNC] Marked sync in progress in DB");
 
   try {
-    // Step 1: Create GHL client (decrypts token)
-    console.log("[SYNC] Step 1: Creating GHL client...");
+    console.log("[SYNC] Creating GHL client...");
     const ghl = await getGHLClient(tenantId);
-    console.log(`[SYNC] GHL client created OK — locationId: ${ghl.getLocationId()}`);
+    console.log(`[SYNC] GHL client OK — location: ${ghl.getLocationId()}`);
 
-    // Step 2: Sync pipelines
-    console.log("[SYNC] Step 2: Fetching pipelines...");
-    let pipelines: GHLPipeline[];
-    try {
-      pipelines = await ghl.getPipelines();
-    } catch (err) {
-      const e = err as { response?: { status?: number; data?: unknown }; message?: string };
-      console.error(`[SYNC] PIPELINE FETCH FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
-      throw err;
-    }
+    // 1. Pipelines
+    console.log("[SYNC] Fetching pipelines...");
+    const pipelines = await ghl.getPipelines();
     console.log(`[SYNC] Got ${pipelines.length} pipelines: ${pipelines.map(p => p.name).join(", ")}`);
 
     for (const pipeline of pipelines) {
@@ -146,24 +135,22 @@ export async function fullSync(
         update: { name: data.name, stages: data.stages, raw: data.raw, cachedAt: new Date() },
       });
       progress.pipelines++;
-      console.log(`[SYNC] Cached pipeline: ${pipeline.name} (${pipeline.stages.length} stages)`);
 
-      // Step 3: Sync opportunities per pipeline
-      console.log(`[SYNC] Step 3: Fetching opportunities for pipeline "${pipeline.name}"...`);
+      // 2. Opportunities per pipeline (page-based)
       await syncOpportunitiesForPipeline(ghl, tenantId, pipeline.id, pipeline.name, progress);
     }
     onProgress?.(progress);
 
-    // Step 4: Sync contacts (paginated)
-    console.log("[SYNC] Step 4: Syncing contacts (paginated)...");
+    // 3. Contacts (page-based)
+    console.log("[SYNC] Syncing contacts...");
     await syncAllContacts(ghl, tenantId, progress, onProgress);
 
-    // Step 5: Sync conversations
-    console.log("[SYNC] Step 5: Syncing conversations...");
-    await syncConversations(ghl, tenantId, progress);
+    // 4. Conversations (page-based)
+    console.log("[SYNC] Syncing conversations...");
+    await syncAllConversations(ghl, tenantId, progress);
     onProgress?.(progress);
 
-    // Step 6: Update sync status
+    // 5. Done
     progress.status = "completed";
     await prisma.syncStatus.update({
       where: { tenantId },
@@ -186,8 +173,7 @@ export async function fullSync(
       },
     });
 
-    console.log(`[SYNC] ========== FULL SYNC COMPLETED ==========`);
-    console.log(`[SYNC] Results: ${progress.pipelines} pipelines, ${progress.opportunities} opportunities, ${progress.contacts} contacts, ${progress.conversations} conversations`);
+    console.log(`[SYNC] ========== COMPLETED: ${progress.pipelines} pipelines, ${progress.opportunities} opps, ${progress.contacts} contacts, ${progress.conversations} convs ==========`);
     return progress;
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
@@ -195,10 +181,10 @@ export async function fullSync(
     progress.status = "failed";
     progress.error = msg;
 
-    console.error(`[SYNC] ========== FULL SYNC FAILED ==========`);
+    console.error(`[SYNC] ========== FAILED ==========`);
     console.error(`[SYNC] Error: ${msg}`);
     console.error(`[SYNC] Stack: ${stack}`);
-    console.error(`[SYNC] Progress at failure: pipelines=${progress.pipelines} opps=${progress.opportunities} contacts=${progress.contacts} convs=${progress.conversations}`);
+    console.error(`[SYNC] Progress: pipelines=${progress.pipelines} opps=${progress.opportunities} contacts=${progress.contacts} convs=${progress.conversations}`);
 
     try {
       await prisma.syncStatus.update({
@@ -210,12 +196,14 @@ export async function fullSync(
         data: { syncState: "error", lastSyncError: msg },
       });
     } catch (dbErr) {
-      console.error("[SYNC] Failed to write error state to DB:", dbErr);
+      console.error("[SYNC] DB error write failed:", dbErr);
     }
 
     return progress;
   }
 }
+
+// ==================== PAGE-BASED CONTACTS ====================
 
 async function syncAllContacts(
   ghl: GHLClient,
@@ -223,46 +211,36 @@ async function syncAllContacts(
   progress: SyncProgress,
   onProgress?: (progress: SyncProgress) => void
 ) {
-  let startAfterId: string | undefined;
-  let startAfter: number | undefined;
   const batchSize = 100;
-  let pageNum = 0;
-  const maxPages = 500; // Safety limit
+  let currentPage = 1;
+  const maxPages = 200;
   const seenFirstIds = new Set<string>();
 
-  while (pageNum < maxPages) {
-    pageNum++;
+  while (currentPage <= maxPages) {
     let res;
     try {
-      console.log(`[SYNC] Contacts page ${pageNum}: fetching (startAfterId=${startAfterId ?? "none"}, startAfter=${startAfter ?? "none"})...`);
-      res = await ghl.getContacts({
-        limit: batchSize,
-        startAfterId,
-        startAfter,
-      });
+      console.log(`[SYNC] Contacts page ${currentPage}...`);
+      res = await ghl.getContacts({ limit: batchSize, page: currentPage });
     } catch (err) {
       const e = err as { response?: { status?: number; data?: unknown }; message?: string };
-      console.error(`[SYNC] CONTACTS PAGE ${pageNum} FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
+      console.error(`[SYNC] Contacts page ${currentPage} FAILED — ${e.response?.status} ${e.message}`);
       throw err;
     }
 
     if (!res.contacts || res.contacts.length === 0) {
-      console.log(`[SYNC] Contacts page ${pageNum}: empty response, done`);
+      console.log(`[SYNC] Contacts page ${currentPage}: empty — done`);
       break;
     }
 
-    // Duplicate detection
     const firstId = res.contacts[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Contacts page ${pageNum}: DUPLICATE first ID ${firstId} — cursor not advancing, stopping`);
+      console.log(`[SYNC] Contacts page ${currentPage}: duplicate ${firstId} — done`);
       break;
     }
     seenFirstIds.add(firstId);
 
     progress.contactsTotal = res.meta?.total;
-    const lastContact = res.contacts[res.contacts.length - 1];
-    // Log the RAW meta so we can see what GHL returns for pagination
-    console.log(`[SYNC] Contacts page ${pageNum}: got ${res.contacts.length} records (total: ${res.meta?.total ?? "?"}, synced: ${progress.contacts}, meta: ${JSON.stringify(res.meta)})`);
+    console.log(`[SYNC] Contacts page ${currentPage}: ${res.contacts.length} records (total: ${res.meta?.total ?? "?"})`);
 
     for (const contact of res.contacts) {
       const data = mapContactToCache(tenantId, contact);
@@ -275,50 +253,25 @@ async function syncAllContacts(
     }
 
     onProgress?.(progress);
-
     const totalLabel = progress.contactsTotal ? `/${progress.contactsTotal}` : "";
     await prisma.tenant.update({
       where: { id: tenantId },
       data: { syncProgressMsg: `Contactos: ${progress.contacts}${totalLabel}` },
     });
 
-    // Stop condition: got fewer than requested = last page
     if (res.contacts.length < batchSize) {
-      console.log(`[SYNC] Contacts: last page (got ${res.contacts.length} < ${batchSize})`);
+      console.log(`[SYNC] Contacts: last page (${res.contacts.length} < ${batchSize})`);
       break;
     }
 
-    // Advance cursor — use whatever GHL gives us in meta
-    const prevCursor = startAfterId ?? String(startAfter ?? "none");
-    if (res.meta?.startAfterId) {
-      startAfterId = res.meta.startAfterId;
-      startAfter = undefined;
-    } else if (res.meta?.startAfter !== undefined && res.meta.startAfter !== null) {
-      startAfter = res.meta.startAfter;
-      startAfterId = undefined;
-    } else {
-      // Fallback: use last contact ID
-      startAfterId = lastContact.id;
-      startAfter = undefined;
-    }
-    const newCursor = startAfterId ?? String(startAfter ?? "none");
-    console.log(`[SYNC] Contacts cursor: ${prevCursor} → ${newCursor}`);
-
-    // Safety: if cursor didn't change, we're stuck
-    if (newCursor === prevCursor) {
-      console.error(`[SYNC] Contacts cursor DID NOT ADVANCE (${newCursor}) — stopping to prevent loop`);
-      break;
-    }
-
+    currentPage++;
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  if (pageNum >= maxPages) {
-    console.error(`[SYNC] SAFETY LIMIT: ${maxPages} pages for contacts — stopping`);
-  }
-
-  console.log(`[SYNC] Contacts sync done: ${progress.contacts} total in ${pageNum} pages`);
+  console.log(`[SYNC] Contacts done: ${progress.contacts} in ${currentPage} pages`);
 }
+
+// ==================== PAGE-BASED OPPORTUNITIES ====================
 
 async function syncOpportunitiesForPipeline(
   ghl: GHLClient,
@@ -336,31 +289,28 @@ async function syncOpportunitiesForPipeline(
   while (currentPage <= maxPages) {
     let res;
     try {
-      // GHL opportunities search uses page-based pagination (page=1, page=2, ...)
       res = await ghl.getOpportunities(pipelineId, {
         limit: batchSize,
         page: currentPage,
       });
     } catch (err) {
       const e = err as { response?: { status?: number; data?: unknown }; message?: string };
-      console.error(`[SYNC] OPPS page ${currentPage} for "${pipelineName}" FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
+      console.error(`[SYNC] Opps page ${currentPage} "${pipelineName}" FAILED — ${e.response?.status} ${e.message}`);
       throw err;
     }
 
     if (!res.opportunities || res.opportunities.length === 0) {
-      console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": empty — done`);
       break;
     }
 
-    // Duplicate detection
     const firstId = res.opportunities[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": duplicate first ID ${firstId} — stopping`);
+      console.log(`[SYNC] Opps page ${currentPage} "${pipelineName}": duplicate — done`);
       break;
     }
     seenFirstIds.add(firstId);
 
-    console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": got ${res.opportunities.length} (meta: total=${res.meta?.total ?? "?"}, nextPage=${res.meta?.nextPage ?? "null"})`);
+    console.log(`[SYNC] Opps page ${currentPage} "${pipelineName}": ${res.opportunities.length} records`);
 
     for (const opp of res.opportunities) {
       const data = mapOpportunityToCache(tenantId, opp);
@@ -372,41 +322,52 @@ async function syncOpportunitiesForPipeline(
       progress.opportunities++;
     }
 
-    // Stop condition: got fewer than requested = last page
-    if (res.opportunities.length < batchSize) {
-      console.log(`[SYNC] Opps for "${pipelineName}": last page (got ${res.opportunities.length} < ${batchSize})`);
-      break;
-    }
+    if (res.opportunities.length < batchSize) break;
 
-    // Advance to next page
     currentPage++;
-
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  if (currentPage > maxPages) {
-    console.error(`[SYNC] SAFETY LIMIT: ${maxPages} pages for "${pipelineName}" — stopping`);
-  }
-
-  const pipelineCount = progress.opportunities - startCount;
-  console.log(`[SYNC] Pipeline "${pipelineName}": ${pipelineCount} opportunities synced in ${currentPage} pages`);
+  const count = progress.opportunities - startCount;
+  console.log(`[SYNC] Pipeline "${pipelineName}": ${count} opps in ${currentPage} pages`);
 }
 
-async function syncConversations(
+// ==================== PAGE-BASED CONVERSATIONS ====================
+
+async function syncAllConversations(
   ghl: GHLClient,
   tenantId: string,
   progress: SyncProgress
 ) {
-  console.log("[SYNC] Fetching conversations...");
-  try {
-    const res = await ghl.getConversations({ limit: 100 });
+  const batchSize = 100;
+  let currentPage = 1;
+  const maxPages = 100;
+  const seenFirstIds = new Set<string>();
 
-    if (!res.conversations || res.conversations.length === 0) {
-      console.log("[SYNC] No conversations found");
-      return;
+  while (currentPage <= maxPages) {
+    let res;
+    try {
+      console.log(`[SYNC] Conversations page ${currentPage}...`);
+      res = await ghl.getConversations({ limit: batchSize, page: currentPage });
+    } catch (err) {
+      const e = err as { response?: { status?: number; data?: unknown }; message?: string };
+      console.error(`[SYNC] Conversations page ${currentPage} FAILED — ${e.response?.status} ${e.message}`);
+      throw err;
     }
 
-    console.log(`[SYNC] Got ${res.conversations.length} conversations`);
+    if (!res.conversations || res.conversations.length === 0) {
+      console.log(`[SYNC] Conversations page ${currentPage}: empty — done`);
+      break;
+    }
+
+    const firstId = res.conversations[0].id;
+    if (seenFirstIds.has(firstId)) {
+      console.log(`[SYNC] Conversations page ${currentPage}: duplicate — done`);
+      break;
+    }
+    seenFirstIds.add(firstId);
+
+    console.log(`[SYNC] Conversations page ${currentPage}: ${res.conversations.length} records`);
 
     for (const conv of res.conversations) {
       const data = mapConversationToCache(tenantId, conv);
@@ -418,12 +379,16 @@ async function syncConversations(
       progress.conversations++;
     }
 
-    console.log(`[SYNC] Conversations sync done: ${progress.conversations} total`);
-  } catch (err) {
-    const e = err as { response?: { status?: number; data?: unknown }; message?: string };
-    console.error(`[SYNC] CONVERSATIONS FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
-    throw err;
+    if (res.conversations.length < batchSize) {
+      console.log(`[SYNC] Conversations: last page (${res.conversations.length} < ${batchSize})`);
+      break;
+    }
+
+    currentPage++;
+    await new Promise((r) => setTimeout(r, 150));
   }
+
+  console.log(`[SYNC] Conversations done: ${progress.conversations} in ${currentPage} pages`);
 }
 
 // ==================== INCREMENTAL SYNC ====================
@@ -435,22 +400,19 @@ export async function incrementalSync(tenantId: string): Promise<{
   const ghl = await getGHLClient(tenantId);
 
   const cachedCount = await prisma.cachedContact.count({ where: { tenantId } });
-  const res = await ghl.getContacts({ limit: 1 });
+  const res = await ghl.getContacts({ limit: 1, page: 1 });
   const ghlTotal = res.meta?.total ?? 0;
 
   const delta = Math.abs(ghlTotal - cachedCount);
   const mismatchPercent = cachedCount > 0 ? (delta / cachedCount) * 100 : 100;
 
-  log.info(
-    { tenantId, cachedCount, ghlTotal, delta, mismatchPercent },
-    "Incremental sync check"
-  );
+  log.info({ tenantId, cachedCount, ghlTotal, delta, mismatchPercent }, "Incremental sync check");
 
   if (mismatchPercent > 10) {
     return { contactsDelta: delta, needsFullSync: true };
   }
 
-  const recentContacts = await ghl.getContacts({ limit: 100 });
+  const recentContacts = await ghl.getContacts({ limit: 100, page: 1 });
   for (const contact of recentContacts.contacts) {
     const data = mapContactToCache(tenantId, contact);
     await prisma.cachedContact.upsert({
@@ -660,10 +622,7 @@ export async function processSyncQueue() {
         },
       });
 
-      log.error(
-        { itemId: item.id, action: item.action, error: msg },
-        "Sync queue item failed"
-      );
+      log.error({ itemId: item.id, action: item.action, error: msg }, "Sync queue item failed");
     }
   }
 }

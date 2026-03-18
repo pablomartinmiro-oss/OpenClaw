@@ -197,38 +197,16 @@ export class GHLClient {
   async getContacts(params?: {
     limit?: number;
     query?: string;
-    startAfterId?: string;
-    startAfter?: number;
+    page?: number;
   }): Promise<GHLContactsResponse> {
-    // GHL v2 contacts API accepts both startAfterId (string) and startAfter (number)
-    // Log what we're sending so we can debug pagination
-    if (params?.startAfterId || params?.startAfter) {
-      this.log.debug({
-        startAfterId: params.startAfterId,
-        startAfter: params.startAfter,
-        limit: params.limit,
-      }, "Contacts pagination params");
-    }
     const res = await this.http.get("/contacts/", {
       params: {
         locationId: this.locationId,
         limit: params?.limit ?? 20,
         query: params?.query,
-        startAfterId: params?.startAfterId,
-        startAfter: params?.startAfter,
+        page: params?.page,
       },
     });
-    // Log the meta for debugging pagination
-    const meta = (res.data as GHLContactsResponse).meta;
-    if (meta) {
-      this.log.debug({
-        total: meta.total,
-        startAfterId: meta.startAfterId,
-        startAfter: meta.startAfter,
-        nextPage: meta.nextPage,
-        currentPage: meta.currentPage,
-      }, "Contacts response meta");
-    }
     return res.data as GHLContactsResponse;
   }
 
@@ -285,9 +263,14 @@ export class GHLClient {
 
   async getConversations(params?: {
     limit?: number;
+    page?: number;
   }): Promise<GHLConversationsResponse> {
     const res = await this.http.get("/conversations/search", {
-      params: { locationId: this.locationId, limit: params?.limit ?? 20 },
+      params: {
+        locationId: this.locationId,
+        limit: params?.limit ?? 20,
+        page: params?.page,
+      },
     });
     return res.data as GHLConversationsResponse;
   }
