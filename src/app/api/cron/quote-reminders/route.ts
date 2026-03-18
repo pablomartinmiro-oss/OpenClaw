@@ -54,6 +54,8 @@ export async function GET() {
         });
 
         await sendEmail({
+          tenantId: quote.tenantId,
+          contactId: quote.ghlContactId ?? null,
           to: quote.clientEmail,
           subject: `Recordatorio — Presupuesto ${quoteNumber} expira pronto`,
           html,

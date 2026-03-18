@@ -1,80 +1,58 @@
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { getGHLClient } from "@/lib/ghl/api";
 import { logger } from "@/lib/logger";
 
 const log = logger.child({ module: "email" });
 
-function createTransporter() {
-  const host = process.env.SMTP_HOST ?? "skicenter-es.correoseguro.dinaserver.com";
-  const port = parseInt(process.env.SMTP_PORT ?? "587");
-  // SMTP_SECURE=true → SSL on 465. Default false → STARTTLS on 587 (Railway-safe)
-  const secure = process.env.SMTP_SECURE === "true";
-
-  log.info({ host, port, secure }, "Creating SMTP transporter");
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: {
-      user: process.env.SMTP_USER ?? "reservas@skicenter.es",
-      pass: process.env.SMTP_PASS ?? "",
-    },
-    tls: {
-      rejectUnauthorized: false, // Allow self-signed certs (Dinahosting)
-    },
-    connectionTimeout: 10_000,
-    greetingTimeout: 5_000,
-    socketTimeout: 10_000,
-  });
-}
+const EMAIL_FROM = "Skicenter <reservas@skicenter.es>";
+const EMAIL_REPLY_TO = "reservas@skicenter.es";
+const EMAIL_CC = ["reservas@skicenter.es"];
 
 interface SendEmailParams {
-  to: string;
+  tenantId: string;
+  contactId: string | null; // GHL contact ID — null skips sending
   subject: string;
   html: string;
-  cc?: string;
-  replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: Buffer;
-    contentType: string;
-  }>;
+  to: string; // used only for logging
 }
 
-export async function sendEmail(
-  params: SendEmailParams
-): Promise<{ messageId: string }> {
-  const from = process.env.SMTP_FROM ?? "Skicenter <reservas@skicenter.es>";
-  const host = process.env.SMTP_HOST ?? "skicenter-es.correoseguro.dinaserver.com";
+interface SendEmailResult {
+  messageId?: string;
+  skipped?: boolean;
+  skipReason?: string;
+}
 
-  // DNS diagnostic — log resolved IP to verify hostname is reachable
-  try {
-    const resolved = await dns.promises.lookup(host);
-    log.info({ host, ip: resolved.address }, "SMTP host DNS resolved");
-  } catch (dnsErr) {
-    log.warn({ host, error: dnsErr }, "SMTP host DNS lookup failed — host may be unreachable");
+export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
+  if (!params.contactId) {
+    log.warn(
+      { to: params.to, subject: params.subject },
+      "Email skipped — no GHL contactId on quote"
+    );
+    return { skipped: true, skipReason: "no_contact_id" };
   }
 
-  log.info({ to: params.to, subject: params.subject }, "Sending email");
+  log.info(
+    { contactId: params.contactId, to: params.to, subject: params.subject },
+    "Sending email via GHL"
+  );
 
-  const transporter = createTransporter();
+  const ghl = await getGHLClient(params.tenantId);
 
-  try {
-    const info = await transporter.sendMail({
-      from,
-      to: params.to,
-      subject: params.subject,
-      html: params.html,
-      cc: params.cc,
-      replyTo: params.replyTo ?? "reservas@skicenter.es",
-      attachments: params.attachments,
-    });
+  const result = await ghl.sendMessage({
+    type: "Email",
+    contactId: params.contactId,
+    subject: params.subject,
+    html: params.html,
+    body: params.subject, // GHL uses body as plain-text fallback
+    emailFrom: EMAIL_FROM,
+    emailTo: params.to,
+    emailCc: EMAIL_CC,
+    emailReplyTo: EMAIL_REPLY_TO,
+  });
 
-    log.info({ messageId: info.messageId, to: params.to }, "Email sent successfully");
-    return { messageId: info.messageId };
-  } catch (error) {
-    log.error({ error, to: params.to }, "Failed to send email");
-    throw error;
-  }
+  log.info(
+    { messageId: result.id, contactId: params.contactId },
+    "Email sent via GHL"
+  );
+
+  return { messageId: result.id };
 }

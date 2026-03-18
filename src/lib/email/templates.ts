@@ -15,6 +15,7 @@ interface QuoteEmailParams {
   paymentUrl?: string;
   expiresAt?: string;
   iban: string;
+  pdfUrl?: string; // download link included in body (GHL API has no attachment support)
 }
 
 function formatEUR(amount: number): string {
@@ -108,6 +109,10 @@ export function buildQuoteEmailHTML(params: QuoteEmailParams): string {
     ? `<p style="color:#D4A853; font-size:13px;"><strong>Válido hasta ${params.expiresAt}.</strong> Pasada esta fecha, los precios podrían variar.</p>`
     : "";
 
+  const pdfLine = params.pdfUrl
+    ? `<p style="font-size:14px; margin-top:16px;">📄 <a href="${params.pdfUrl}" style="color:#E87B5A;">Descargar presupuesto en PDF</a></p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><style>${baseStyles()}</style></head>
@@ -123,6 +128,7 @@ export function buildQuoteEmailHTML(params: QuoteEmailParams): string {
     ${itemsTable}
     ${paymentSection}
     ${validityLine}
+    ${pdfLine}
     <p style="font-size:14px;">¿Tienes alguna duda? Llámanos al <strong>639 576 627</strong> o escríbenos a <a href="mailto:reservas@skicenter.es" style="color:#E87B5A;">reservas@skicenter.es</a>.</p>
   </div>
   <div class="footer">

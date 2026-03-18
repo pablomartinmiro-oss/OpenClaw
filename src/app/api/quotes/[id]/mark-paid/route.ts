@@ -57,7 +57,7 @@ export async function POST(
       "Quote marked as paid"
     );
 
-    // Send confirmation email
+    // Send confirmation email via GHL
     if (quote.clientEmail) {
       try {
         const quoteNumber = quote.id.slice(-8).toUpperCase();
@@ -72,16 +72,14 @@ export async function POST(
         });
 
         await sendEmail({
+          tenantId,
+          contactId: quote.ghlContactId ?? null,
           to: quote.clientEmail,
           subject: `Pago confirmado — Presupuesto ${quoteNumber}`,
           html,
-          cc: "reservas@skicenter.es",
         });
       } catch (emailError) {
-        log.error(
-          { error: emailError, quoteId: id },
-          "Failed to send confirmation email"
-        );
+        log.error({ error: emailError, quoteId: id }, "Failed to send confirmation email");
       }
     }
 

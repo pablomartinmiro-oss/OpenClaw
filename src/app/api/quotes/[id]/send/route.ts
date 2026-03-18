@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
-import { generateQuotePDF } from "@/lib/pdf/quote-pdf";
 import { sendEmail } from "@/lib/email/client";
 import { buildQuoteEmailHTML } from "@/lib/email/templates";
 import { getGHLClient } from "@/lib/ghl/api";
@@ -37,17 +36,11 @@ export async function POST(
     }
 
     if (!quote.clientEmail) {
-      return NextResponse.json(
-        { error: "El cliente no tiene email" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "El cliente no tiene email" }, { status: 400 });
     }
 
     if (quote.items.length === 0) {
-      return NextResponse.json(
-        { error: "El presupuesto no tiene productos" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "El presupuesto no tiene productos" }, { status: 400 });
     }
 
     // 2. Generate Redsys payment link
@@ -63,17 +56,16 @@ export async function POST(
         urlOk: `${BASE_URL}/presupuestos/${quote.id}/success`,
         urlKo: `${BASE_URL}/presupuestos/${quote.id}/error`,
       });
-      // Build full payment URL with params
-      const searchParams = new URLSearchParams();
-      searchParams.set("Ds_SignatureVersion", redsysForm.params.Ds_SignatureVersion);
-      searchParams.set("Ds_MerchantParameters", redsysForm.params.Ds_MerchantParameters);
-      searchParams.set("Ds_Signature", redsysForm.params.Ds_Signature);
-      redsysPaymentUrl = `${redsysForm.url}?${searchParams.toString()}`;
+      const sp = new URLSearchParams();
+      sp.set("Ds_SignatureVersion", redsysForm.params.Ds_SignatureVersion);
+      sp.set("Ds_MerchantParameters", redsysForm.params.Ds_MerchantParameters);
+      sp.set("Ds_Signature", redsysForm.params.Ds_Signature);
+      redsysPaymentUrl = `${redsysForm.url}?${sp.toString()}`;
     } catch (redsysError) {
       log.warn({ error: redsysError }, "Redsys not configured, sending without payment link");
     }
 
-    // 3. Format dates for display
+    // 3. Format dates
     const quoteNumber = quote.id.slice(-8).toUpperCase();
     const checkIn = new Date(quote.checkIn).toLocaleDateString("es-ES");
     const checkOut = new Date(quote.checkOut).toLocaleDateString("es-ES");
@@ -81,28 +73,10 @@ export async function POST(
       ? new Date(quote.expiresAt).toLocaleDateString("es-ES")
       : undefined;
 
-    // 4. Generate PDF
-    const pdfBuffer = await generateQuotePDF({
-      quoteNumber,
-      clientName: quote.clientName,
-      clientEmail: quote.clientEmail,
-      destination: quote.destination,
-      checkIn,
-      checkOut,
-      items: quote.items.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-        totalPrice: item.totalPrice,
-      })),
-      totalAmount: quote.totalAmount,
-      paymentUrl: redsysPaymentUrl ?? undefined,
-      expiresAt,
-      iban: IBAN,
-    });
+    // 4. PDF download link (GHL API does not support attachments)
+    const pdfUrl = `${BASE_URL}/api/quotes/${id}/pdf`;
 
-    // 5. Build email HTML
+    // 5. Build email HTML (includes PDF download link + payment button)
     const html = buildQuoteEmailHTML({
       quoteNumber,
       clientName: quote.clientName,
@@ -120,82 +94,69 @@ export async function POST(
       paymentUrl: redsysPaymentUrl ?? undefined,
       expiresAt,
       iban: IBAN,
+      pdfUrl,
     });
 
-    // 6. Send email (non-blocking — quote is saved as SENT regardless)
+    // 6. Send via GHL (non-blocking — quote saved as SENT regardless)
     let emailError: string | null = null;
+    let emailSkipped = false;
     try {
-      await sendEmail({
+      const result = await sendEmail({
+        tenantId,
+        contactId: quote.ghlContactId ?? null,
         to: quote.clientEmail,
-        subject: `Presupuesto Skicenter N.o ${quoteNumber}`,
+        subject: `Presupuesto Skicenter N.º ${quoteNumber}`,
         html,
-        cc: "reservas@skicenter.es",
-        attachments: [
-          {
-            filename: `presupuesto-${quoteNumber}.pdf`,
-            content: pdfBuffer,
-            contentType: "application/pdf",
-          },
-        ],
       });
+      if (result.skipped) {
+        emailSkipped = true;
+        log.warn({ quoteId: id, reason: result.skipReason }, "Email skipped");
+      }
     } catch (err) {
-      const e = err as NodeJS.ErrnoException & { command?: string };
+      const e = err as Error & { code?: string };
       emailError = `${e.code ?? "EMAIL_ERROR"}: ${e.message}`;
-      log.error({ error: err, to: quote.clientEmail }, "Email failed — quote saved as sent anyway");
+      log.error({ error: err, to: quote.clientEmail }, "GHL email failed — quote saved as sent anyway");
     }
 
-    // 7. Update quote status and tracking fields
+    // 7. Update quote status
     const now = new Date();
+    const emailSent = !emailError && !emailSkipped;
     await prisma.quote.update({
       where: { id },
       data: {
         status: "enviado",
         sentAt: now,
-        ...(emailError ? {} : { emailSentAt: now, emailSentTo: quote.clientEmail }),
+        ...(emailSent ? { emailSentAt: now, emailSentTo: quote.clientEmail } : {}),
         redsysOrderId: redsysPaymentUrl ? orderId : null,
         redsysPaymentUrl,
         pdfUrl: `/api/quotes/${id}/pdf`,
       },
     });
 
-    // Move GHL opportunity to "SE LE MANDA EL PRESUPUESTO" stage
+    // 8. Move GHL opportunity to PRESUPUESTO stage
     if (quote.ghlOpportunityId) {
       try {
         const ghl = await getGHLClient(tenantId);
         const stageInfo = await findStageByName(tenantId, "PRESUPUESTO");
         if (stageInfo) {
-          await ghl.updateOpportunity(quote.ghlOpportunityId, {
-            stageId: stageInfo.stageId,
-          });
+          await ghl.updateOpportunity(quote.ghlOpportunityId, { stageId: stageInfo.stageId });
           await prisma.cachedOpportunity.updateMany({
             where: { id: quote.ghlOpportunityId, tenantId },
-            data: {
-              pipelineStageId: stageInfo.stageId,
-              cachedAt: new Date(),
-            },
+            data: { pipelineStageId: stageInfo.stageId, cachedAt: new Date() },
           });
-          log.info(
-            { oppId: quote.ghlOpportunityId, stageId: stageInfo.stageId },
-            "GHL opportunity moved to PRESUPUESTO stage",
-          );
         }
       } catch (ghlError) {
-        log.error(
-          { error: ghlError },
-          "Failed to move GHL opportunity on send",
-        );
+        log.error({ error: ghlError }, "Failed to move GHL opportunity on send");
       }
     }
 
-    log.info(
-      { quoteId: id, to: quote.clientEmail, orderId, emailError },
-      "Quote sent"
-    );
+    log.info({ quoteId: id, to: quote.clientEmail, orderId, emailError, emailSkipped }, "Quote sent");
 
     return NextResponse.json({
       success: true,
-      emailSentTo: emailError ? null : quote.clientEmail,
+      emailSentTo: emailSent ? quote.clientEmail : null,
       emailError,
+      emailSkipped,
       redsysPaymentUrl,
       redsysOrderId: redsysPaymentUrl ? orderId : null,
     });

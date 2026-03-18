@@ -87,11 +87,18 @@ export interface GHLMessagesResponse {
 }
 
 export interface SendMessageData {
-  conversationId: string;
   type: "SMS" | "Email" | "WhatsApp" | "Live_Chat";
-  body: string;
+  body?: string;
+  // Routing — one of these is required
+  conversationId?: string;
+  contactId?: string;
+  // Email-specific
   html?: string;
   subject?: string;
+  emailFrom?: string;
+  emailTo?: string;
+  emailCc?: string[];
+  emailReplyTo?: string;
 }
 
 // ==================== PIPELINES & OPPORTUNITIES ====================

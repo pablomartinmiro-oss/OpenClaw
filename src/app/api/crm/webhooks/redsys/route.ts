@@ -94,10 +94,11 @@ export async function POST(request: NextRequest) {
           });
 
           await sendEmail({
+            tenantId: quote.tenantId,
+            contactId: quote.ghlContactId ?? null,
             to: quote.clientEmail,
             subject: `Pago confirmado — Presupuesto ${quoteNumber}`,
             html,
-            cc: "reservas@skicenter.es",
           });
         } catch (emailError) {
           log.error(
