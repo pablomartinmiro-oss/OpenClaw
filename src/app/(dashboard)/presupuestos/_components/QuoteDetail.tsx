@@ -167,15 +167,31 @@ export function QuoteDetail({ quote, products, onPreviewEmail, onDeleted }: Quot
         id: quote.id, totalAmount,
         expiresAt: expiresAt.toISOString(),
       });
-      await sendQuote.mutateAsync(quote.id);
-      toast.success("Presupuesto enviado con enlace de pago");
+      const result = await sendQuote.mutateAsync(quote.id);
+      if (result.emailError) {
+        toast.warning(`Presupuesto guardado como enviado, pero el email falló: ${result.emailError}`);
+        if (result.redsysPaymentUrl) {
+          await navigator.clipboard.writeText(result.redsysPaymentUrl).catch(() => null);
+          toast.info("Enlace de pago copiado al portapapeles");
+        }
+      } else {
+        toast.success("Presupuesto enviado con enlace de pago");
+      }
     } catch { toast.error("Error al enviar"); }
   };
 
   const handleResend = async () => {
     try {
-      await sendQuote.mutateAsync(quote.id);
-      toast.success("Email reenviado");
+      const result = await sendQuote.mutateAsync(quote.id);
+      if (result.emailError) {
+        toast.warning(`Email falló: ${result.emailError}`);
+        if (result.redsysPaymentUrl) {
+          await navigator.clipboard.writeText(result.redsysPaymentUrl).catch(() => null);
+          toast.info("Enlace de pago copiado al portapapeles");
+        }
+      } else {
+        toast.success("Email reenviado");
+      }
     } catch { toast.error("Error al reenviar"); }
   };
 

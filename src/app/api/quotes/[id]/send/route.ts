@@ -122,20 +122,27 @@ export async function POST(
       iban: IBAN,
     });
 
-    // 6. Send email with PDF attachment, CC to reservas
-    await sendEmail({
-      to: quote.clientEmail,
-      subject: `Presupuesto Skicenter N.o ${quoteNumber}`,
-      html,
-      cc: "reservas@skicenter.es",
-      attachments: [
-        {
-          filename: `presupuesto-${quoteNumber}.pdf`,
-          content: pdfBuffer,
-          contentType: "application/pdf",
-        },
-      ],
-    });
+    // 6. Send email (non-blocking — quote is saved as SENT regardless)
+    let emailError: string | null = null;
+    try {
+      await sendEmail({
+        to: quote.clientEmail,
+        subject: `Presupuesto Skicenter N.o ${quoteNumber}`,
+        html,
+        cc: "reservas@skicenter.es",
+        attachments: [
+          {
+            filename: `presupuesto-${quoteNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: "application/pdf",
+          },
+        ],
+      });
+    } catch (err) {
+      const e = err as NodeJS.ErrnoException & { command?: string };
+      emailError = `${e.code ?? "EMAIL_ERROR"}: ${e.message}`;
+      log.error({ error: err, to: quote.clientEmail }, "Email failed — quote saved as sent anyway");
+    }
 
     // 7. Update quote status and tracking fields
     const now = new Date();
@@ -144,8 +151,7 @@ export async function POST(
       data: {
         status: "enviado",
         sentAt: now,
-        emailSentAt: now,
-        emailSentTo: quote.clientEmail,
+        ...(emailError ? {} : { emailSentAt: now, emailSentTo: quote.clientEmail }),
         redsysOrderId: redsysPaymentUrl ? orderId : null,
         redsysPaymentUrl,
         pdfUrl: `/api/quotes/${id}/pdf`,
@@ -182,13 +188,15 @@ export async function POST(
     }
 
     log.info(
-      { quoteId: id, to: quote.clientEmail, orderId },
-      "Quote sent successfully"
+      { quoteId: id, to: quote.clientEmail, orderId, emailError },
+      "Quote sent"
     );
 
     return NextResponse.json({
       success: true,
-      emailSentTo: quote.clientEmail,
+      emailSentTo: emailError ? null : quote.clientEmail,
+      emailError,
+      redsysPaymentUrl,
       redsysOrderId: redsysPaymentUrl ? orderId : null,
     });
   } catch (error) {
