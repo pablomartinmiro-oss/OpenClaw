@@ -6,6 +6,8 @@ import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
 import { generateQuotePDF } from "@/lib/pdf/quote-pdf";
 import { sendEmail } from "@/lib/email/client";
 import { buildQuoteEmailHTML } from "@/lib/email/templates";
+import { getGHLClient } from "@/lib/ghl/api";
+import { findStageByName } from "@/lib/ghl/stages";
 
 const BASE_URL = "https://crm-dash-prod.up.railway.app";
 const IBAN = "ES58 0182 2900 5402 0182 7221";
@@ -58,8 +60,8 @@ export async function POST(
         amount: quote.totalAmount,
         description: `Presupuesto ${quote.id.slice(-8).toUpperCase()}`,
         merchantUrl: `${BASE_URL}/api/crm/webhooks/redsys`,
-        urlOk: `${BASE_URL}/presupuestos/${quote.id}?payment=ok`,
-        urlKo: `${BASE_URL}/presupuestos/${quote.id}?payment=ko`,
+        urlOk: `${BASE_URL}/presupuestos/${quote.id}/success`,
+        urlKo: `${BASE_URL}/presupuestos/${quote.id}/error`,
       });
       // Build full payment URL with params
       const searchParams = new URLSearchParams();
@@ -149,6 +151,35 @@ export async function POST(
         pdfUrl: `/api/quotes/${id}/pdf`,
       },
     });
+
+    // Move GHL opportunity to "SE LE MANDA EL PRESUPUESTO" stage
+    if (quote.ghlOpportunityId) {
+      try {
+        const ghl = await getGHLClient(tenantId);
+        const stageInfo = await findStageByName(tenantId, "PRESUPUESTO");
+        if (stageInfo) {
+          await ghl.updateOpportunity(quote.ghlOpportunityId, {
+            stageId: stageInfo.stageId,
+          });
+          await prisma.cachedOpportunity.updateMany({
+            where: { id: quote.ghlOpportunityId, tenantId },
+            data: {
+              pipelineStageId: stageInfo.stageId,
+              cachedAt: new Date(),
+            },
+          });
+          log.info(
+            { oppId: quote.ghlOpportunityId, stageId: stageInfo.stageId },
+            "GHL opportunity moved to PRESUPUESTO stage",
+          );
+        }
+      } catch (ghlError) {
+        log.error(
+          { error: ghlError },
+          "Failed to move GHL opportunity on send",
+        );
+      }
+    }
 
     log.info(
       { quoteId: id, to: quote.clientEmail, orderId },

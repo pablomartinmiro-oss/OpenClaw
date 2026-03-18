@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email/client";
 import { buildConfirmationEmailHTML } from "@/lib/email/templates";
+import { getGHLClient } from "@/lib/ghl/api";
+import { findStageByName } from "@/lib/ghl/stages";
 
 export async function POST(
   request: NextRequest,
@@ -83,13 +85,37 @@ export async function POST(
       }
     }
 
-    // Move GHL opportunity if linked
+    // Move GHL opportunity to COMPRA stage
     if (quote.ghlOpportunityId) {
-      log.info(
-        { oppId: quote.ghlOpportunityId },
-        "GHL opportunity should be moved to CLIENTE COMPRA stage"
-      );
-      // GHL stage move would go here when GHL is connected
+      try {
+        const ghl = await getGHLClient(tenantId);
+        const stageInfo = await findStageByName(tenantId, "COMPRA");
+        if (stageInfo) {
+          await ghl.updateOpportunity(quote.ghlOpportunityId, {
+            stageId: stageInfo.stageId,
+            monetaryValue: quote.totalAmount,
+            status: "won",
+          });
+          await prisma.cachedOpportunity.updateMany({
+            where: { id: quote.ghlOpportunityId, tenantId },
+            data: {
+              pipelineStageId: stageInfo.stageId,
+              monetaryValue: quote.totalAmount,
+              status: "won",
+              cachedAt: new Date(),
+            },
+          });
+          log.info(
+            { oppId: quote.ghlOpportunityId },
+            "GHL opportunity moved to COMPRA stage",
+          );
+        }
+      } catch (ghlError) {
+        log.error(
+          { error: ghlError },
+          "Failed to move GHL opportunity on payment",
+        );
+      }
     }
 
     return NextResponse.json({ quote: updated });

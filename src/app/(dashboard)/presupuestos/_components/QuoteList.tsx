@@ -8,9 +8,12 @@ import { STATIONS } from "../../reservas/_components/constants";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   nuevo: { label: "Nuevo", color: "bg-soft-blue-light text-soft-blue" },
+  borrador: { label: "Borrador", color: "bg-soft-blue-light text-soft-blue" },
   en_proceso: { label: "En Proceso", color: "bg-gold-light text-gold" },
   enviado: { label: "Enviado", color: "bg-sage-light text-sage" },
-  aceptado: { label: "Aceptado", color: "bg-coral-light text-coral" },
+  pagado: { label: "Pagado", color: "bg-sage text-white" },
+  expirado: { label: "Expirado", color: "bg-red-100 text-red-600" },
+  cancelado: { label: "Cancelado", color: "bg-gray-100 text-gray-500" },
 };
 
 function getStationLabel(value: string): string {

@@ -26,6 +26,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow public payment result pages (Redsys redirect targets)
+  if (/^\/presupuestos\/[^/]+\/(success|error)$/.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // Allow static assets
   if (
     pathname.startsWith("/_next") ||
