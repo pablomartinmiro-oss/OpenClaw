@@ -200,6 +200,15 @@ export class GHLClient {
     startAfterId?: string;
     startAfter?: number;
   }): Promise<GHLContactsResponse> {
+    // GHL v2 contacts API accepts both startAfterId (string) and startAfter (number)
+    // Log what we're sending so we can debug pagination
+    if (params?.startAfterId || params?.startAfter) {
+      this.log.debug({
+        startAfterId: params.startAfterId,
+        startAfter: params.startAfter,
+        limit: params.limit,
+      }, "Contacts pagination params");
+    }
     const res = await this.http.get("/contacts/", {
       params: {
         locationId: this.locationId,
@@ -209,6 +218,17 @@ export class GHLClient {
         startAfter: params?.startAfter,
       },
     });
+    // Log the meta for debugging pagination
+    const meta = (res.data as GHLContactsResponse).meta;
+    if (meta) {
+      this.log.debug({
+        total: meta.total,
+        startAfterId: meta.startAfterId,
+        startAfter: meta.startAfter,
+        nextPage: meta.nextPage,
+        currentPage: meta.currentPage,
+      }, "Contacts response meta");
+    }
     return res.data as GHLContactsResponse;
   }
 
@@ -303,7 +323,7 @@ export class GHLClient {
 
   async getOpportunities(
     pipelineId: string,
-    params?: { stageId?: string; limit?: number; startAfterId?: string }
+    params?: { stageId?: string; limit?: number; startAfterId?: string; page?: number }
   ): Promise<GHLOpportunitiesResponse> {
     const res = await this.http.get("/opportunities/search", {
       params: {
@@ -312,9 +332,19 @@ export class GHLClient {
         pipeline_stage_id: params?.stageId,
         limit: params?.limit ?? 20,
         startAfterId: params?.startAfterId,
+        page: params?.page,
       },
     });
-    return res.data as GHLOpportunitiesResponse;
+    // Log meta for pagination debugging
+    const data = res.data as GHLOpportunitiesResponse;
+    this.log.debug({
+      pipelineId,
+      returned: data.opportunities?.length,
+      metaTotal: data.meta?.total,
+      metaNextPage: data.meta?.nextPage,
+      metaCurrentPage: data.meta?.currentPage,
+    }, "Opportunities response meta");
+    return data;
   }
 
   async getOpportunity(id: string): Promise<GHLOpportunity> {

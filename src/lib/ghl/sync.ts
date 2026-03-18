@@ -254,14 +254,15 @@ async function syncAllContacts(
     // Duplicate detection
     const firstId = res.contacts[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Contacts page ${pageNum}: duplicate detected (${firstId}) — stopping`);
+      console.log(`[SYNC] Contacts page ${pageNum}: DUPLICATE first ID ${firstId} — cursor not advancing, stopping`);
       break;
     }
     seenFirstIds.add(firstId);
 
     progress.contactsTotal = res.meta?.total;
     const lastContact = res.contacts[res.contacts.length - 1];
-    console.log(`[SYNC] Contacts page ${pageNum}: got ${res.contacts.length} records (total: ${res.meta?.total ?? "unknown"}, synced so far: ${progress.contacts}, cursor: ${startAfterId ?? "start"} → ${lastContact.id})`);
+    // Log the RAW meta so we can see what GHL returns for pagination
+    console.log(`[SYNC] Contacts page ${pageNum}: got ${res.contacts.length} records (total: ${res.meta?.total ?? "?"}, synced: ${progress.contacts}, meta: ${JSON.stringify(res.meta)})`);
 
     for (const contact of res.contacts) {
       const data = mapContactToCache(tenantId, contact);
@@ -275,7 +276,6 @@ async function syncAllContacts(
 
     onProgress?.(progress);
 
-    // Update tenant sync progress for UI polling
     const totalLabel = progress.contactsTotal ? `/${progress.contactsTotal}` : "";
     await prisma.tenant.update({
       where: { id: tenantId },
@@ -288,16 +288,26 @@ async function syncAllContacts(
       break;
     }
 
-    // Advance cursor — prefer meta.startAfterId, fallback to last ID
+    // Advance cursor — use whatever GHL gives us in meta
+    const prevCursor = startAfterId ?? String(startAfter ?? "none");
     if (res.meta?.startAfterId) {
       startAfterId = res.meta.startAfterId;
       startAfter = undefined;
-    } else if (res.meta?.startAfter !== undefined) {
+    } else if (res.meta?.startAfter !== undefined && res.meta.startAfter !== null) {
       startAfter = res.meta.startAfter;
       startAfterId = undefined;
     } else {
+      // Fallback: use last contact ID
       startAfterId = lastContact.id;
       startAfter = undefined;
+    }
+    const newCursor = startAfterId ?? String(startAfter ?? "none");
+    console.log(`[SYNC] Contacts cursor: ${prevCursor} → ${newCursor}`);
+
+    // Safety: if cursor didn't change, we're stuck
+    if (newCursor === prevCursor) {
+      console.error(`[SYNC] Contacts cursor DID NOT ADVANCE (${newCursor}) — stopping to prevent loop`);
+      break;
     }
 
     await new Promise((r) => setTimeout(r, 150));
@@ -317,44 +327,42 @@ async function syncOpportunitiesForPipeline(
   pipelineName: string,
   progress: SyncProgress
 ) {
-  let startAfterId: string | undefined;
-  let pageNum = 0;
+  let currentPage = 1;
   const startCount = progress.opportunities;
   const batchSize = 20;
-  const maxPages = 500; // Safety limit
-  const seenIds = new Set<string>();
+  const maxPages = 500;
+  const seenFirstIds = new Set<string>();
 
-  while (pageNum < maxPages) {
-    pageNum++;
+  while (currentPage <= maxPages) {
     let res;
     try {
+      // GHL opportunities search uses page-based pagination (page=1, page=2, ...)
       res = await ghl.getOpportunities(pipelineId, {
         limit: batchSize,
-        startAfterId,
+        page: currentPage,
       });
     } catch (err) {
       const e = err as { response?: { status?: number; data?: unknown }; message?: string };
-      console.error(`[SYNC] OPPS page ${pageNum} for "${pipelineName}" FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
+      console.error(`[SYNC] OPPS page ${currentPage} for "${pipelineName}" FAILED — status: ${e.response?.status}, body: ${JSON.stringify(e.response?.data).substring(0, 300)}, msg: ${e.message}`);
       throw err;
     }
 
     if (!res.opportunities || res.opportunities.length === 0) {
-      console.log(`[SYNC] Opps page ${pageNum} for "${pipelineName}": empty — done`);
+      console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": empty — done`);
       break;
     }
 
-    // Duplicate detection: if we've seen the first ID before, we're looping
+    // Duplicate detection
     const firstId = res.opportunities[0].id;
-    if (seenIds.has(firstId)) {
-      console.log(`[SYNC] Opps page ${pageNum} for "${pipelineName}": duplicate detected (${firstId}) — stopping`);
+    if (seenFirstIds.has(firstId)) {
+      console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": duplicate first ID ${firstId} — stopping`);
       break;
     }
+    seenFirstIds.add(firstId);
 
-    const lastOpp = res.opportunities[res.opportunities.length - 1];
-    console.log(`[SYNC] Opps page ${pageNum} for "${pipelineName}": got ${res.opportunities.length}, cursor: ${startAfterId ?? "start"} → ${lastOpp.id}`);
+    console.log(`[SYNC] Opps page ${currentPage} for "${pipelineName}": got ${res.opportunities.length} (meta: total=${res.meta?.total ?? "?"}, nextPage=${res.meta?.nextPage ?? "null"})`);
 
     for (const opp of res.opportunities) {
-      seenIds.add(opp.id);
       const data = mapOpportunityToCache(tenantId, opp);
       await prisma.cachedOpportunity.upsert({
         where: { id: opp.id },
@@ -370,18 +378,18 @@ async function syncOpportunitiesForPipeline(
       break;
     }
 
-    // Advance cursor to last ID
-    startAfterId = lastOpp.id;
+    // Advance to next page
+    currentPage++;
 
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  if (pageNum >= maxPages) {
+  if (currentPage > maxPages) {
     console.error(`[SYNC] SAFETY LIMIT: ${maxPages} pages for "${pipelineName}" — stopping`);
   }
 
   const pipelineCount = progress.opportunities - startCount;
-  console.log(`[SYNC] Pipeline "${pipelineName}": ${pipelineCount} opportunities synced in ${pageNum} pages`);
+  console.log(`[SYNC] Pipeline "${pipelineName}": ${pipelineCount} opportunities synced in ${currentPage} pages`);
 }
 
 async function syncConversations(
