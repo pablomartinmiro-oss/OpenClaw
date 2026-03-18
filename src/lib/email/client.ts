@@ -1,3 +1,4 @@
+import type { AxiosError } from "axios";
 import { getGHLClient } from "@/lib/ghl/api";
 import { logger } from "@/lib/logger";
 
@@ -37,22 +38,61 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 
   const ghl = await getGHLClient(params.tenantId);
 
-  const result = await ghl.sendMessage({
-    type: "Email",
-    contactId: params.contactId,
+  // GHL requires a conversationId — get or create one for this contact
+  const conversation = await ghl.getOrCreateConversation(params.contactId);
+
+  const requestBody = {
+    type: "Email" as const,
+    conversationId: conversation.id,
     subject: params.subject,
     html: params.html,
-    body: params.subject, // GHL uses body as plain-text fallback
+    body: params.subject, // plain-text fallback
     emailFrom: EMAIL_FROM,
     emailTo: params.to,
     emailCc: EMAIL_CC,
     emailReplyTo: EMAIL_REPLY_TO,
-  });
+  };
 
   log.info(
-    { messageId: result.id, contactId: params.contactId },
-    "Email sent via GHL"
+    {
+      conversationId: conversation.id,
+      contactId: params.contactId,
+      type: requestBody.type,
+      emailFrom: requestBody.emailFrom,
+      emailTo: requestBody.emailTo,
+      htmlLength: params.html.length,
+      subject: params.subject,
+    },
+    "GHL sendMessage request"
   );
 
-  return { messageId: result.id };
+  try {
+    const result = await ghl.sendMessage(requestBody);
+    log.info(
+      { messageId: result.id, conversationId: conversation.id },
+      "Email sent via GHL"
+    );
+    return { messageId: result.id };
+  } catch (err) {
+    const axiosErr = err as AxiosError;
+    const status = axiosErr.response?.status;
+    const responseBody = axiosErr.response?.data
+      ? JSON.stringify(axiosErr.response.data).substring(0, 500)
+      : "";
+    log.error(
+      {
+        status,
+        responseBody,
+        contactId: params.contactId,
+        conversationId: conversation.id,
+        requestType: requestBody.type,
+        requestEmailFrom: requestBody.emailFrom,
+        requestEmailTo: requestBody.emailTo,
+        requestHtmlLength: params.html.length,
+      },
+      "GHL sendMessage failed — full response logged"
+    );
+    // Re-throw with enriched message so caller gets the GHL reason
+    throw new Error(`GHL_${status ?? "ERR"}: ${responseBody || axiosErr.message}`);
+  }
 }

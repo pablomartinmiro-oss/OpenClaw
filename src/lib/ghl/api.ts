@@ -280,6 +280,25 @@ export class GHLClient {
     return (res.data as { conversation: GHLConversation }).conversation ?? res.data;
   }
 
+  async getOrCreateConversation(contactId: string): Promise<GHLConversation> {
+    // Search for existing conversation for this contact
+    const searchRes = await this.http.get("/conversations/search", {
+      params: { locationId: this.locationId, contactId, limit: 1 },
+    });
+    const data = searchRes.data as GHLConversationsResponse;
+    if (data.conversations?.length > 0) {
+      this.log.info({ contactId, conversationId: data.conversations[0].id }, "Found existing GHL conversation");
+      return data.conversations[0];
+    }
+    // Create new conversation
+    this.log.info({ contactId }, "Creating new GHL conversation");
+    const createRes = await this.http.post("/conversations/", {
+      locationId: this.locationId,
+      contactId,
+    });
+    return (createRes.data as { conversation: GHLConversation }).conversation;
+  }
+
   async getMessages(conversationId: string): Promise<GHLMessage[]> {
     const res = await this.http.get(`/conversations/${conversationId}/messages`);
     return (res.data as GHLMessagesResponse).messages;
