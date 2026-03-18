@@ -58,8 +58,7 @@ export async function POST(
     }
 
     const ghl = await getGHLClient(tenantId);
-    const result = await ghl.sendMessage({
-      conversationId: id,
+    const result = await ghl.sendMessage(id, {
       type: (body.type as "SMS" | "Email" | "WhatsApp") ?? "SMS",
       body: body.message,
     });

@@ -41,9 +41,10 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   // GHL requires a conversationId — get or create one for this contact
   const conversation = await ghl.getOrCreateConversation(params.contactId);
 
+  // conversationId goes in the URL; contactId is required in the body
   const requestBody = {
     type: "Email" as const,
-    conversationId: conversation.id,
+    contactId: params.contactId,
     subject: params.subject,
     html: params.html,
     body: params.subject, // plain-text fallback
@@ -63,11 +64,11 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       htmlLength: params.html.length,
       subject: params.subject,
     },
-    "GHL sendMessage request"
+    "GHL sendMessage request — POST /conversations/{id}/messages"
   );
 
   try {
-    const result = await ghl.sendMessage(requestBody);
+    const result = await ghl.sendMessage(conversation.id, requestBody);
     log.info(
       { messageId: result.id, conversationId: conversation.id },
       "Email sent via GHL"
