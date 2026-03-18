@@ -1,19 +1,23 @@
-import type { AxiosError } from "axios";
-import { getGHLClient } from "@/lib/ghl/api";
+import { Resend } from "resend";
 import { logger } from "@/lib/logger";
 
 const log = logger.child({ module: "email" });
 
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY ?? "");
+  return _resend;
+}
+
 const EMAIL_FROM = "Skicenter <reservas@skicenter.es>";
-const EMAIL_REPLY_TO = "reservas@skicenter.es";
-const EMAIL_CC = ["reservas@skicenter.es"];
+const EMAIL_CC = "reservas@skicenter.es";
 
 interface SendEmailParams {
   tenantId: string;
-  contactId: string | null; // GHL contact ID — null skips sending
+  contactId: string | null; // kept for API compat — not used by Resend
   subject: string;
   html: string;
-  to: string; // used only for logging
+  to: string;
 }
 
 interface SendEmailResult {
@@ -23,77 +27,21 @@ interface SendEmailResult {
 }
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-  if (!params.contactId) {
-    log.warn(
-      { to: params.to, subject: params.subject },
-      "Email skipped — no GHL contactId on quote"
-    );
-    return { skipped: true, skipReason: "no_contact_id" };
-  }
+  log.info({ to: params.to, subject: params.subject }, "Sending email via Resend");
 
-  log.info(
-    { contactId: params.contactId, to: params.to, subject: params.subject },
-    "Sending email via GHL"
-  );
-
-  const ghl = await getGHLClient(params.tenantId);
-
-  // GHL requires a conversationId — get or create one for this contact
-  const conversation = await ghl.getOrCreateConversation(params.contactId);
-
-  // conversationId goes in the URL; contactId is required in the body
-  const requestBody = {
-    type: "Email" as const,
-    contactId: params.contactId,
+  const { data, error } = await getResend().emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    cc: EMAIL_CC,
     subject: params.subject,
     html: params.html,
-    body: params.subject, // plain-text fallback
-    emailFrom: EMAIL_FROM,
-    emailTo: params.to,
-    emailCc: EMAIL_CC,
-    emailReplyTo: EMAIL_REPLY_TO,
-  };
+  });
 
-  log.info(
-    {
-      conversationId: conversation.id,
-      contactId: params.contactId,
-      type: requestBody.type,
-      emailFrom: requestBody.emailFrom,
-      emailTo: requestBody.emailTo,
-      htmlLength: params.html.length,
-      subject: params.subject,
-    },
-    "GHL sendMessage request — POST /conversations/{id}/messages"
-  );
-
-  try {
-    const result = await ghl.sendMessage(conversation.id, requestBody);
-    log.info(
-      { messageId: result.id, conversationId: conversation.id },
-      "Email sent via GHL"
-    );
-    return { messageId: result.id };
-  } catch (err) {
-    const axiosErr = err as AxiosError;
-    const status = axiosErr.response?.status;
-    const responseBody = axiosErr.response?.data
-      ? JSON.stringify(axiosErr.response.data).substring(0, 500)
-      : "";
-    log.error(
-      {
-        status,
-        responseBody,
-        contactId: params.contactId,
-        conversationId: conversation.id,
-        requestType: requestBody.type,
-        requestEmailFrom: requestBody.emailFrom,
-        requestEmailTo: requestBody.emailTo,
-        requestHtmlLength: params.html.length,
-      },
-      "GHL sendMessage failed — full response logged"
-    );
-    // Re-throw with enriched message so caller gets the GHL reason
-    throw new Error(`GHL_${status ?? "ERR"}: ${responseBody || axiosErr.message}`);
+  if (error) {
+    log.error({ error, to: params.to }, "Resend email failed");
+    throw new Error(`RESEND_ERROR: ${error.message}`);
   }
+
+  log.info({ messageId: data?.id, to: params.to }, "Email sent via Resend");
+  return { messageId: data?.id ?? undefined };
 }
