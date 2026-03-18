@@ -207,10 +207,39 @@ model Quote {
   wantsEquipment  Boolean   @default(false)
 
   // Quote state
-  status          String    @default("nuevo") // nuevo, en_proceso, enviado, aceptado
+  status          String    @default("nuevo") // nuevo, borrador, enviado, pagado, expirado, cancelado
   totalAmount     Float     @default(0)
   expiresAt       DateTime?
   sentAt          DateTime?
+
+  // Payment (Redsys)
+  redsysOrderId    String?   @unique  // Ds_Order (12 chars, unique per payment)
+  redsysPaymentUrl String?             // Generated Redsys payment URL
+  paymentMethod    String?             // "redsys" | "transfer" | "cash"
+  paymentStatus    String?   @default("pending") // "pending" | "paid" | "failed"
+  paidAt           DateTime?
+  paymentRef       String?             // Redsys auth code or transfer ref
+
+  // PDF
+  pdfUrl           String?             // URL/path to generated PDF
+
+  // Email tracking
+  emailSentAt      DateTime?           // When quote email was sent
+  emailSentTo      String?             // Email address sent to
+  reminderSentAt   DateTime?           // When reminder was sent
+  reminderCount    Int       @default(0)
+
+  // GHL link
+  ghlOpportunityId String?             // Link to GHL opportunity
+  ghlPipelineId    String?             // Pipeline the opp is in
+  ghlStageId       String?             // Current stage ID
+
+  // Internal
+  internalNotes    String?
+  cancelledAt      DateTime?
+  cancelReason     String?
+  createdBy        String?             // User ID who created
+
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -232,6 +261,17 @@ model QuoteItem {
   unitPrice   Float
   discount    Float    @default(0) // percentage 0-100
   totalPrice  Float
+
+  // Extra fields for ski products
+  startDate    DateTime?
+  endDate      DateTime?
+  station      String?
+  modalidad    String?   // "individual" | "colectivo"
+  nivel        String?   // "principiante" | "intermedio" | "avanzado"
+  sector       String?   // "Baqueira" | "Beret"
+  idioma       String?   // "es" | "en" | "fr"
+  notes        String?
+
   createdAt   DateTime @default(now())
 
   quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
