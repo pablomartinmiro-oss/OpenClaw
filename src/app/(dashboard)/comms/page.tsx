@@ -20,7 +20,7 @@ export default function CommsPage() {
   const { can } = usePermissions();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: convoData, isLoading: convosLoading } = useConversations();
+  const { data: convoData, isLoading: convosLoading } = useConversations({ limit: 100 });
   const { data: msgData, isLoading: msgsLoading } = useMessages(selectedId);
   const sendMessage = useSendMessage(selectedId ?? "");
   const assignConversation = useAssignConversation();

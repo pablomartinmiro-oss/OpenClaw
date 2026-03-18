@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Users } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { useContacts } from "@/hooks/useGHL";
 import { TableSkeleton } from "@/components/shared/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -9,13 +9,36 @@ import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { ContactsTable } from "./_components/ContactsTable";
 import { ContactsSearch } from "./_components/ContactsSearch";
 import { SourceFilter } from "./_components/SourceFilter";
+import { Button } from "@/components/ui/button";
+
+const PAGE_SIZE = 50;
 
 export default function ContactsPage() {
-  const { data, isLoading } = useContacts();
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
 
+  // Debounce search — send to server after 300ms
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+    // Simple debounce via setTimeout
+    clearTimeout((globalThis as unknown as { __searchTimeout?: ReturnType<typeof setTimeout> }).__searchTimeout);
+    (globalThis as unknown as { __searchTimeout?: ReturnType<typeof setTimeout> }).__searchTimeout = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, 300);
+  };
+
+  const { data, isLoading, isFetching } = useContacts({
+    page,
+    limit: PAGE_SIZE,
+    query: debouncedSearch,
+  });
+
   const contacts = useMemo(() => data?.contacts ?? [], [data]);
+  const total = data?.meta?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const sources = useMemo(() => {
     const set = new Set<string>();
@@ -25,21 +48,11 @@ export default function ContactsPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
+  // Client-side source filter (applied on top of server-side search)
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return contacts.filter((c) => {
-      const matchesSearch =
-        !q ||
-        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.phone?.includes(q) ||
-        c.tags.some((t) => t.toLowerCase().includes(q));
-
-      const matchesSource = !sourceFilter || c.source === sourceFilter;
-
-      return matchesSearch && matchesSource;
-    });
-  }, [contacts, search, sourceFilter]);
+    if (!sourceFilter) return contacts;
+    return contacts.filter((c) => c.source === sourceFilter);
+  }, [contacts, sourceFilter]);
 
   return (
     <GHLEmptyState message="No hay contactos. Conecta GoHighLevel para importar tus contactos.">
@@ -50,12 +63,13 @@ export default function ContactsPage() {
           <p className="text-sm text-text-secondary">Gestiona tu base de datos de contactos</p>
         </div>
         <span className="text-sm text-text-secondary">
-          {filtered.length} de {contacts.length} contactos
+          {total.toLocaleString("es-ES")} contactos
+          {isFetching && !isLoading && <span className="ml-2 text-xs text-coral">cargando...</span>}
         </span>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <ContactsSearch value={search} onChange={setSearch} />
+        <ContactsSearch value={search} onChange={handleSearch} />
         {sources.length > 0 && (
           <SourceFilter
             sources={sources}
@@ -80,6 +94,35 @@ export default function ContactsPage() {
       ) : (
         <div className="overflow-hidden rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <ContactsTable contacts={filtered} />
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-text-secondary">
+            Página {page} de {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Siguiente
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

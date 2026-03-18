@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const pipelineId = url.searchParams.get("pipelineId") ?? "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
-  const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get("limit") ?? "100")));
+  const limit = Math.min(5000, Math.max(1, parseInt(url.searchParams.get("limit") ?? "100")));
   const skip = (page - 1) * limit;
   const log = logger.child({ tenantId, path: "/api/crm/opportunities" });
 

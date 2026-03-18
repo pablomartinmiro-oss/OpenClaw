@@ -4,6 +4,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import type {
   GHLConversationsResponse,
@@ -26,10 +27,13 @@ async function fetchJSON<T>(url: string): Promise<T> {
 
 // ─── Conversations ───────────────────────────────────────
 
-export function useConversations() {
-  return useQuery<GHLConversationsResponse>({
-    queryKey: ["conversations"],
-    queryFn: () => fetchJSON("/api/crm/conversations"),
+export function useConversations(params?: { page?: number; limit?: number }) {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 50;
+  return useQuery<GHLConversationsResponse & { meta: { page: number; limit: number; totalPages: number } }>({
+    queryKey: ["conversations", page, limit],
+    queryFn: () => fetchJSON(`/api/crm/conversations?page=${page}&limit=${limit}`),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -67,7 +71,6 @@ export function useSendMessage(conversationId: string) {
           "messages",
           conversationId,
         ]);
-      // Optimistic update: append message immediately
       if (previous) {
         queryClient.setQueryData<GHLMessagesResponse>(
           ["messages", conversationId],
@@ -92,7 +95,6 @@ export function useSendMessage(conversationId: string) {
       return { previous };
     },
     onError: (_err, _msg, context) => {
-      // Rollback on error
       if (context?.previous) {
         queryClient.setQueryData(
           ["messages", conversationId],
@@ -129,10 +131,15 @@ export function useAssignConversation() {
 
 // ─── Contacts ────────────────────────────────────────────
 
-export function useContacts() {
+export function useContacts(params?: { page?: number; limit?: number; query?: string }) {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 50;
+  const query = params?.query ?? "";
+  const searchParam = query ? `&query=${encodeURIComponent(query)}` : "";
   return useQuery<GHLContactsResponse>({
-    queryKey: ["contacts"],
-    queryFn: () => fetchJSON("/api/crm/contacts"),
+    queryKey: ["contacts", page, limit, query],
+    queryFn: () => fetchJSON(`/api/crm/contacts?page=${page}&limit=${limit}${searchParam}`),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -256,7 +263,7 @@ export function useOpportunities(pipelineId: string | null) {
   return useQuery<GHLOpportunitiesResponse>({
     queryKey: ["opportunities", pipelineId],
     queryFn: () =>
-      fetchJSON(`/api/crm/opportunities?pipelineId=${pipelineId}`),
+      fetchJSON(`/api/crm/opportunities?pipelineId=${pipelineId}&limit=2500`),
     enabled: !!pipelineId,
   });
 }
