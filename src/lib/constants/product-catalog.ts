@@ -203,6 +203,46 @@ export function buildFullCatalog(): ProductSeedItem[] {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // ⚠️  PLACEHOLDER PRICES — Replace with real pricing from Jorge/Skicenter
+  // ═══════════════════════════════════════════════════════════════════
+
+  // ═══ CANDANCHÚ / ASTÚN (placeholder) ═══
+  products.push(
+    { name: "Forfait adulto (placeholder)", category: "forfait", station: "candanchu", personType: "adulto", priceType: "per_day", price: 40, sortOrder: 1000, pricingMatrix: { media: { "1": 40, "2": 78, "3": 114, "4": 148, "5": 180, "6": 210, "7": 238 }, alta: { "1": 45, "2": 88, "3": 129, "4": 168, "5": 205, "6": 240, "7": 273 } } },
+    { name: "Forfait infantil (placeholder)", category: "forfait", station: "candanchu", personType: "infantil", priceType: "per_day", price: 28, sortOrder: 1001, pricingMatrix: { media: { "1": 28, "2": 54, "3": 78, "4": 100, "5": 120, "6": 138, "7": 154 }, alta: { "1": 32, "2": 62, "3": 90, "4": 116, "5": 140, "6": 162, "7": 182 } } },
+    { name: "Alquiler esquí adulto media calidad (placeholder)", category: "alquiler", station: "candanchu", personType: "adulto", tier: "media", includesHelmet: false, priceType: "per_day", price: 22, sortOrder: 1010, pricingMatrix: { media: { "1": 22, "2": 40, "3": 56, "4": 70, "5": 82, "6": 92, "7": 100 }, alta: { "1": 25, "2": 46, "3": 65, "4": 82, "5": 97, "6": 110, "7": 121 } } },
+    { name: "Alquiler esquí infantil media calidad (placeholder)", category: "alquiler", station: "candanchu", personType: "infantil", tier: "media", includesHelmet: false, priceType: "per_day", price: 18, sortOrder: 1011, pricingMatrix: { media: { "1": 18, "2": 32, "3": 44, "4": 54, "5": 62, "6": 68, "7": 72 }, alta: { "1": 20, "2": 36, "3": 50, "4": 62, "5": 72, "6": 80, "7": 86 } } },
+    { name: "Curso colectivo esquí (placeholder)", category: "escuela", station: "candanchu", priceType: "per_day", price: 30, sortOrder: 1020, pricingMatrix: { media: { "1": 30, "2": 56, "3": 78, "4": 96, "5": 110 }, alta: { "1": 34, "2": 64, "3": 90, "4": 112, "5": 130 } } },
+  );
+
+  // ═══ FORMIGAL / CERLER (placeholder) ═══
+  products.push(
+    { name: "Forfait adulto (placeholder)", category: "forfait", station: "formigal", personType: "adulto", priceType: "per_day", price: 48, sortOrder: 1100, pricingMatrix: { media: { "1": 48, "2": 94, "3": 138, "4": 180, "5": 220, "6": 258, "7": 294 }, alta: { "1": 54, "2": 106, "3": 156, "4": 204, "5": 250, "6": 294, "7": 336 } } },
+    { name: "Forfait infantil (placeholder)", category: "forfait", station: "formigal", personType: "infantil", priceType: "per_day", price: 33, sortOrder: 1101, pricingMatrix: { media: { "1": 33, "2": 64, "3": 93, "4": 120, "5": 145, "6": 168, "7": 189 }, alta: { "1": 37, "2": 72, "3": 105, "4": 136, "5": 165, "6": 192, "7": 217 } } },
+    { name: "Alquiler esquí adulto media calidad (placeholder)", category: "alquiler", station: "formigal", personType: "adulto", tier: "media", includesHelmet: false, priceType: "per_day", price: 25, sortOrder: 1110, pricingMatrix: { media: { "1": 25, "2": 46, "3": 65, "4": 82, "5": 97, "6": 110, "7": 121 }, alta: { "1": 28, "2": 52, "3": 74, "4": 94, "5": 112, "6": 128, "7": 142 } } },
+    { name: "Alquiler esquí infantil media calidad (placeholder)", category: "alquiler", station: "formigal", personType: "infantil", tier: "media", includesHelmet: false, priceType: "per_day", price: 20, sortOrder: 1111, pricingMatrix: { media: { "1": 20, "2": 36, "3": 50, "4": 62, "5": 72, "6": 80, "7": 86 }, alta: { "1": 22, "2": 40, "3": 56, "4": 70, "5": 82, "6": 92, "7": 100 } } },
+    { name: "Curso colectivo esquí (placeholder)", category: "escuela", station: "formigal", priceType: "per_day", price: 32, sortOrder: 1120, pricingMatrix: { media: { "1": 32, "2": 60, "3": 84, "4": 104, "5": 120 }, alta: { "1": 36, "2": 68, "3": 96, "4": 120, "5": 140 } } },
+  );
+
+  // ═══ ALTO CAMPOO (placeholder) ═══
+  products.push(
+    { name: "Forfait adulto (placeholder)", category: "forfait", station: "alto_campoo", personType: "adulto", priceType: "per_day", price: 35, sortOrder: 1200, pricingMatrix: { media: { "1": 35, "2": 68, "3": 99, "4": 128, "5": 155, "6": 180, "7": 203 }, alta: { "1": 40, "2": 78, "3": 114, "4": 148, "5": 180, "6": 210, "7": 238 } } },
+    { name: "Forfait infantil (placeholder)", category: "forfait", station: "alto_campoo", personType: "infantil", priceType: "per_day", price: 24, sortOrder: 1201, pricingMatrix: { media: { "1": 24, "2": 46, "3": 66, "4": 84, "5": 100, "6": 114, "7": 126 }, alta: { "1": 28, "2": 54, "3": 78, "4": 100, "5": 120, "6": 138, "7": 154 } } },
+    { name: "Alquiler esquí adulto media calidad (placeholder)", category: "alquiler", station: "alto_campoo", personType: "adulto", tier: "media", includesHelmet: false, priceType: "per_day", price: 20, sortOrder: 1210, pricingMatrix: { media: { "1": 20, "2": 36, "3": 50, "4": 62, "5": 72, "6": 80, "7": 86 }, alta: { "1": 22, "2": 40, "3": 56, "4": 70, "5": 82, "6": 92, "7": 100 } } },
+    { name: "Alquiler esquí infantil media calidad (placeholder)", category: "alquiler", station: "alto_campoo", personType: "infantil", tier: "media", includesHelmet: false, priceType: "per_day", price: 16, sortOrder: 1211, pricingMatrix: { media: { "1": 16, "2": 28, "3": 38, "4": 46, "5": 52, "6": 56, "7": 58 }, alta: { "1": 18, "2": 32, "3": 44, "4": 54, "5": 62, "6": 68, "7": 72 } } },
+    { name: "Curso colectivo esquí (placeholder)", category: "escuela", station: "alto_campoo", priceType: "per_day", price: 26, sortOrder: 1220, pricingMatrix: { media: { "1": 26, "2": 48, "3": 66, "4": 80, "5": 90 }, alta: { "1": 30, "2": 56, "3": 78, "4": 96, "5": 110 } } },
+  );
+
+  // ═══ GRANDVALIRA / ANDORRA (placeholder) ═══
+  products.push(
+    { name: "Forfait adulto (placeholder)", category: "forfait", station: "grandvalira", personType: "adulto", priceType: "per_day", price: 55, sortOrder: 1300, pricingMatrix: { media: { "1": 55, "2": 108, "3": 159, "4": 208, "5": 255, "6": 300, "7": 343 }, alta: { "1": 62, "2": 122, "3": 180, "4": 236, "5": 290, "6": 342, "7": 392 } } },
+    { name: "Forfait infantil (placeholder)", category: "forfait", station: "grandvalira", personType: "infantil", priceType: "per_day", price: 38, sortOrder: 1301, pricingMatrix: { media: { "1": 38, "2": 74, "3": 108, "4": 140, "5": 170, "6": 198, "7": 224 }, alta: { "1": 43, "2": 84, "3": 123, "4": 160, "5": 195, "6": 228, "7": 259 } } },
+    { name: "Alquiler esquí adulto media calidad (placeholder)", category: "alquiler", station: "grandvalira", personType: "adulto", tier: "media", includesHelmet: false, priceType: "per_day", price: 28, sortOrder: 1310, pricingMatrix: { media: { "1": 28, "2": 52, "3": 74, "4": 94, "5": 112, "6": 128, "7": 142 }, alta: { "1": 32, "2": 60, "3": 86, "4": 110, "5": 132, "6": 152, "7": 170 } } },
+    { name: "Alquiler esquí infantil media calidad (placeholder)", category: "alquiler", station: "grandvalira", personType: "infantil", tier: "media", includesHelmet: false, priceType: "per_day", price: 22, sortOrder: 1311, pricingMatrix: { media: { "1": 22, "2": 40, "3": 56, "4": 70, "5": 82, "6": 92, "7": 100 }, alta: { "1": 25, "2": 46, "3": 65, "4": 82, "5": 97, "6": 110, "7": 121 } } },
+    { name: "Curso colectivo esquí (placeholder)", category: "escuela", station: "grandvalira", priceType: "per_day", price: 35, sortOrder: 1320, pricingMatrix: { media: { "1": 35, "2": 66, "3": 93, "4": 116, "5": 135 }, alta: { "1": 40, "2": 76, "3": 108, "4": 136, "5": 160 } } },
+  );
+
   return products;
 }
 
