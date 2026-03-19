@@ -21,6 +21,18 @@ interface QuoteItemInput {
 
 const log = logger.child({ module: "from-survey" });
 
+// Hardcoded fallback — GHL API /locations/customFields returns 403 (scope not granted).
+// IDs extracted from real webhook payloads observed in production logs (2026-03-19).
+const HARDCODED_FIELD_IDS: Record<string, string> = {
+  K7RFol5m4m2eOH1WcoYx: "destino",
+  lMUYIYlz7CfWKBpIOAPw: "fecha_de_entrada",
+  LDVitENBIT4X4unOJSoq: "fecha_de_salida",
+  P0MxXLSR0ZPTO4jRZIF6: "nde_adultos_12_aos_o_mayor",
+  SXXw7M407yfWXiHOrFYV: "n_de_nios_11_aos_o_menor",
+  B2Vk41Jt2jeDmPNoJ4IY: "servicios_necesarios_survey",
+  "4lyeEQvvPxeNhYW1z9h7": "nombre_del_alojamiento",
+};
+
 // ==================== SURVEY FIELD KEYS ====================
 
 const SURVEY_KEYS = {
@@ -203,8 +215,10 @@ function confirmationEmailHtml(name: string, destination: string, ci: string, co
 export async function maybeCreateQuoteFromSurvey(tenantId: string, contactData: Record<string, any>): Promise<void> {
   console.log("[SURVEY] Custom fields received:", JSON.stringify(contactData.customFields));
 
-  // GHL webhooks send custom fields by ID — resolve to key names via cached field map
-  const idKeyMap = await getCustomFieldIdToKeyMap(tenantId).catch(() => ({} as Record<string, string>));
+  // GHL webhooks send custom fields by ID — resolve to key names.
+  // Hardcoded IDs are used as fallback since /locations/customFields returns 403 (scope not granted).
+  const apiMap = await getCustomFieldIdToKeyMap(tenantId).catch(() => ({} as Record<string, string>));
+  const idKeyMap = { ...HARDCODED_FIELD_IDS, ...apiMap };
   console.log("[SURVEY] ID→key map:", JSON.stringify(idKeyMap));
 
   const fields = extractFields(contactData.customFields as RawCustomFields, idKeyMap);
