@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Euro, Users, MessageCircle,
@@ -92,11 +92,58 @@ function formatRelativeSync(dateStr: string): string {
   return `hace ${Math.floor(diffHours / 24)}d`;
 }
 
+function getWeekRange(): { from: string; to: string } {
+  const today = new Date();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - today.getDay() + 1);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return {
+    from: monday.toISOString().slice(0, 10),
+    to: sunday.toISOString().slice(0, 10),
+  };
+}
+
+const PRESETS = [
+  { label: "Esta semana", getValue: () => getWeekRange() },
+  {
+    label: "Últimos 7d", getValue: () => {
+      const to = new Date(); to.setHours(0, 0, 0, 0);
+      const from = new Date(to); from.setDate(to.getDate() - 6);
+      return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+    },
+  },
+  {
+    label: "Este mes", getValue: () => {
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth(), 1);
+      const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+    },
+  },
+  {
+    label: "Últimos 30d", getValue: () => {
+      const to = new Date(); to.setHours(0, 0, 0, 0);
+      const from = new Date(to); from.setDate(to.getDate() - 29);
+      return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+    },
+  },
+] as const;
+
 export default function DashboardHome() {
   const queryClient = useQueryClient();
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>(getWeekRange);
+  const [activePreset, setActivePreset] = useState<string>("Esta semana");
+
+  function applyPreset(label: string, getValue: () => { from: string; to: string }) {
+    const range = getValue();
+    setDateRange(range);
+    setActivePreset(label);
+  }
+
   const { data: quotes, isLoading: quotesLoading } = useQuotes();
   const { data: dashStats, isLoading: statsLoading, isFetching: statsFetching } = useDashboardStats();
-  const { data: resStats, isLoading: resStatsLoading } = useReservationStats();
+  const { data: resStats, isLoading: resStatsLoading } = useReservationStats(dateRange);
 
   function handleRefresh() {
     queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -236,13 +283,45 @@ export default function DashboardHome() {
       {/* Reservas esta semana + Presupuestos */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Reservas Esta Semana</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-text-primary">Reservas</h2>
             <span className="text-xs text-text-secondary">{resStats?.weekly.totalReservations ?? 0} total</span>
           </div>
-          <div className="flex h-48 items-end gap-1">
+          {/* Quick presets */}
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {PRESETS.map(({ label, getValue }) => (
+              <button
+                key={label}
+                onClick={() => applyPreset(label, getValue)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  activePreset === label
+                    ? "bg-coral text-white"
+                    : "bg-warm-muted text-text-secondary hover:bg-coral/10 hover:text-coral"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <div className="flex items-center gap-1 ml-auto">
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => { setDateRange((r) => ({ ...r, from: e.target.value })); setActivePreset(""); }}
+                className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-coral focus:outline-none"
+              />
+              <span className="text-[11px] text-text-secondary">–</span>
+              <input
+                type="date"
+                value={dateRange.to}
+                min={dateRange.from}
+                onChange={(e) => { setDateRange((r) => ({ ...r, to: e.target.value })); setActivePreset(""); }}
+                className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-coral focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex h-40 items-end gap-1 overflow-x-auto">
             {dailyVolume.map((d, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
+              <div key={i} className="flex min-w-[24px] flex-1 flex-col items-center gap-1">
                 <span className="text-[10px] font-medium text-text-primary">{d.count > 0 ? d.count : ""}</span>
                 <div
                   className="w-full rounded-t-lg bg-gradient-to-t from-coral to-coral/40 transition-all"

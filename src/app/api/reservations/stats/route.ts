@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -11,6 +11,11 @@ export async function GET() {
 
   const { tenantId } = session.user;
   const log = logger.child({ tenantId, path: "/api/reservations/stats" });
+
+  // Optional date range for chart
+  const url = new URL(req.url);
+  const fromParam = url.searchParams.get("from");
+  const toParam = url.searchParams.get("to");
 
   try {
     const today = new Date();
@@ -46,16 +51,19 @@ export async function GET() {
       stationCapacity[cap.station].max += cap.maxCapacity;
     }
 
-    // Weekly summary
+    // Date range for chart (defaults to current week Mon-Sun)
     const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
+    const rangeStart = fromParam ? new Date(fromParam) : weekStart;
+    const rangeEnd = toParam ? (() => { const d = new Date(toParam); d.setDate(d.getDate() + 1); return d; })() : weekEnd;
+
     const weekReservations = await prisma.reservation.findMany({
       where: {
         tenantId,
-        createdAt: { gte: weekStart, lt: weekEnd },
+        createdAt: { gte: rangeStart, lt: rangeEnd },
         status: { in: ["confirmada", "pendiente"] },
       },
       select: { source: true, totalPrice: true, station: true },
@@ -72,21 +80,25 @@ export async function GET() {
 
     const topStation = Object.entries(stationCounts).sort((a, b) => b[1] - a[1])[0];
 
-    // Daily volume for the current week (Mon-Sun)
+    // Daily volume for the selected range
     const dailyVolume: { day: string; count: number; revenue: number }[] = [];
-    const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-    const allWeekReservations = await prisma.reservation.findMany({
-      where: { tenantId, createdAt: { gte: weekStart, lt: weekEnd } },
+    const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const allRangeReservations = await prisma.reservation.findMany({
+      where: { tenantId, createdAt: { gte: rangeStart, lt: rangeEnd } },
       select: { createdAt: true, totalPrice: true },
     });
-    for (let d = 0; d < 7; d++) {
-      const dayStart = new Date(weekStart);
+    const rangeDays = Math.ceil((rangeEnd.getTime() - rangeStart.getTime()) / 86400000);
+    for (let d = 0; d < rangeDays; d++) {
+      const dayStart = new Date(rangeStart);
       dayStart.setDate(dayStart.getDate() + d);
       const dayEnd = new Date(dayStart);
       dayEnd.setDate(dayEnd.getDate() + 1);
-      const dayRes = allWeekReservations.filter((r) => r.createdAt >= dayStart && r.createdAt < dayEnd);
+      const dayRes = allRangeReservations.filter((r) => r.createdAt >= dayStart && r.createdAt < dayEnd);
+      const label = rangeDays <= 7
+        ? DAY_LABELS[dayStart.getDay()]
+        : `${dayStart.getDate()}/${dayStart.getMonth() + 1}`;
       dailyVolume.push({
-        day: DAY_LABELS[d],
+        day: label,
         count: dayRes.length,
         revenue: dayRes.reduce((s, r) => s + r.totalPrice, 0),
       });

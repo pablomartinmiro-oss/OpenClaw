@@ -103,10 +103,11 @@ export function useReservations(filters?: {
   });
 }
 
-export function useReservationStats() {
+export function useReservationStats(dateRange?: { from: string; to: string }) {
+  const params = dateRange ? `?from=${dateRange.from}&to=${dateRange.to}` : "";
   return useQuery({
-    queryKey: ["reservation-stats"],
-    queryFn: () => fetchJSON<ReservationStats>("/api/reservations/stats"),
+    queryKey: ["reservation-stats", dateRange],
+    queryFn: () => fetchJSON<ReservationStats>(`/api/reservations/stats${params}`),
     refetchInterval: 30000, // Refresh every 30s for live counters
   });
 }

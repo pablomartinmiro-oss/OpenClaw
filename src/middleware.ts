@@ -16,6 +16,8 @@ const PUBLIC_ROUTES = [
   "/api/crm/webhooks",
   "/api/crm/oauth",
   "/api/cron/sync",
+  "/survey",
+  "/api/survey",
 ];
 
 export async function middleware(req: NextRequest) {
