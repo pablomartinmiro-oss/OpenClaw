@@ -16,6 +16,7 @@ const PUBLIC_ROUTES = [
   "/api/crm/webhooks",
   "/api/crm/oauth",
   "/api/cron/sync",
+  "/api/cron/quote-reminders",
   "/survey",
   "/api/survey",
 ];
