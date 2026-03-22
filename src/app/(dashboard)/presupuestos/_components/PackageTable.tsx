@@ -3,16 +3,39 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { Product } from "@/hooks/useProducts";
 import type { Upsell } from "@/lib/quotes/auto-package";
+import { ProductVariableForm, type ProductVariables } from "./ProductVariableForm";
+import { ProductSearchPicker } from "./ProductSearchPicker";
 
 export interface EditableItem {
   id?: string;
   productId: string | null;
   name: string;
   description: string | null;
+  category: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;
   totalPrice: number;
+  // Per-product variables
+  startDate: string | null;
+  endDate: string | null;
+  numDays: number | null;
+  numPersons: number | null;
+  ageDetails: Array<{ age: number; type: string }> | null;
+  modalidad: string | null;
+  nivel: string | null;
+  sector: string | null;
+  idioma: string | null;
+  horario: string | null;
+  puntoEncuentro: string | null;
+  tipoCliente: string | null;
+  gama: string | null;
+  casco: boolean | null;
+  tipoActividad: string | null;
+  regimen: string | null;
+  alojamientoNombre: string | null;
+  seguroIncluido: boolean | null;
+  notes: string | null;
 }
 
 interface PackageTableProps {
@@ -22,6 +45,7 @@ interface PackageTableProps {
   showAddProduct: boolean;
   onToggleAddProduct: () => void;
   onUpdateItem: (index: number, field: keyof EditableItem, value: number) => void;
+  onUpdateItemVars: (index: number, vars: Partial<ProductVariables>) => void;
   onRemoveItem: (index: number) => void;
   onAddProduct: (product: Product) => void;
   onAddUpsell: (upsell: Upsell) => void;
@@ -29,12 +53,10 @@ interface PackageTableProps {
 
 export function PackageTable({
   items, upsells, products, showAddProduct,
-  onToggleAddProduct, onUpdateItem, onRemoveItem, onAddProduct, onAddUpsell,
+  onToggleAddProduct, onUpdateItem, onUpdateItemVars, onRemoveItem, onAddProduct, onAddUpsell,
 }: PackageTableProps) {
   const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
-  const availableProducts = products.filter(
-    (p) => p.isActive && !items.some((item) => item.productId === p.id)
-  );
+  const excludeIds = new Set(items.map((i) => i.productId).filter(Boolean) as string[]);
 
   return (
     <div className="flex-1 px-6 py-4">
@@ -46,14 +68,12 @@ export function PackageTable({
       </div>
 
       {showAddProduct && (
-        <div className="mb-4 rounded-lg border border-border bg-white shadow-lg max-h-48 overflow-y-auto">
-          {availableProducts.map((product) => (
-            <button key={product.id} onClick={() => onAddProduct(product)} className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-surface transition-colors">
-              <span className="text-text-primary">{product.name}</span>
-              <span className="text-text-secondary">{product.price.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</span>
-            </button>
-          ))}
-        </div>
+        <ProductSearchPicker
+          products={products}
+          excludeIds={excludeIds}
+          onSelect={onAddProduct}
+          onClose={onToggleAddProduct}
+        />
       )}
 
       <div className="rounded-lg border border-border overflow-hidden">
@@ -74,20 +94,25 @@ export function PackageTable({
                 <td className="px-4 py-3">
                   <div className="text-sm font-medium text-text-primary">{item.name}</div>
                   {item.description && <div className="text-xs text-text-secondary">{item.description}</div>}
+                  <ProductVariableForm
+                    category={item.category}
+                    variables={item}
+                    onChange={(vars) => onUpdateItemVars(index, vars)}
+                  />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 align-top">
                   <input type="number" min="1" value={item.quantity} onChange={(e) => onUpdateItem(index, "quantity", parseInt(e.target.value) || 1)} className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-coral focus:outline-none" />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 align-top">
                   <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => onUpdateItem(index, "unitPrice", parseFloat(e.target.value) || 0)} className="w-full rounded border border-border px-2 py-1 text-right text-sm focus:border-coral focus:outline-none" />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 align-top">
                   <input type="number" min="0" max="100" value={item.discount} onChange={(e) => onUpdateItem(index, "discount", parseFloat(e.target.value) || 0)} className="w-full rounded border border-border px-2 py-1 text-center text-sm focus:border-coral focus:outline-none" />
                 </td>
-                <td className="px-4 py-3 text-right text-sm font-semibold text-text-primary">
+                <td className="px-4 py-3 text-right text-sm font-semibold text-text-primary align-top">
                   {item.totalPrice.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 align-top">
                   <button onClick={() => onRemoveItem(index)} className="rounded p-1 text-text-secondary hover:text-danger transition-colors">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

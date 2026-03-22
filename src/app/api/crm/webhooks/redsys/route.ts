@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { verifyRedsysSignature } from "@/lib/redsys/client";
 import { sendEmail } from "@/lib/email/client";
 import { buildConfirmationEmailHTML } from "@/lib/email/templates";
+import { generateTasksForPaidQuote } from "@/lib/tasks/generate";
 
 const log = logger.child({ route: "/api/crm/webhooks/redsys" });
 
@@ -79,6 +80,23 @@ export async function POST(request: NextRequest) {
         "Payment confirmed"
       );
 
+      // Generate auto-tasks
+      try {
+        await generateTasksForPaidQuote({
+          id: quote.id,
+          tenantId: quote.tenantId,
+          items: quote.items.map((i) => ({
+            id: i.id,
+            category: i.category,
+            name: i.name,
+            startDate: i.startDate,
+            seguroIncluido: i.seguroIncluido,
+          })),
+        });
+      } catch (taskError) {
+        log.error({ error: taskError }, "Failed to generate auto-tasks on Redsys payment");
+      }
+
       // Send confirmation email
       if (quote.clientEmail) {
         try {
@@ -86,9 +104,28 @@ export async function POST(request: NextRequest) {
           const html = buildConfirmationEmailHTML({
             quoteNumber,
             clientName: quote.clientName,
+            clientPhone: quote.clientPhone ?? undefined,
+            clientEmail: quote.clientEmail ?? undefined,
             destination: quote.destination,
             checkIn: new Date(quote.checkIn).toLocaleDateString("es-ES"),
             checkOut: new Date(quote.checkOut).toLocaleDateString("es-ES"),
+            items: quote.items.map((item) => ({
+              name: item.name,
+              category: item.category,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount,
+              totalPrice: item.totalPrice,
+              startDate: item.startDate ? new Date(item.startDate).toLocaleDateString("es-ES") : null,
+              numDays: item.numDays,
+              horario: item.horario,
+              modalidad: item.modalidad,
+              nivel: item.nivel,
+              sector: item.sector,
+              idioma: item.idioma,
+              tipoCliente: item.tipoCliente,
+              notes: item.notes,
+            })),
             totalAmount: quote.totalAmount,
             paymentRef: authCode,
           });
@@ -97,7 +134,7 @@ export async function POST(request: NextRequest) {
             tenantId: quote.tenantId,
             contactId: quote.ghlContactId ?? null,
             to: quote.clientEmail,
-            subject: `Pago confirmado — Presupuesto ${quoteNumber}`,
+            subject: `Confirmación reserva nº ${quoteNumber} ${quote.clientName}`,
             html,
           });
         } catch (emailError) {

@@ -1,12 +1,12 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE U complete — Presupuestos fully wired (Redsys + GHL pipeline + PDF + email)
-- **Step:** Ready for Phase V — decide next feature area
+- **Phase:** PHASE V complete — Product System Upgrade (per-product variables, tasks, cancellation, BDR emails)
+- **Step:** Ready for push
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last pushed commit:** cb6fa70 (2026-03-18)
-- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R-U pushed to git, Railway auto-deploys
-- **Date:** 2026-03-18
+- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R-V pushed to git, Railway auto-deploys
+- **Date:** 2026-03-20
 
 ## What the App Does Today
 
@@ -181,7 +181,26 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **QuoteList**: pagado/expirado/cancelado status badges
 - Middleware updated to allow public `/presupuestos/:id/success|error` paths
 
-### Next: Phase V — TBD
+### Phase V: Product System Upgrade (2026-03-20) ✅
+- **Schema upgrade**: QuoteItem now has 20+ per-product fields (startDate, numDays, numPersons, ageDetails, modalidad, nivel, sector, idioma, horario, puntoEncuentro, tipoCliente, gama, casco, tipoActividad, regimen, alojamientoNombre, seguroIncluido, tallaBotas, alturaPeso, dni)
+- **Task model**: Auto-generated tasks on payment — 7 task types (request_dni, check_dni, request_sizes, prepare_material, validate_level, offer_insurance, send_location)
+- **Cancellation system**: POST `/api/quotes/:id/cancel` with >15 days (bono/refund), <15 days (100% charge), Groupon block, holiday blackout
+- **Quote cancellation fields**: cancelType, cancelNotes, refundIban, refundTitular, refundStatus, bonoCode, bonoAmount, bonoExpiresAt
+- **BDR email templates**: Presupuesto email with per-product details (fecha, modalidad, nivel, sector, idioma), dark teal header, client info block, T&C policy
+- **Confirmation email**: Per-product details, matching BDR format
+- **Cancellation emails**: Client notification (bono/refund/no-refund) + admin refund request to administracion@skicenter.es
+- **ProductVariableForm**: Collapsible per-product variable section — fields shown by category type
+- **ProductSearchPicker**: Dynamic search/filter with grouped categories, replaces flat product list
+- **CancellationModal**: Multi-step flow (reason → bono/refund choice → IBAN form → confirmation)
+- **TaskList**: Progress bar, pending/completed tasks, toggle completion, due date warnings
+- **PackageTable upgrade**: Integrated ProductVariableForm + ProductSearchPicker
+- **QuoteDetail upgrade**: Cancellation button on enviado/pagado, task list on paid quotes, cancel info bar
+- **Items API**: PUT/POST now persist all per-product fields
+- **Auto-tasks wired**: Both Redsys webhook and manual mark-paid trigger task generation
+- **Product audit**: GET `/api/admin/product-audit` — finds duplicates, zero-price, test products
+- **Migration**: `20260320000000_product_system_upgrade`
+
+### Next: Phase W — TBD
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
@@ -189,6 +208,7 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 3. `20260316200000_ghl_cache_sync` — Cache tables, SyncQueue, SyncStatus
 4. `20260316300000_pricing_engine` — Product refactor (destination→station, new fields), SeasonCalendar table
 5. `20260317000000_demo_onboarding_sync` — isDemo, onboarding steps (1-3 + dismissed), sync progress fields on Tenant
+6. `20260320000000_product_system_upgrade` — QuoteItem per-product fields, Task model, Quote cancellation fields
 
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before migrations

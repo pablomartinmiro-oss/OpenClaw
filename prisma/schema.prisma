@@ -55,6 +55,7 @@ model Tenant {
   reservations       Reservation[]
   stationCapacity    StationCapacity[]
   grouponMappings    GrouponProductMapping[]
+  tasks              Task[]
   cachedContacts     CachedContact[]
   cachedConversations CachedConversation[]
   cachedOpportunities CachedOpportunity[]
@@ -226,8 +227,14 @@ model Quote {
   // Email tracking
   emailSentAt      DateTime?           // When quote email was sent
   emailSentTo      String?             // Email address sent to
-  reminderSentAt   DateTime?           // When reminder was sent
+  reminderSentAt   DateTime?           // When last reminder was sent
   reminderCount    Int       @default(0)
+  lastReminderStep String?             // "reminder_1" | "reminder_2" | "discount" | "expiry_warning" | "expired"
+
+  // Post-payment follow-up tracking
+  crossSellSentAt  DateTime?           // When cross-sell email was sent
+  reviewSentAt     DateTime?           // When review request was sent
+  preTripStep      String?             // "pre_48h" | "pre_24h" | "day_of"
 
   // GHL link
   ghlOpportunityId String?             // Link to GHL opportunity
@@ -237,9 +244,19 @@ model Quote {
   // Internal
   source           String?             // "manual" | "survey" (auto-created from GHL webhook)
   internalNotes    String?
-  cancelledAt      DateTime?
-  cancelReason     String?
   createdBy        String?             // User ID who created
+
+  // Cancellation
+  cancelledAt      DateTime?
+  cancelReason     String?             // "cliente_solicita" | "sin_disponibilidad" | "error_presupuesto" | "otro"
+  cancelType       String?             // "bono" | "devolucion" | "sin_devolucion" | "groupon"
+  cancelNotes      String?             // Free text for "otro"
+  refundIban       String?
+  refundTitular    String?
+  refundStatus     String?             // "pendiente" | "completado"
+  bonoCode         String?             // Generated voucher code
+  bonoAmount       Float?
+  bonoExpiresAt    DateTime?
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -247,6 +264,7 @@ model Quote {
   tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   items           QuoteItem[]
   reservations    Reservation[]
+  tasks           Task[]
 
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
@@ -258,27 +276,77 @@ model QuoteItem {
   productId   String?
   name        String   // Snapshot of product name
   description String?
+  category    String?  // Product category snapshot: forfait, alquiler, clase_particular, etc.
   quantity    Int      @default(1)
   unitPrice   Float
   discount    Float    @default(0) // percentage 0-100
   totalPrice  Float
 
-  // Extra fields for ski products
-  startDate    DateTime?
-  endDate      DateTime?
-  station      String?
-  modalidad    String?   // "individual" | "colectivo"
-  nivel        String?   // "principiante" | "intermedio" | "avanzado"
-  sector       String?   // "Baqueira" | "Beret"
-  idioma       String?   // "es" | "en" | "fr"
-  notes        String?
+  // Per-product dates and persons
+  startDate       DateTime?
+  endDate         DateTime?
+  numDays         Int?
+  numPersons      Int?
+  ageDetails      Json?     // [{age: 8, type: "niño"}, {age: 35, type: "adulto"}]
+
+  // Ski product variables
+  station         String?
+  modalidad       String?   // "alpino" | "snow"
+  nivel           String?   // "A" | "A+" | "B" | "B+" | "C" | "D"
+  sector          String?   // "Baqueira" | "Beret" | "Formigal" etc.
+  idioma          String?   // "español" | "inglés" | "francés"
+  horario         String?   // "10:00" | "13:00"
+  puntoEncuentro  String?   // Meeting point
+
+  // Equipment/rental
+  tipoCliente     String?   // "niño" | "adulto" | "baby" | "senior"
+  gama            String?   // "media" | "alta"
+  casco           Boolean?  // Helmet included
+  tipoActividad   String?   // "esquí" | "snow"
+  tallaBotas      String?   // Boot size (filled post-purchase)
+  alturaPeso      String?   // Height/weight (filled post-purchase)
+  dni             String?   // DNI (for accommodation/rental)
+
+  // Accommodation
+  regimen           String?   // "solo_alojamiento" | "desayuno" | "media_pension" | "pension_completa"
+  alojamientoNombre String?   // Accommodation name
+
+  // Insurance & extras
+  seguroIncluido  Boolean?  // Insurance included (forfait)
+  notes           String?
 
   createdAt   DateTime @default(now())
 
   quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  tasks       Task[]
 
   @@index([quoteId])
+}
+
+// ==================== TASKS (auto-generated on payment) ====================
+model Task {
+  id            String    @id @default(cuid())
+  tenantId      String
+  quoteId       String
+  quoteItemId   String?
+  type          String    // "request_dni" | "request_sizes" | "validate_level" | "offer_insurance" | "send_location" | "check_dni" | "prepare_material"
+  title         String
+  description   String?
+  status        String    @default("pending") // "pending" | "completed"
+  dueDate       DateTime?
+  assignedTo    String?   // User ID
+  completedAt   DateTime?
+  completedBy   String?   // User ID who completed
+  createdAt     DateTime  @default(now())
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quote         Quote     @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteItem     QuoteItem? @relation(fields: [quoteItemId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([quoteId])
+  @@index([tenantId, dueDate])
 }
 
 // ==================== RESERVATIONS ====================

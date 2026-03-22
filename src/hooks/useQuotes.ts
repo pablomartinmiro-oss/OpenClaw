@@ -8,10 +8,32 @@ interface QuoteItem {
   productId: string | null;
   name: string;
   description: string | null;
+  category: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;
   totalPrice: number;
+  // Per-product variables
+  startDate: string | null;
+  endDate: string | null;
+  numDays: number | null;
+  numPersons: number | null;
+  ageDetails: Array<{ age: number; type: string }> | null;
+  station: string | null;
+  modalidad: string | null;
+  nivel: string | null;
+  sector: string | null;
+  idioma: string | null;
+  horario: string | null;
+  puntoEncuentro: string | null;
+  tipoCliente: string | null;
+  gama: string | null;
+  casco: boolean | null;
+  tipoActividad: string | null;
+  regimen: string | null;
+  alojamientoNombre: string | null;
+  seguroIncluido: boolean | null;
+  notes: string | null;
 }
 
 interface Quote {
@@ -36,6 +58,15 @@ interface Quote {
   totalAmount: number;
   expiresAt: string | null;
   sentAt: string | null;
+  // Cancellation
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  cancelType: string | null;
+  cancelNotes: string | null;
+  bonoCode: string | null;
+  bonoAmount: number | null;
+  bonoExpiresAt: string | null;
+  refundStatus: string | null;
   createdAt: string;
   updatedAt: string;
   items: QuoteItem[];
@@ -219,4 +250,85 @@ export function useQuoteDraftCount() {
   });
 }
 
-export type { Quote, QuoteItem };
+export function useCancelQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      reason,
+      notes,
+      action,
+      iban,
+      titular,
+    }: {
+      id: string;
+      reason: string;
+      notes?: string;
+      action?: "bono" | "devolucion";
+      iban?: string;
+      titular?: string;
+    }) => {
+      const res = await fetch(`/api/quotes/${id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, notes, action, iban, titular }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al cancelar");
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+      qc.invalidateQueries({ queryKey: ["quote"] });
+    },
+  });
+}
+
+// ==================== TASKS ====================
+
+interface Task {
+  id: string;
+  tenantId: string;
+  quoteId: string;
+  quoteItemId: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  status: string;
+  dueDate: string | null;
+  assignedTo: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  quote?: { id: string; clientName: string; destination: string };
+  quoteItem?: { id: string; name: string; category: string | null };
+}
+
+export function useTasks(quoteId?: string, status?: string) {
+  const params = new URLSearchParams();
+  if (quoteId) params.set("quoteId", quoteId);
+  if (status) params.set("status", status);
+  const qs = params.toString();
+
+  return useQuery({
+    queryKey: ["tasks", quoteId, status],
+    queryFn: () => fetchJSON<{ tasks: Task[] }>(`/api/tasks${qs ? `?${qs}` : ""}`),
+    select: (data) => data.tasks,
+  });
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
+      fetchJSON<{ task: Task }>("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId, status }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+}
+
+export type { Quote, QuoteItem, Task };

@@ -17,6 +17,7 @@ interface PackageItem {
   productId: string | null;
   name: string;
   description: string | null;
+  category: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;
@@ -76,6 +77,7 @@ function addItem(
   const price = getMatrixPrice(product, season, days);
   items.push({
     productId: product.id, name: product.name, description: product.description,
+    category: product.category ?? null,
     quantity: qty, unitPrice: price, discount: 0, totalPrice: price * qty,
     breakdown: `${days} días × ${label} = ${EUR.format(price * qty)}`,
   });

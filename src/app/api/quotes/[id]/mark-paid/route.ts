@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email/client";
 import { buildConfirmationEmailHTML } from "@/lib/email/templates";
 import { getGHLClient } from "@/lib/ghl/api";
 import { findStageByName } from "@/lib/ghl/stages";
+import { generateTasksForPaidQuote } from "@/lib/tasks/generate";
 
 export async function POST(
   request: NextRequest,
@@ -57,6 +58,24 @@ export async function POST(
       "Quote marked as paid"
     );
 
+    // Generate auto-tasks for paid quote
+    try {
+      const taskCount = await generateTasksForPaidQuote({
+        id: updated.id,
+        tenantId,
+        items: updated.items.map((i) => ({
+          id: i.id,
+          category: i.category,
+          name: i.name,
+          startDate: i.startDate,
+          seguroIncluido: i.seguroIncluido,
+        })),
+      });
+      log.info({ quoteId: id, taskCount }, "Auto-tasks generated on payment");
+    } catch (taskError) {
+      log.error({ error: taskError }, "Failed to generate auto-tasks");
+    }
+
     // Send confirmation email via GHL
     if (quote.clientEmail) {
       try {
@@ -64,9 +83,28 @@ export async function POST(
         const html = buildConfirmationEmailHTML({
           quoteNumber,
           clientName: quote.clientName,
+          clientPhone: quote.clientPhone ?? undefined,
+          clientEmail: quote.clientEmail ?? undefined,
           destination: quote.destination,
           checkIn: new Date(quote.checkIn).toLocaleDateString("es-ES"),
           checkOut: new Date(quote.checkOut).toLocaleDateString("es-ES"),
+          items: updated.items.map((item) => ({
+            name: item.name,
+            category: item.category,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount,
+            totalPrice: item.totalPrice,
+            startDate: item.startDate ? new Date(item.startDate).toLocaleDateString("es-ES") : null,
+            numDays: item.numDays,
+            horario: item.horario,
+            modalidad: item.modalidad,
+            nivel: item.nivel,
+            sector: item.sector,
+            idioma: item.idioma,
+            tipoCliente: item.tipoCliente,
+            notes: item.notes,
+          })),
           totalAmount: quote.totalAmount,
           paymentRef: body.paymentRef,
         });
@@ -75,7 +113,7 @@ export async function POST(
           tenantId,
           contactId: quote.ghlContactId ?? null,
           to: quote.clientEmail,
-          subject: `Pago confirmado — Presupuesto ${quoteNumber}`,
+          subject: `Confirmación reserva nº ${quoteNumber} ${quote.clientName}`,
           html,
         });
       } catch (emailError) {

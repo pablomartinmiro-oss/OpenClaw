@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { sendEmail } from "@/lib/email/client";
-import { buildReminderEmailHTML } from "@/lib/email/templates";
+import {
+  processUnpaidReminders,
+  processPostPaymentFollowUp,
+  processPreTripReminders,
+  flagAtRiskQuotes,
+} from "@/lib/quotes/follow-up";
 
 const log = logger.child({ route: "/api/cron/quote-reminders" });
-const IBAN = "ES58 0182 2900 5402 0182 7221";
 
 /**
- * PUBLIC GET endpoint for Railway cron.
- * 1. Send reminders for quotes expiring within 2 days
- * 2. Expire quotes past their expiration date
+ * PUBLIC GET endpoint for Railway cron — run daily at 09:00 Europe/Madrid.
+ *
+ * Processes ALL quote follow-up sequences:
+ * 1. Unpaid reminders: reminder_1 (+24h), reminder_2 (+48h), discount (+72h),
+ *    expiry_warning (2 days before), auto-expire (past validUntil)
+ * 2. Post-payment: cross-sell (+24h after paid), review (+5h after checkOut)
+ * 3. Pre-trip: 48h, 24h, day-of-arrival reminders
+ * 4. At-risk flagging: 5+ days sent without payment → team notification
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -21,96 +28,39 @@ export async function GET(req: Request) {
     }
   }
 
+  const startTime = Date.now();
+
   try {
-    const now = new Date();
-    const twoDaysFromNow = new Date(
-      now.getTime() + 2 * 24 * 60 * 60 * 1000
-    );
+    // 1. Process unpaid quote reminder sequence
+    const reminders = await processUnpaidReminders();
 
-    // 1. Find quotes needing a reminder
-    const quotesToRemind = await prisma.quote.findMany({
-      where: {
-        status: "enviado",
-        expiresAt: {
-          gt: now,
-          lte: twoDaysFromNow,
-        },
-        reminderSentAt: null,
-        clientEmail: { not: null },
-      },
-    });
+    // 2. Post-payment follow-ups (cross-sell + reviews)
+    const postPayment = await processPostPaymentFollowUp();
 
-    let remindersSent = 0;
+    // 3. Pre-trip reminders for paid quotes
+    const preTrip = await processPreTripReminders();
 
-    for (const quote of quotesToRemind) {
-      if (!quote.clientEmail) continue;
+    // 4. Flag at-risk quotes (5+ days without payment)
+    const atRisk = await flagAtRiskQuotes();
 
-      try {
-        const quoteNumber = quote.id.slice(-8).toUpperCase();
-        const expiresAt = quote.expiresAt
-          ? new Date(quote.expiresAt).toLocaleDateString("es-ES")
-          : "";
+    const elapsed = Date.now() - startTime;
 
-        const html = buildReminderEmailHTML({
-          quoteNumber,
-          clientName: quote.clientName,
-          destination: quote.destination,
-          totalAmount: quote.totalAmount,
-          paymentUrl: quote.redsysPaymentUrl ?? undefined,
-          expiresAt,
-          iban: IBAN,
-        });
+    const summary = {
+      remindersSent: reminders.sent,
+      quotesExpired: reminders.expired,
+      crossSellSent: postPayment.crossSellSent,
+      reviewsSent: postPayment.reviewsSent,
+      preTripSent: preTrip.sent,
+      atRiskFlagged: atRisk,
+      errors: reminders.errors + postPayment.errors + preTrip.errors,
+      elapsedMs: elapsed,
+    };
 
-        await sendEmail({
-          tenantId: quote.tenantId,
-          contactId: quote.ghlContactId ?? null,
-          to: quote.clientEmail,
-          subject: `Recordatorio — Presupuesto ${quoteNumber} expira pronto`,
-          html,
-        });
+    log.info(summary, "[CRON] Quote follow-up completed");
 
-        await prisma.quote.update({
-          where: { id: quote.id },
-          data: {
-            reminderSentAt: now,
-            reminderCount: { increment: 1 },
-          },
-        });
-
-        remindersSent++;
-      } catch (emailError) {
-        log.error(
-          { error: emailError, quoteId: quote.id },
-          "Failed to send reminder"
-        );
-      }
-    }
-
-    // 2. Expire overdue quotes
-    const expiredResult = await prisma.quote.updateMany({
-      where: {
-        status: "enviado",
-        expiresAt: { lt: now },
-      },
-      data: { status: "expirado" },
-    });
-
-    log.info(
-      {
-        remindersSent,
-        expired: expiredResult.count,
-        checked: quotesToRemind.length,
-      },
-      "Quote reminders cron completed"
-    );
-
-    return NextResponse.json({
-      remindersSent,
-      expired: expiredResult.count,
-      checkedForReminders: quotesToRemind.length,
-    });
+    return NextResponse.json(summary);
   } catch (error) {
-    log.error({ error }, "Quote reminders cron failed");
+    log.error({ error }, "[CRON] Quote follow-up failed");
     return NextResponse.json(
       { error: "Cron job failed" },
       { status: 500 }
