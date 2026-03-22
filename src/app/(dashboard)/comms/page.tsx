@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
 import { useConversations, useMessages, useSendMessage, useAssignConversation, useContact } from "@/hooks/useGHL";
 import { usePermissions } from "@/hooks/usePermissions";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -59,9 +59,9 @@ export default function CommsPage() {
 
   return (
     <GHLEmptyState message="No hay conversaciones. Conecta GoHighLevel para gestionar tus comunicaciones.">
-    <div className="-m-6 flex h-[calc(100vh-3.5rem)]">
+    <div className="-m-4 md:-m-6 flex h-[calc(100vh-3.5rem)]">
       {/* Left panel: Conversation list */}
-      <div className="w-80 shrink-0">
+      <div className={`w-full md:w-80 md:shrink-0 ${selectedId ? "hidden md:block" : "block"}`}>
         <ConversationList
           conversations={conversations}
           loading={convosLoading}
@@ -73,10 +73,16 @@ export default function CommsPage() {
 
       {/* Center panel: Message thread */}
       {selectedId ? (
-        <div className="flex flex-1 flex-col">
+        <div className={`flex flex-1 flex-col ${selectedId ? "block" : "hidden md:block"}`}>
           {/* Thread header */}
           <div className="flex items-center justify-between border-b border-border bg-white px-4 py-2.5">
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedId(null)}
+                className="flex items-center gap-1 rounded-lg p-1 text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors md:hidden min-h-[44px] min-w-[44px] justify-center"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
               <h2 className="text-sm font-semibold text-text-primary">
                 {selectedConvo?.contactName ?? "Conversación"}
               </h2>
@@ -102,7 +108,7 @@ export default function CommsPage() {
           />
         </div>
       ) : (
-        <div className="flex flex-1 items-center justify-center bg-surface">
+        <div className="hidden md:flex flex-1 items-center justify-center bg-surface">
           <EmptyState
             icon={MessageSquare}
             title="Selecciona una conversación"

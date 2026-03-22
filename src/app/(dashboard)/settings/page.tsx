@@ -15,7 +15,23 @@ import { SeasonCalendarCard } from "./_components/SeasonCalendarCard";
 import { PriceImportCard } from "./_components/PriceImportCard";
 import { SeedCatalogCard } from "./_components/SeedCatalogCard";
 import { SurveyUrlCard } from "./_components/SurveyUrlCard";
+import { Building2, RefreshCw, Package, Plug, Users } from "lucide-react";
 import { toast } from "sonner";
+
+function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-coral-light">
+        <Icon className="h-4 w-4 text-coral" />
+      </div>
+      <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
+    </div>
+  );
+}
+
+function SectionDivider() {
+  return <div className="border-t border-border" />;
+}
 
 function SettingsToast() {
   const searchParams = useSearchParams();
@@ -87,80 +103,101 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* Cuenta */}
       <RoleGate permission="settings:tenant">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <TenantInfoCard
-            name={tenant?.name ?? ""}
-            slug={tenant?.slug ?? ""}
-            createdAt={tenant?.createdAt ?? ""}
+        <section>
+          <SectionHeader icon={Building2} title="Cuenta" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <TenantInfoCard
+              name={tenant?.name ?? ""}
+              slug={tenant?.slug ?? ""}
+              createdAt={tenant?.createdAt ?? ""}
+              loading={tenantLoading}
+            />
+            <GHLConnectionCard
+              ghlLocationId={tenant?.ghlLocationId ?? null}
+              ghlConnectedAt={tenant?.ghlConnectedAt ?? null}
+              ghlTokenExpiry={tenant?.ghlTokenExpiry ?? null}
+              loading={tenantLoading}
+            />
+          </div>
+        </section>
+      </RoleGate>
+
+      <SectionDivider />
+
+      {/* Sincronizacion */}
+      <RoleGate permission="settings:tenant">
+        <section>
+          <SectionHeader icon={RefreshCw} title="Sincronización" />
+          <SyncStatusCard
+            ghlConnected={!!tenant?.ghlLocationId}
             loading={tenantLoading}
+            syncStatus={tenantData?.syncStatus}
+            syncState={tenant?.syncState}
+            syncProgressMsg={tenant?.syncProgressMsg}
+            lastSyncError={tenant?.lastSyncError}
           />
-          <GHLConnectionCard
-            ghlLocationId={tenant?.ghlLocationId ?? null}
-            ghlConnectedAt={tenant?.ghlConnectedAt ?? null}
-            ghlTokenExpiry={tenant?.ghlTokenExpiry ?? null}
-            loading={tenantLoading}
-          />
-        </div>
+        </section>
       </RoleGate>
 
-      {/* Sync status + manual sync button */}
+      <SectionDivider />
+
+      {/* Catalogo */}
       <RoleGate permission="settings:tenant">
-        <SyncStatusCard
-          ghlConnected={!!tenant?.ghlLocationId}
-          loading={tenantLoading}
-          syncStatus={tenantData?.syncStatus}
-          syncState={tenant?.syncState}
-          syncProgressMsg={tenant?.syncProgressMsg}
-          lastSyncError={tenant?.lastSyncError}
-        />
+        <section>
+          <SectionHeader icon={Package} title="Catálogo" />
+          <div className="space-y-6">
+            <SeasonCalendarCard />
+            <PriceImportCard />
+            <SeedCatalogCard />
+          </div>
+        </section>
       </RoleGate>
 
+      <SectionDivider />
+
+      {/* Integraciones */}
       <RoleGate permission="settings:tenant">
-        <SeasonCalendarCard />
+        <section>
+          <SectionHeader icon={Plug} title="Integraciones" />
+          <div className="space-y-6">
+            <SurveyUrlCard slug={tenant?.slug ?? ""} loading={tenantLoading} />
+            <GrouponMappingCard />
+          </div>
+        </section>
       </RoleGate>
 
-      <RoleGate permission="settings:tenant">
-        <PriceImportCard />
-      </RoleGate>
+      <SectionDivider />
 
-      <RoleGate permission="settings:tenant">
-        <SeedCatalogCard />
-      </RoleGate>
-
-      <RoleGate permission="settings:tenant">
-        <SurveyUrlCard slug={tenant?.slug ?? ""} loading={tenantLoading} />
-      </RoleGate>
-
-      <RoleGate permission="settings:tenant">
-        <GrouponMappingCard />
-      </RoleGate>
-
+      {/* Equipo */}
       <RoleGate permission="settings:team">
-        <div className="space-y-4">
+        <section>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Equipo</h2>
-            <span className="text-sm text-muted-foreground">
+            <SectionHeader icon={Users} title="Equipo" />
+            <span className="text-sm text-text-secondary">
               {users.length} miembros
             </span>
           </div>
 
-          <TeamInviteCard
-            onInvite={handleInvite}
-            isPending={inviteMember.isPending}
-            inviteUrl={inviteUrl}
-          />
+          <div className="space-y-4">
+            <TeamInviteCard
+              onInvite={handleInvite}
+              isPending={inviteMember.isPending}
+              inviteUrl={inviteUrl}
+            />
 
-          <TeamTable
-            users={users}
-            roles={roles}
-            loading={teamLoading}
-            canManage={can("settings:team")}
-            onRoleChange={handleRoleChange}
-            onResendInvite={handleResendInvite}
-            resendingId={resendingId}
-          />
-        </div>
+            <TeamTable
+              users={users}
+              roles={roles}
+              loading={teamLoading}
+              canManage={can("settings:team")}
+              onRoleChange={handleRoleChange}
+              onResendInvite={handleResendInvite}
+              resendingId={resendingId}
+            />
+          </div>
+        </section>
       </RoleGate>
     </div>
   );

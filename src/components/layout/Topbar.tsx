@@ -27,7 +27,7 @@ export function Topbar() {
     : "??";
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b border-border bg-white px-6">
+    <header className="flex h-14 items-center gap-4 border-b border-border bg-white px-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Global Search */}
       <GlobalSearch />
 
@@ -37,15 +37,15 @@ export function Topbar() {
 
         {/* User Menu */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted">
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-muted">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-coral-light text-xs font-semibold text-coral">
+              <AvatarFallback className="bg-gradient-to-br from-coral to-coral-hover text-xs font-semibold text-white">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="hidden text-left md:block">
               <p className="text-sm font-medium leading-none text-text-primary">
-                {user?.name ?? "User"}
+                {user?.name ?? "Usuario"}
               </p>
               <p className="text-xs text-text-secondary">
                 {user?.roleName ?? ""}
@@ -55,7 +55,7 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
             <DropdownMenuItem className="gap-2 rounded-lg">
               <User className="h-4 w-4" />
-              Profile
+              Perfil
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -63,7 +63,7 @@ export function Topbar() {
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
               <LogOut className="h-4 w-4" />
-              Sign out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

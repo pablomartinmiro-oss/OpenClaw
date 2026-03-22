@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { LayoutList, CalendarDays } from "lucide-react";
+import { LayoutList, CalendarDays, ArrowLeft } from "lucide-react";
 import { useReservations, useReservationStats } from "@/hooks/useReservations";
 import { StatsBar } from "./_components/StatsBar";
 import { ReservationList } from "./_components/ReservationList";
@@ -97,11 +97,14 @@ export default function ReservasPage() {
       </div>
 
       {/* Main two-panel layout */}
-      <div className="flex min-h-0 flex-1 gap-4">
+      <div className="flex min-h-0 flex-1 gap-0 md:gap-4">
         {view === "lista" ? (
           <>
-            {/* Left panel: 35% */}
-            <div className="flex w-[35%] flex-col rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            {/* Left panel: list */}
+            <div className={cn(
+              "flex w-full md:w-[35%] flex-col rounded-none md:rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+              selectedId ? "hidden md:flex" : "flex"
+            )}>
               <ReservationList
                 reservations={reservations}
                 loading={isLoading}
@@ -111,8 +114,23 @@ export default function ReservasPage() {
               <WeeklyStats stats={stats} />
             </div>
 
-            {/* Right panel: 65% */}
-            <div className="flex w-[65%] flex-col rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            {/* Right panel: detail/form */}
+            <div className={cn(
+              "flex w-full md:w-[65%] flex-col rounded-none md:rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+              selectedId ? "flex" : "hidden md:flex"
+            )}>
+              {/* Mobile back button */}
+              {selectedId && (
+                <div className="flex items-center border-b border-border px-3 py-2 md:hidden">
+                  <button
+                    onClick={() => setSelectedId(null)}
+                    className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors min-h-[44px]"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Volver
+                  </button>
+                </div>
+              )}
               {selectedReservation ? (
                 <ReservationDetail
                   reservation={selectedReservation}
@@ -130,7 +148,10 @@ export default function ReservasPage() {
         ) : (
           <>
             {/* Left panel: calendar */}
-            <div className="flex w-[40%] flex-col rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            <div className={cn(
+              "flex w-full md:w-[40%] flex-col rounded-none md:rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+              calendarDate ? "hidden md:flex" : "flex"
+            )}>
               <ReservationCalendar
                 reservations={reservations ?? []}
                 month={calendarMonth}
@@ -141,22 +162,37 @@ export default function ReservasPage() {
             </div>
 
             {/* Right panel: day reservations */}
-            <div className="flex w-[60%] flex-col rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            <div className={cn(
+              "flex w-full md:w-[60%] flex-col rounded-none md:rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+              calendarDate ? "flex" : "hidden md:flex"
+            )}>
               {calendarDate ? (
-                selectedReservation ? (
-                  <ReservationDetail
-                    reservation={selectedReservation}
-                    onBack={() => setSelectedId(null)}
-                  />
-                ) : (
-                  <ReservationList
-                    reservations={dayReservations}
-                    loading={isLoading}
-                    selectedId={selectedId}
-                    onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
-                    emptyLabel={`Sin reservas el ${calendarDate}`}
-                  />
-                )
+                <>
+                  {/* Mobile back button for calendar view */}
+                  <div className="flex items-center border-b border-border px-3 py-2 md:hidden">
+                    <button
+                      onClick={() => { setCalendarDate(null); setSelectedId(null); }}
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors min-h-[44px]"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Volver
+                    </button>
+                  </div>
+                  {selectedReservation ? (
+                    <ReservationDetail
+                      reservation={selectedReservation}
+                      onBack={() => setSelectedId(null)}
+                    />
+                  ) : (
+                    <ReservationList
+                      reservations={dayReservations}
+                      loading={isLoading}
+                      selectedId={selectedId}
+                      onSelect={(id) => setSelectedId(id === selectedId ? null : id)}
+                      emptyLabel={`Sin reservas el ${calendarDate}`}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[#8A8580]">
                   <CalendarDays className="h-10 w-10 opacity-25" />

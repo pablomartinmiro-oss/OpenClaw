@@ -10,8 +10,21 @@ import { ContactsTable } from "./_components/ContactsTable";
 import { ContactsSearch } from "./_components/ContactsSearch";
 import { SourceFilter } from "./_components/SourceFilter";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
+
+function getPageNumbers(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "ellipsis")[] = [1];
+  if (current > 3) pages.push("ellipsis");
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (current < total - 2) pages.push("ellipsis");
+  if (total > 1) pages.push(total);
+  return pages;
+}
 
 export default function ContactsPage() {
   const [page, setPage] = useState(1);
@@ -19,11 +32,9 @@ export default function ContactsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
 
-  // Debounce search — send to server after 300ms
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
-    // Simple debounce via setTimeout
     clearTimeout((globalThis as unknown as { __searchTimeout?: ReturnType<typeof setTimeout> }).__searchTimeout);
     (globalThis as unknown as { __searchTimeout?: ReturnType<typeof setTimeout> }).__searchTimeout = setTimeout(() => {
       setDebouncedSearch(value);
@@ -48,11 +59,12 @@ export default function ContactsPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
-  // Client-side source filter (applied on top of server-side search)
   const filtered = useMemo(() => {
     if (!sourceFilter) return contacts;
     return contacts.filter((c) => c.source === sourceFilter);
   }, [contacts, sourceFilter]);
+
+  const pageNumbers = getPageNumbers(page, totalPages);
 
   return (
     <GHLEmptyState message="No hay contactos. Conecta GoHighLevel para importar tus contactos.">
@@ -87,40 +99,62 @@ export default function ContactsPage() {
           title="No se encontraron contactos"
           description={
             search || sourceFilter
-              ? "Prueba ajustando tu búsqueda o filtros"
-              : "Los contactos aparecerán aquí una vez sincronizados con GHL"
+              ? "Prueba ajustando tu busqueda o filtros"
+              : "Los contactos apareceran aqui una vez sincronizados con GHL"
           }
         />
       ) : (
-        <div className="overflow-hidden rounded-[14px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="overflow-x-auto rounded-[16px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <ContactsTable contacts={filtered} />
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination with page numbers */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-text-secondary">
-            Página {page} de {totalPages}
+            Mostrando {((page - 1) * PAGE_SIZE) + 1}-{Math.min(page * PAGE_SIZE, total)} de {total.toLocaleString("es-ES")}
           </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="h-8 w-8 p-0"
             >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Anterior
+              <ChevronLeft className="h-4 w-4" />
             </Button>
+
+            {pageNumbers.map((p, idx) =>
+              p === "ellipsis" ? (
+                <span key={`ellipsis-${idx}`} className="px-1 text-xs text-text-secondary">
+                  ...
+                </span>
+              ) : (
+                <Button
+                  key={p}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "h-8 w-8 p-0 text-xs",
+                    page === p && "bg-coral text-white border-coral hover:bg-coral-hover hover:text-white"
+                  )}
+                >
+                  {p}
+                </Button>
+              )
+            )}
+
             <Button
               variant="outline"
               size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
+              className="h-8 w-8 p-0"
             >
-              Siguiente
-              <ChevronRight className="ml-1 h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

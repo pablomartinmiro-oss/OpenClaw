@@ -56,7 +56,7 @@ export function MobileNav() {
       <SheetTrigger
         render={
           <button
-            className="rounded-md p-2 text-muted-foreground hover:bg-accent md:hidden"
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Open menu"
           />
         }
@@ -82,7 +82,7 @@ export function MobileNav() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]",
                   isActive
                     ? "border-l-[3px] border-coral bg-warm-muted text-text-primary"
                     : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"

@@ -14,6 +14,7 @@ import {
   FileText,
   Package,
   CalendarCheck,
+  Mountain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -121,15 +122,27 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-border px-4">
         {!collapsed && (
-          <span className="text-lg font-semibold text-text-primary">Skicenter</span>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-coral text-white">
+              <Mountain className="h-4 w-4" />
+            </div>
+            <span className="text-lg font-semibold text-text-primary tracking-tight">
+              Skicenter
+            </span>
+          </div>
+        )}
+        {collapsed && (
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-[10px] bg-coral text-white">
+            <Mountain className="h-4 w-4" />
+          </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "rounded-[10px] p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral",
-            collapsed ? "mx-auto" : "ml-auto"
+            "rounded-[10px] p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral transition-colors",
+            collapsed ? "mx-auto mt-2" : "ml-auto"
           )}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expandir barra lateral" : "Contraer barra lateral"}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -158,21 +171,24 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "border-l-[3px] border-coral bg-warm-muted text-text-primary"
-                  : "text-text-secondary hover:bg-warm-muted hover:text-text-primary",
+                  ? "border-l-[3px] border-coral bg-gradient-to-r from-coral/10 to-coral/[0.03] text-text-primary"
+                  : "text-text-secondary hover:bg-warm-muted hover:text-text-primary hover:translate-x-0.5",
                 collapsed && "justify-center px-2"
               )}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={cn(
+                "h-5 w-5 shrink-0 transition-colors duration-150",
+                isActive && "text-coral"
+              )} />
               {!collapsed && (
                 <>
                   <span className="flex-1">{item.label}</span>
                   {showBadge && (
                     <Badge
-                      variant={item.href === "/comms" ? "destructive" : item.href === "/presupuestos" ? "destructive" : "secondary"}
+                      variant={item.href === "/comms" || item.href === "/presupuestos" ? "destructive" : "secondary"}
                       className="h-5 min-w-5 justify-center rounded-full px-1 text-xs"
                     >
                       {badgeCount > 99 ? "99+" : badgeCount}
@@ -190,8 +206,23 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
 
       {/* Footer */}
       <div className="border-t border-border p-3">
-        {!collapsed && (
-          <p className="truncate text-xs text-text-secondary">Skicenter Dashboard v1.0</p>
+        {!collapsed ? (
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sage" />
+            </span>
+            <p className="truncate text-xs text-text-secondary">
+              Skicenter v1.0
+            </p>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sage" />
+            </span>
+          </div>
         )}
       </div>
     </aside>

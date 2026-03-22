@@ -583,3 +583,17 @@ model SyncStatus {
 
   @@index([tenantId])
 }
+
+// ==================== CONTACT FORM SUBMISSIONS ====================
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  nombre    String
+  email     String
+  telefono  String?
+  asunto    String   @default("Información general")
+  mensaje   String
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}

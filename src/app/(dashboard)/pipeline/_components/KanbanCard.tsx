@@ -25,6 +25,12 @@ function getDaysInStage(createdAt: string): number {
   return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
 }
 
+function getBorderColor(days: number): string {
+  if (days <= 3) return "border-l-sage";
+  if (days <= 7) return "border-l-gold";
+  return "border-l-muted-red";
+}
+
 export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: opportunity.id,
@@ -35,6 +41,7 @@ export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardPr
     : undefined;
 
   const daysInStage = getDaysInStage(opportunity.createdAt);
+  const borderColor = getBorderColor(daysInStage);
 
   return (
     <div
@@ -46,16 +53,21 @@ export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardPr
         if (!isDragging && !isDragOverlay) onClick?.();
       }}
       className={cn(
-        "rounded-lg border border-border/50 bg-surface p-3 transition-shadow hover:shadow-[0_2px_6px_rgba(0,0,0,0.08)] cursor-grab active:cursor-grabbing",
+        "rounded-[10px] border border-border/50 bg-surface p-3 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] cursor-grab active:cursor-grabbing",
+        "border-l-[3px]",
+        borderColor,
         isDragging && "opacity-40",
         isDragOverlay && "shadow-lg ring-1 ring-coral/20 rotate-2"
       )}
     >
-      <p className="mb-1 text-sm font-medium leading-tight text-text-primary">
-        {opportunity.name}
+      {/* Contact name */}
+      <p className="mb-1.5 text-sm font-medium leading-tight text-text-primary">
+        {opportunity.contactName || opportunity.name}
       </p>
+
+      {/* Deal value (bold) */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-success">
+        <span className="text-sm font-bold text-text-primary">
           {formatCurrency(opportunity.monetaryValue)}
         </span>
         {opportunity.assignedTo && (
@@ -65,19 +77,21 @@ export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardPr
           </div>
         )}
       </div>
-      <div className="mt-1.5 flex items-center justify-between">
+
+      {/* Days in stage + status */}
+      <div className="mt-2 flex items-center justify-between">
         <p className="text-[10px] text-text-secondary capitalize">{opportunity.status}</p>
-        {daysInStage >= 7 && (
-          <span className={cn(
-            "flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium",
-            daysInStage >= 30
-              ? "bg-red-100 text-red-600"
-              : "bg-gold-light text-gold"
-          )}>
-            <Clock className="h-2.5 w-2.5" />
-            {daysInStage}d
-          </span>
-        )}
+        <span className={cn(
+          "flex items-center gap-0.5 rounded-[6px] px-1.5 py-0.5 text-[10px] font-medium",
+          daysInStage <= 3
+            ? "bg-sage-light text-sage"
+            : daysInStage <= 7
+            ? "bg-gold-light text-gold"
+            : "bg-muted-red-light text-muted-red"
+        )}>
+          <Clock className="h-2.5 w-2.5" />
+          {daysInStage}d
+        </span>
       </div>
     </div>
   );

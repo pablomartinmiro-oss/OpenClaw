@@ -11,8 +11,10 @@ const SESSION_COOKIE_NAME = `${cookiePrefix}authjs.session-token`;
 const PUBLIC_ROUTES = [
   "/login",
   "/register",
+  "/contacto",
   "/api/auth",
   "/api/health",
+  "/api/contact",
   "/api/crm/webhooks",
   "/api/crm/oauth",
   "/api/cron/sync",

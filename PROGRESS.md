@@ -1,11 +1,11 @@
 # GHL Dashboard — Build Progress
 
 ## Current Status
-- **Phase:** PHASE W complete — Automated Quote Follow-Up System
+- **Phase:** PHASE X complete — Public Contact Form + Full UI/UX Overhaul
 - **Step:** Ready for push
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **Last pushed commit:** cb6fa70 (2026-03-18)
-- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R-W pushed to git, Railway auto-deploys
+- **Last deployed commit:** fc2e8d0 (2026-03-16) — phases R-X pushed to git, Railway auto-deploys
 - **Date:** 2026-03-22
 
 ## What the App Does Today
@@ -219,7 +219,89 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
   - `src/app/api/cron/quote-reminders/route.ts` — Cron endpoint orchestrating all flows
 - **Cron setup**: `GET /api/cron/quote-reminders` — run daily at 09:00 Europe/Madrid
 
-### Next: Phase X — TBD
+### Phase X: Public Contact Form + Full UI/UX Overhaul (2026-03-22) ✅
+
+**TASK 1: Public Contact Form (/contacto)**
+- **Public page** at `/contacto` — no auth required, standalone layout with Skicenter branding
+- **Fields**: Nombre (required), Email (required), Teléfono, Asunto (dropdown: Presupuesto/Info/Incidencia/Cupones/Otro), Mensaje (required), Privacidad checkbox (required)
+- **Honeypot** field for bot protection (hidden "website" input — bots fill it, silently accepted)
+- **Rate limiting**: max 3 submissions per email per hour via `ContactSubmission` DB model
+- **Email delivery**: Notification to reservas@skicenter.es + Confirmation to client ("Te contactaremos en menos de 24h") via Resend
+- **GHL integration**: Creates/updates contact with tag "web-contacto" (best effort)
+- **Success screen**: Animated checkmark + "¡Gracias! Te contactaremos pronto."
+- **Embed support**: `?embed=true` hides header/footer for clean iframe on skicenter.es
+- **New files**: `src/app/contacto/` (page, layout, contact-form, success-screen), `src/app/api/contact/` (route, email-templates)
+- **DB migration**: `20260322100000_contact_submission` — ContactSubmission model with email+createdAt index
+
+**TASK 2: Full UI/UX Overhaul**
+
+**A. Design System & Micro-interactions (globals.css)**
+- 7 animation utility classes: `animate-fade-in`, `animate-slide-up`, `animate-slide-in-right`, `animate-scale-in`, `animate-pulse-soft`, `hover-lift`, `card-hover`
+- Custom scrollbar styling (6px, warm border colors)
+- 5 keyframe definitions for smooth animations
+
+**B. Sidebar Polish**
+- Mountain icon logo with coral background, better collapsed state
+- Active nav item: coral gradient background (`from-coral/10 to-coral/[0.03]`), icon turns coral
+- Hover animation: subtle `translate-x-0.5` slide effect
+- Footer: green pulsing "online" status dot + version label
+- Spanish aria labels
+
+**C. Topbar Polish**
+- Menu items translated to Spanish ("Perfil", "Cerrar sesión")
+- Subtle bottom shadow, gradient avatar background (coral → coral-hover)
+
+**D. NotificationBell Upgrade**
+- Time-grouped notifications: "Hoy", "Ayer", "Esta semana", "Anteriores"
+- Color-coded left borders by type (coral/sage/gold/blue)
+- Slide-in animation on dropdown open
+- New `payment_received` type with CircleDollarSign icon
+
+**E. EmptyState Upgrade**
+- Warmer design with coral-light icon background
+- Fade-in mount animation, larger typography, better visual hierarchy
+
+**F. Dashboard — Command Center Redesign**
+- Split from 498 lines into 5 files (all <300 lines)
+- StatCard enhanced with trend arrows (↑12%) and sparkline mini-charts
+- New **NeedsAttention** section: quotes expiring within 3 days, color-coded urgency
+- New **ActivityFeed**: unified feed (reservations + quotes + opportunities) with colored stripes, relative timestamps
+- FunnelChart extracted to own component
+- All chart cards get `animate-fade-in` + `card-hover`
+
+**G. Presupuestos — QuoteList Overhaul**
+- Cards instead of plain list items: client name, destination, total (bold), status badge, pax count
+- Status badges: borrador (gray), enviado (blue + pulse), pagado (green + checkmark), expirado (red + strikethrough), cancelado (dark gray)
+- "Desde formulario" orange badge for survey-sourced quotes
+- Clickable status pill filters (Todos/Borrador/Enviado/Pagado/Expirado) with counts
+- Search bar (client name/email/phone)
+
+**H. Pipeline — Kanban Improvements**
+- Color-coded card left borders by days in stage: <3d green, 3-7d yellow, >7d red
+- Days-in-stage badge with matching colors
+- Stage headers: count pill + total value
+- Warm background for columns
+
+**I. Contacts — Table Upgrade**
+- Row hover highlight, clickable rows
+- Tags column with color-coded badges (VIP gold, nuevo blue, activo sage, lead coral)
+- "Actividad" column with relative dates
+- Smart pagination with numbered pages + ellipsis (not just prev/next)
+- "Mostrando X-Y de Z" info display
+
+**J. Settings — Sectioned Layout**
+- 5 sections with icon headers: Cuenta, Sincronización, Catálogo, Integraciones, Equipo
+- Each section has coral-light icon circle + title
+- Separators between sections
+
+**K. Mobile Responsive**
+- Dashboard layout: `p-4 md:p-6` padding
+- Split-panel pages (Presupuestos, Reservas, Comms): show one panel at a time on mobile with "← Volver" back button
+- MobileNav: 44x44px touch targets on trigger and nav items
+- Tables: horizontal scroll wrapper on mobile
+- All interactive elements meet 44px minimum touch target
+
+### Next: Phase Y — TBD
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
@@ -229,10 +311,11 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 5. `20260317000000_demo_onboarding_sync` — isDemo, onboarding steps (1-3 + dismissed), sync progress fields on Tenant
 6. `20260320000000_product_system_upgrade` — QuoteItem per-product fields, Task model, Quote cancellation fields
 7. `20260322000000_quote_followup_tracking` — Quote follow-up tracking fields (lastReminderStep, crossSellSentAt, reviewSentAt, preTripStep)
+8. `20260322100000_contact_submission` — ContactSubmission model for public contact form (rate limiting index)
 
 ## Known Issues
 - No Postgres running locally — need `docker-compose up db redis` before migrations
-- ANTHROPIC_API_KEY must be set on Railway for voucher reader to work
+- ~~ANTHROPIC_API_KEY must be set on Railway for voucher reader to work~~ ✅ Set on Railway + local .env (2026-03-22)
 - Voucher section only visible when "CUPÓN GROUPON" source is selected
 - Cron endpoint (`/api/cron/sync`) needs Railway cron job configured (every 5 min)
 - Permission checks removed — auth is session-only (no granular RBAC at API level)
@@ -274,7 +357,13 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 
 ## Auto-Audit Results
 
-### Phase T Final Audit (2026-03-17) — Latest
+### Phase X Final Audit (2026-03-22) — Latest
+- ✅ Type Check: 0 errors
+- ✅ Build: compiled clean (65 static pages, 7.5s)
+- ✅ New route: /contacto (public contact form)
+- ✅ Pending push
+
+### Phase T Final Audit (2026-03-17)
 - ✅ Type Check: 0 errors
 - ✅ Build: compiled clean (48+ routes)
 - ✅ Pending push

@@ -21,20 +21,22 @@ export function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-white p-8 text-center">
-      <div className="rounded-full bg-muted p-4">
-        <Icon className="h-8 w-8 text-muted-foreground" />
+    <div className="animate-fade-in flex min-h-[320px] flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-border bg-white p-10 text-center">
+      <div className="rounded-full bg-coral-light p-5">
+        <Icon className="h-10 w-10 text-coral" />
       </div>
-      <div>
-        <h3 className="text-lg font-semibold">{title}</h3>
+      <div className="space-y-1.5">
+        <h3 className="text-xl font-semibold text-text-primary">{title}</h3>
         {description && (
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          <p className="mx-auto max-w-sm text-sm leading-relaxed text-text-secondary">
             {description}
           </p>
         )}
       </div>
       {action && (
-        <Button onClick={action.onClick}>{action.label}</Button>
+        <Button onClick={action.onClick} className="mt-1 hover-lift">
+          {action.label}
+        </Button>
       )}
       {children}
     </div>
