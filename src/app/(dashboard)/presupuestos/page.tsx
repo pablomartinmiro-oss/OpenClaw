@@ -39,13 +39,16 @@ export default function PresupuestosPage() {
 
   const showDetail = showNewForm || !!currentQuote;
 
+  // DEBUG: Always show both panels for testing
+  const debugAlwaysShow = false;
+
   return (
     <>
       <div className="flex h-[calc(100vh-8rem)] gap-0 -m-4 md:-m-6">
         {/* Left panel — Quote list (hidden on mobile when detail is shown) */}
         <div className={cn(
           "w-full md:w-[40%] md:min-w-[320px] border-r border-border bg-white",
-          showDetail ? "hidden md:block" : "block"
+          (showDetail && !debugAlwaysShow) ? "hidden md:block" : "block"
         )}>
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
@@ -55,7 +58,10 @@ export default function PresupuestosPage() {
               </p>
             </div>
             <button
-              onClick={() => { setShowNewForm(true); setSelectedQuote(null); }}
+              onClick={() => { 
+                setShowNewForm(true); 
+                setSelectedQuote(null); 
+              }}
               className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors min-h-[44px]"
             >
               <Plus className="h-4 w-4" /> Nuevo
@@ -64,14 +70,17 @@ export default function PresupuestosPage() {
           <QuoteList
             quotes={quotes || []}
             selectedId={currentQuote?.id || null}
-            onSelect={(q) => { setSelectedQuote(q); setShowNewForm(false); }}
+            onSelect={(q) => { 
+              setSelectedQuote(q); 
+              setShowNewForm(false); 
+            }}
           />
         </div>
 
         {/* Right panel — Quote detail or form (full width on mobile) */}
         <div className={cn(
           "flex-1 bg-white",
-          showDetail ? "block" : "hidden md:block"
+          (showDetail || debugAlwaysShow) ? "block" : "hidden md:block"
         )}>
           {/* Mobile back button */}
           {showDetail && (

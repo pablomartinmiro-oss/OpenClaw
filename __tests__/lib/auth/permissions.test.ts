@@ -52,7 +52,7 @@ describe("permissions", () => {
   describe("DEFAULT_ROLES", () => {
     it("Owner / Manager has all permissions", () => {
       expect(DEFAULT_ROLES["Owner / Manager"]).toEqual(ALL_PERMISSIONS);
-      expect(DEFAULT_ROLES["Owner / Manager"].length).toBe(15);
+      expect(DEFAULT_ROLES["Owner / Manager"].length).toBe(18);
     });
 
     it("Sales Rep has comms and pipeline permissions but not analytics", () => {

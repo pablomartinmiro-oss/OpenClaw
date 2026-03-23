@@ -54,12 +54,8 @@ export function MobileNav() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        render={
-          <button
-            className="rounded-md p-2 text-muted-foreground hover:bg-accent md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Open menu"
-          />
-        }
+        className="rounded-md p-2 text-muted-foreground hover:bg-accent md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center"
+        aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </SheetTrigger>

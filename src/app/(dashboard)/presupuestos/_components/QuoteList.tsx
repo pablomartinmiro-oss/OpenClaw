@@ -150,10 +150,13 @@ function QuoteCard({
     new Date(dateStr).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 
   return (
-    <button
+    <div
       onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect()}
       className={cn(
-        "w-full border-b border-warm-border p-4 text-left transition-all hover:bg-warm-muted/50",
+        "w-full border-b border-warm-border p-4 text-left transition-all hover:bg-warm-muted/50 cursor-pointer",
         isSelected && "bg-warm-muted border-l-[3px] border-l-coral"
       )}
     >
@@ -215,7 +218,7 @@ function QuoteCard({
           })}
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 
