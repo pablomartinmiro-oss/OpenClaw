@@ -27,8 +27,15 @@ export async function GET(req: Request) {
     await processSyncQueue();
 
     // 2. Find all tenants with GHL connected
+    // Include tenants with OAuth token OR those covered by GHL_PRIVATE_TOKEN
+    const hasPrivateToken = !!process.env.GHL_PRIVATE_TOKEN;
     const liveTenants = await prisma.tenant.findMany({
-      where: { ghlAccessToken: { not: null }, isActive: true, isDemo: false },
+      where: {
+        isActive: true,
+        isDemo: false,
+        ghlLocationId: { not: null },
+        ...(hasPrivateToken ? {} : { ghlAccessToken: { not: null } }),
+      },
       select: { id: true, name: true },
     });
 
