@@ -20,7 +20,8 @@ export default function CommsPage() {
   const { can } = usePermissions();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: convoData, isLoading: convosLoading } = useConversations({ limit: 100 });
+  const [convoPage, setConvoPage] = useState(1);
+  const { data: convoData, isLoading: convosLoading } = useConversations({ limit: 50, page: convoPage });
   const { data: msgData, isLoading: msgsLoading } = useMessages(selectedId);
   const sendMessage = useSendMessage(selectedId ?? "");
   const assignConversation = useAssignConversation();
@@ -61,7 +62,7 @@ export default function CommsPage() {
     <GHLEmptyState message="No hay conversaciones. Conecta GoHighLevel para gestionar tus comunicaciones.">
     <div className="-m-4 md:-m-6 flex h-[calc(100vh-3.5rem)]">
       {/* Left panel: Conversation list */}
-      <div className={`w-full md:w-80 md:shrink-0 ${selectedId ? "hidden md:block" : "block"}`}>
+      <div className={`w-full md:w-80 md:shrink-0 flex flex-col ${selectedId ? "hidden md:flex" : "flex"}`}>
         <ConversationList
           conversations={conversations}
           loading={convosLoading}
@@ -69,6 +70,26 @@ export default function CommsPage() {
           currentUserId={session?.user?.id ?? ""}
           onSelect={setSelectedId}
         />
+        {/* Pagination */}
+        {convoData && convoData.meta && convoData.meta.totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border bg-white px-3 py-2 text-xs text-text-secondary">
+            <button
+              disabled={convoPage <= 1}
+              onClick={() => setConvoPage(p => Math.max(1, p - 1))}
+              className="rounded px-2 py-1 hover:bg-warm-muted disabled:opacity-40"
+            >
+              ← Anterior
+            </button>
+            <span>{convoPage} / {convoData.meta.totalPages}</span>
+            <button
+              disabled={convoPage >= convoData.meta.totalPages}
+              onClick={() => setConvoPage(p => p + 1)}
+              className="rounded px-2 py-1 hover:bg-warm-muted disabled:opacity-40"
+            >
+              Siguiente →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Center panel: Message thread */}
