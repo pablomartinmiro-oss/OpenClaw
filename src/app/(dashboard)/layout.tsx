@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GHLStatusBanner } from "@/components/shared/GHLStatusBanner";
 import { DemoBanner } from "@/components/shared/DemoBanner";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { AIChatWidget } from "@/components/ai/AIChatWidget";
 
 export default function DashboardLayout({
   children,
@@ -58,6 +59,7 @@ export default function DashboardLayout({
           </div>
         </div>
         <CommandPalette />
+        <AIChatWidget />
         <Toaster />
       </QueryClientProvider>
     </SessionProvider>
