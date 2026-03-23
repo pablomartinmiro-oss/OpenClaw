@@ -9,8 +9,8 @@ function getResend(): Resend {
   return _resend;
 }
 
-const EMAIL_FROM = "Skicenter <reservas@skicenter.es>";
-const EMAIL_CC = "reservas@skicenter.es";
+const EMAIL_FROM = process.env.EMAIL_FROM ?? "Skicenter <onboarding@resend.dev>";
+const EMAIL_CC = process.env.EMAIL_CC ?? "";
 
 interface SendEmailParams {
   tenantId: string;
@@ -32,7 +32,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   const { data, error } = await getResend().emails.send({
     from: EMAIL_FROM,
     to: params.to,
-    cc: EMAIL_CC,
+    ...(EMAIL_CC ? { cc: EMAIL_CC } : {}),
     subject: params.subject,
     html: params.html,
   });
