@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { fullSync } from "@/lib/ghl/sync";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
+
+const log = logger.child({ route: "/api/admin/ghl/full-sync" });
 
 // Railway runs next start (persistent server), not serverless.
 // Allow up to 5 minutes for the sync to complete.
@@ -26,7 +29,7 @@ export async function POST() {
     );
   }
 
-  console.log(`[SYNC-ROUTE] POST received for tenant ${tenantId}`);
+  log.info(`[SYNC-ROUTE] POST received for tenant ${tenantId}`);
 
   // Fire-and-forget: Railway runs a persistent Node.js server,
   // so promises survive after HTTP response.
@@ -35,7 +38,7 @@ export async function POST() {
 
   syncPromise
     .then((result) => {
-      console.log(`[SYNC-ROUTE] Background sync finished: ${result.status} — ${result.contacts} contacts, ${result.opportunities} opps`);
+      log.info(`[SYNC-ROUTE] Background sync finished: ${result.status} — ${result.contacts} contacts, ${result.opportunities} opps`);
     })
     .catch(async (error) => {
       const msg = error instanceof Error ? error.message : "Unknown error";

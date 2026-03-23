@@ -191,23 +191,23 @@ function confirmationEmailHtml(name: string, destination: string, ci: string, co
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function maybeCreateQuoteFromSurvey(tenantId: string, contactData: Record<string, any>): Promise<void> {
-  console.log("[SURVEY] Custom fields received:", JSON.stringify(contactData.customFields));
+  log.info({ customFields: contactData.customFields }, "[SURVEY] Custom fields received");
 
   // GHL webhooks send custom fields by ID — resolve to key names.
   // Hardcoded IDs are used as fallback since /locations/customFields returns 403 (scope not granted).
   const apiMap = await getCustomFieldIdToKeyMap(tenantId).catch(() => ({} as Record<string, string>));
   const idKeyMap = { ...HARDCODED_FIELD_IDS, ...apiMap };
-  console.log("[SURVEY] ID→key map:", JSON.stringify(idKeyMap));
+  log.info({ idKeyMap }, "[SURVEY] ID to key map");
 
   const fields = extractFields(contactData.customFields as RawCustomFields, idKeyMap);
-  console.log("[SURVEY] Resolved fields:", JSON.stringify(fields));
+  log.info({ fields }, "[SURVEY] Resolved fields");
 
   const rawDestino = fields[SURVEY_KEYS.destino];
   const rawCheckIn = fields[SURVEY_KEYS.checkIn];
   const hasSurveyData = !!(rawDestino && rawCheckIn);
-  console.log("[SURVEY] Destino value:", rawDestino);
-  console.log("[SURVEY] CheckIn value:", rawCheckIn);
-  console.log("[SURVEY] Survey detected:", hasSurveyData);
+  log.info({ rawDestino }, "[SURVEY] Destino value");
+  log.info({ rawCheckIn }, "[SURVEY] CheckIn value");
+  log.info({ hasSurveyData }, "[SURVEY] Survey detected");
 
   // Only proceed if core survey fields are present
   if (!hasSurveyData) return;

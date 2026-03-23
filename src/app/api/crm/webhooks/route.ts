@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const log = logger.child({ path: "/api/crm/webhooks" });
 
   const rawBody = await req.text();
-  console.log("[WEBHOOK] Received:", req.method, rawBody);
+  log.info({ method: req.method, bodyLength: rawBody.length }, "[WEBHOOK] Received");
   const signature = req.headers.get("x-ghl-signature");
 
   if (!verifySignature(rawBody, signature)) {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         await invalidateContactCaches(tenantId, (data.contactId as string) ?? (data.id as string));
         // GHL sends ContactUpdate when a form is submitted on an existing contact —
         // process survey data exactly like ContactCreate (with duplicate detection)
-        console.log("[SURVEY] Processing ContactUpdate for survey data", {
+        log.info({
           contactId: (data.contactId as string) ?? (data.id as string),
           hasCustomFields: !!data.customFields,
         });

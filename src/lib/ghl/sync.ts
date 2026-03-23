@@ -97,7 +97,7 @@ export async function fullSync(
   tenantId: string,
   onProgress?: (progress: SyncProgress) => void
 ): Promise<SyncProgress> {
-  console.log(`[SYNC] ========== FULL SYNC STARTED for tenant ${tenantId} ==========`);
+  log.info(`[SYNC] ========== FULL SYNC STARTED for tenant ${tenantId} ==========`);
 
   const progress: SyncProgress = {
     contacts: 0,
@@ -118,14 +118,14 @@ export async function fullSync(
   });
 
   try {
-    console.log("[SYNC] Creating GHL client...");
+    log.info("[SYNC] Creating GHL client...");
     const ghl = await getGHLClient(tenantId);
-    console.log(`[SYNC] GHL client OK — location: ${ghl.getLocationId()}`);
+    log.info(`[SYNC] GHL client OK — location: ${ghl.getLocationId()}`);
 
     // 1. Pipelines
-    console.log("[SYNC] Fetching pipelines...");
+    log.info("[SYNC] Fetching pipelines...");
     const pipelines = await ghl.getPipelines();
-    console.log(`[SYNC] Got ${pipelines.length} pipelines: ${pipelines.map(p => p.name).join(", ")}`);
+    log.info(`[SYNC] Got ${pipelines.length} pipelines: ${pipelines.map(p => p.name).join(", ")}`);
 
     for (const pipeline of pipelines) {
       const data = mapPipelineToCache(tenantId, pipeline);
@@ -142,11 +142,11 @@ export async function fullSync(
     onProgress?.(progress);
 
     // 3. Contacts (page-based)
-    console.log("[SYNC] Syncing contacts...");
+    log.info("[SYNC] Syncing contacts...");
     await syncAllContacts(ghl, tenantId, progress, onProgress);
 
     // 4. Conversations (page-based)
-    console.log("[SYNC] Syncing conversations...");
+    log.info("[SYNC] Syncing conversations...");
     await syncAllConversations(ghl, tenantId, progress);
     onProgress?.(progress);
 
@@ -173,7 +173,7 @@ export async function fullSync(
       },
     });
 
-    console.log(`[SYNC] ========== COMPLETED: ${progress.pipelines} pipelines, ${progress.opportunities} opps, ${progress.contacts} contacts, ${progress.conversations} convs ==========`);
+    log.info(`[SYNC] ========== COMPLETED: ${progress.pipelines} pipelines, ${progress.opportunities} opps, ${progress.contacts} contacts, ${progress.conversations} convs ==========`);
     return progress;
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
@@ -219,7 +219,7 @@ async function syncAllContacts(
   while (currentPage <= maxPages) {
     let res;
     try {
-      console.log(`[SYNC] Contacts page ${currentPage}...`);
+      log.info(`[SYNC] Contacts page ${currentPage}...`);
       res = await ghl.getContacts({ limit: batchSize, page: currentPage });
     } catch (err) {
       const e = err as { response?: { status?: number; data?: unknown }; message?: string };
@@ -228,19 +228,19 @@ async function syncAllContacts(
     }
 
     if (!res.contacts || res.contacts.length === 0) {
-      console.log(`[SYNC] Contacts page ${currentPage}: empty — done`);
+      log.info(`[SYNC] Contacts page ${currentPage}: empty — done`);
       break;
     }
 
     const firstId = res.contacts[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Contacts page ${currentPage}: duplicate ${firstId} — done`);
+      log.info(`[SYNC] Contacts page ${currentPage}: duplicate ${firstId} — done`);
       break;
     }
     seenFirstIds.add(firstId);
 
     progress.contactsTotal = res.meta?.total;
-    console.log(`[SYNC] Contacts page ${currentPage}: ${res.contacts.length} records (total: ${res.meta?.total ?? "?"})`);
+    log.info(`[SYNC] Contacts page ${currentPage}: ${res.contacts.length} records (total: ${res.meta?.total ?? "?"})`);
 
     for (const contact of res.contacts) {
       const data = mapContactToCache(tenantId, contact);
@@ -260,7 +260,7 @@ async function syncAllContacts(
     });
 
     if (res.contacts.length < batchSize) {
-      console.log(`[SYNC] Contacts: last page (${res.contacts.length} < ${batchSize})`);
+      log.info(`[SYNC] Contacts: last page (${res.contacts.length} < ${batchSize})`);
       break;
     }
 
@@ -268,7 +268,7 @@ async function syncAllContacts(
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  console.log(`[SYNC] Contacts done: ${progress.contacts} in ${currentPage} pages`);
+  log.info(`[SYNC] Contacts done: ${progress.contacts} in ${currentPage} pages`);
 }
 
 // ==================== PAGE-BASED OPPORTUNITIES ====================
@@ -305,12 +305,12 @@ async function syncOpportunitiesForPipeline(
 
     const firstId = res.opportunities[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Opps page ${currentPage} "${pipelineName}": duplicate — done`);
+      log.info(`[SYNC] Opps page ${currentPage} "${pipelineName}": duplicate — done`);
       break;
     }
     seenFirstIds.add(firstId);
 
-    console.log(`[SYNC] Opps page ${currentPage} "${pipelineName}": ${res.opportunities.length} records`);
+    log.info(`[SYNC] Opps page ${currentPage} "${pipelineName}": ${res.opportunities.length} records`);
 
     for (const opp of res.opportunities) {
       const data = mapOpportunityToCache(tenantId, opp);
@@ -329,7 +329,7 @@ async function syncOpportunitiesForPipeline(
   }
 
   const count = progress.opportunities - startCount;
-  console.log(`[SYNC] Pipeline "${pipelineName}": ${count} opps in ${currentPage} pages`);
+  log.info(`[SYNC] Pipeline "${pipelineName}": ${count} opps in ${currentPage} pages`);
 }
 
 // ==================== PAGE-BASED CONVERSATIONS ====================
@@ -347,7 +347,7 @@ async function syncAllConversations(
   while (currentPage <= maxPages) {
     let res;
     try {
-      console.log(`[SYNC] Conversations page ${currentPage}...`);
+      log.info(`[SYNC] Conversations page ${currentPage}...`);
       res = await ghl.getConversations({ limit: batchSize, page: currentPage });
     } catch (err) {
       const e = err as { response?: { status?: number; data?: unknown }; message?: string };
@@ -356,18 +356,18 @@ async function syncAllConversations(
     }
 
     if (!res.conversations || res.conversations.length === 0) {
-      console.log(`[SYNC] Conversations page ${currentPage}: empty — done`);
+      log.info(`[SYNC] Conversations page ${currentPage}: empty — done`);
       break;
     }
 
     const firstId = res.conversations[0].id;
     if (seenFirstIds.has(firstId)) {
-      console.log(`[SYNC] Conversations page ${currentPage}: duplicate — done`);
+      log.info(`[SYNC] Conversations page ${currentPage}: duplicate — done`);
       break;
     }
     seenFirstIds.add(firstId);
 
-    console.log(`[SYNC] Conversations page ${currentPage}: ${res.conversations.length} records`);
+    log.info(`[SYNC] Conversations page ${currentPage}: ${res.conversations.length} records`);
 
     for (const conv of res.conversations) {
       const data = mapConversationToCache(tenantId, conv);
@@ -380,7 +380,7 @@ async function syncAllConversations(
     }
 
     if (res.conversations.length < batchSize) {
-      console.log(`[SYNC] Conversations: last page (${res.conversations.length} < ${batchSize})`);
+      log.info(`[SYNC] Conversations: last page (${res.conversations.length} < ${batchSize})`);
       break;
     }
 
@@ -388,7 +388,7 @@ async function syncAllConversations(
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  console.log(`[SYNC] Conversations done: ${progress.conversations} in ${currentPage} pages`);
+  log.info(`[SYNC] Conversations done: ${progress.conversations} in ${currentPage} pages`);
 }
 
 // ==================== INCREMENTAL SYNC ====================
