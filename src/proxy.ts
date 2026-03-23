@@ -23,7 +23,7 @@ const PUBLIC_ROUTES = [
   "/api/survey",
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Allow public routes
