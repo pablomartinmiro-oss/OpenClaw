@@ -479,14 +479,30 @@ export async function getGHLClient(tenantId: string): Promise<GHLClient> {
     throw new Error("Tenant not found");
   }
 
-  if (!tenant.ghlAccessToken) {
-    log.error("No ghlAccessToken in DB — tenant not connected");
-    throw new Error("GHL not connected for this tenant — no access token");
-  }
-
   if (!tenant.ghlLocationId) {
     log.error("No ghlLocationId in DB");
     throw new Error("GHL not connected for this tenant — no location ID");
+  }
+
+  // --- Private Integration Token (never expires) ---
+  const privateToken = process.env.GHL_PRIVATE_TOKEN;
+  if (privateToken) {
+    log.info("Using GHL_PRIVATE_TOKEN (private integration — no OAuth needed)");
+    return new GHLClient({
+      accessToken: privateToken,
+      refreshToken: "",
+      locationId: tenant.ghlLocationId,
+      tenantId: tenant.id,
+      onTokenRefresh: async () => {
+        // Private tokens don't refresh — nothing to do
+      },
+    });
+  }
+
+  // --- Fallback: OAuth access token ---
+  if (!tenant.ghlAccessToken) {
+    log.error("No ghlAccessToken in DB and no GHL_PRIVATE_TOKEN — tenant not connected");
+    throw new Error("GHL not connected for this tenant — no access token");
   }
 
   let accessToken: string;
