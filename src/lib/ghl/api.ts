@@ -309,7 +309,13 @@ export class GHLClient {
 
   async getMessages(conversationId: string): Promise<GHLMessage[]> {
     const res = await this.http.get(`/conversations/${conversationId}/messages`);
-    return (res.data as GHLMessagesResponse).messages;
+    const data = res.data as GHLMessagesResponse | { messages: { messages?: GHLMessage[]; nextPage?: string | null } } | { messages?: GHLMessage[] };
+    // GHL API sometimes wraps messages in a nested object
+    const raw = (data as { messages: GHLMessagesResponse }).messages;
+    if (raw && typeof raw === 'object' && !Array.isArray(raw) && 'messages' in raw) {
+      return (raw as GHLMessagesResponse).messages ?? [];
+    }
+    return Array.isArray(raw) ? raw : [];
   }
 
   async sendMessage(conversationId: string, data: Omit<SendMessageData, "conversationId">): Promise<GHLMessage> {
