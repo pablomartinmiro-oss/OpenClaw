@@ -57,15 +57,22 @@ export default function PresupuestosPage() {
                 {quotes?.length || 0} solicitudes
               </p>
             </div>
-            <button
-              onClick={() => { 
-                setShowNewForm(true); 
-                setSelectedQuote(null); 
-              }}
-              className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors min-h-[44px]"
-            >
-              <Plus className="h-4 w-4" /> Nuevo
-            </button>
+            <div className="flex items-center gap-2">
+              {currentQuote && (
+                <span className="text-xs text-coral font-medium">
+                  Selected: {currentQuote.clientName}
+                </span>
+              )}
+              <button
+                onClick={() => { 
+                  setShowNewForm(true); 
+                  setSelectedQuote(null); 
+                }}
+                className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors min-h-[44px]"
+              >
+                <Plus className="h-4 w-4" /> Nuevo
+              </button>
+            </div>
           </div>
           <QuoteList
             quotes={quotes || []}
@@ -101,13 +108,25 @@ export default function PresupuestosPage() {
               onCreated={() => setShowNewForm(false)}
             />
           ) : currentQuote ? (
-            <QuoteDetail
-              key={currentQuote.id}
-              quote={currentQuote}
-              products={products || []}
-              onPreviewEmail={(quote, items) => setEmailPreview({ quote, items })}
-              onDeleted={() => setSelectedQuote(null)}
-            />
+            <div className="h-full overflow-auto">
+              {/* Debug view - simple version */}
+              <div className="p-6 border-b border-border">
+                <h2 className="text-xl font-bold text-text-primary">{currentQuote.clientName}</h2>
+                <p className="text-text-secondary">{currentQuote.clientEmail}</p>
+                <p className="text-coral font-bold text-lg mt-2">{currentQuote.totalAmount} €</p>
+                <p className="text-sm text-text-secondary mt-1">Status: {currentQuote.status}</p>
+                <p className="text-sm text-text-secondary">Destination: {currentQuote.destination}</p>
+                <p className="text-sm text-text-secondary">Dates: {currentQuote.checkIn} to {currentQuote.checkOut}</p>
+                <p className="text-sm text-text-secondary">Adults: {currentQuote.adults}, Children: {currentQuote.children}</p>
+              </div>
+              <QuoteDetail
+                key={currentQuote.id}
+                quote={currentQuote}
+                products={products || []}
+                onPreviewEmail={(quote, items) => setEmailPreview({ quote, items })}
+                onDeleted={() => setSelectedQuote(null)}
+              />
+            </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-text-secondary">
               <FileText className="h-12 w-12 mb-3 opacity-30" />
