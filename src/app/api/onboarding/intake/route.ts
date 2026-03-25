@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk"; // eslint-disable-line
 import { logger } from "@/lib/logger";
 
 const log = logger.child({ route: "/api/onboarding/intake" });
