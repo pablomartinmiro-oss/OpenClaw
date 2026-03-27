@@ -82,21 +82,21 @@ export function GlobalSearch() {
 
   return (
     <div ref={ref} className="relative max-w-md flex-1">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
       <input
         type="text"
         value={query}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => query.length >= 2 && setOpen(true)}
-        placeholder="Buscar contactos, reservas, presupuestos..."
-        className="h-9 w-full rounded-[10px] border border-[#E8E4DE] bg-[#FAF9F7] pl-9 pr-8 text-sm text-[#2D2A26] placeholder:text-[#8A8580] outline-none focus:border-[#E87B5A] focus:ring-1 focus:ring-[#E87B5A]/30"
+        placeholder="Buscar... (⌘K)"
+        className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-16 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-colors"
       />
       {query && (
         <button
           onClick={() => { setQuery(""); setResults(null); setOpen(false); }}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-[#E8E4DE]"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 hover:bg-slate-200"
         >
-          <X className="h-3.5 w-3.5 text-[#8A8580]" />
+          <X className="h-3.5 w-3.5 text-slate-400" />
         </button>
       )}
 

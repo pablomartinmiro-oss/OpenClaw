@@ -354,3 +354,10 @@
     @apply text-sm text-slate-500 max-w-xs;
   }
 }
+
+
+/* ── Shimmer animation ─────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
