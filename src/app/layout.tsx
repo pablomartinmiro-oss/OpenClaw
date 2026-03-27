@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "GHL Dashboard",
-  description: "Multi-tenant dashboard for GoHighLevel CRM",
+  title: "SKIINET — Plataforma de gestión para escuelas de ski",
+  description: "Reservas, clientes, pagos e instructores en una sola plataforma inteligente.",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={dmSans.variable}>
+    <html lang="es" className={inter.variable}>
       <body className="antialiased">
         {children}
       </body>

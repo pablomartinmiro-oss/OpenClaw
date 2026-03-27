@@ -115,7 +115,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-[#1E2A3B] bg-[#0F1623] transition-all duration-200",
+        "flex h-screen flex-col border-r border-[#162032] bg-[#0C1220] transition-all duration-200",
         collapsed ? "w-16" : "w-[240px]"
       )}
     >
@@ -123,10 +123,10 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
       <div className="flex h-14 items-center border-b border-border px-4">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-600 text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600/20 text-blue-400">
               <Mountain className="h-4 w-4" />
             </div>
-            <span className="text-lg font-semibold text-white tracking-tight">
+            <span className="text-[15px] font-bold text-white tracking-tight">
               Skicenter
             </span>
           </div>
@@ -139,7 +139,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "rounded-[10px] p-1.5 text-slate-400 hover:bg-[#1E2A3B] hover:text-white transition-colors",
+            "rounded-md p-1.5 text-slate-500 hover:bg-[#162032] hover:text-slate-300 transition-colors",
             collapsed ? "mx-auto mt-2" : "ml-auto"
           )}
           aria-label={collapsed ? "Expandir barra lateral" : "Contraer barra lateral"}
@@ -173,15 +173,15 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
               className={cn(
                 "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "border-l-[3px] border-blue-500 bg-blue-500/10 text-white"
-                  : "text-slate-400 hover:bg-[#1E2A3B] hover:text-white hover:translate-x-0.5",
+                  ? "bg-[#162032] text-white font-medium"
+                  : "text-slate-400 hover:bg-[#162032] hover:text-slate-200 hover:translate-x-0.5",
                 collapsed && "justify-center px-2"
               )}
               title={collapsed ? item.label : undefined}
             >
               <Icon className={cn(
                 "h-5 w-5 shrink-0 transition-colors duration-150",
-                isActive && "text-blue-400"
+                isActive ? "text-blue-400" : "text-slate-500"
               )} />
               {!collapsed && (
                 <>

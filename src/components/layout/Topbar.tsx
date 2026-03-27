@@ -27,7 +27,7 @@ export function Topbar() {
     : "??";
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b border-border bg-white px-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <header className="flex h-12 items-center gap-4 border-b border-slate-100 bg-white/95 backdrop-blur-sm px-6">
       {/* Global Search */}
       <GlobalSearch />
 
@@ -39,15 +39,15 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 transition-colors hover:bg-muted">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-gradient-to-br from-coral to-coral-hover text-xs font-semibold text-white">
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-xs font-semibold text-white">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="hidden text-left md:block">
-              <p className="text-sm font-medium leading-none text-text-primary">
+              <p className="text-sm font-medium leading-none text-slate-900">
                 {user?.name ?? "Usuario"}
               </p>
-              <p className="text-xs text-text-secondary">
+              <p className="text-xs text-slate-500">
                 {user?.roleName ?? ""}
               </p>
             </div>
