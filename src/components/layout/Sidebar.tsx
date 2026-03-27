@@ -30,6 +30,7 @@ interface NavItem {
   /** Roles allowed to see this item. Empty = all roles */
   roles?: string[];
   badge?: number;
+  shortcut?: string;
 }
 
 // Role-based visibility:
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/",
     icon: LayoutDashboard,
     permission: null,
+    shortcut: "G H",
   },
   {
     label: "Presupuestos",

@@ -10,6 +10,8 @@ import { ContactsTable } from "./_components/ContactsTable";
 import { ContactsSearch } from "./_components/ContactsSearch";
 import { SourceFilter } from "./_components/SourceFilter";
 import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportToCSV } from "@/lib/utils/export";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 50;

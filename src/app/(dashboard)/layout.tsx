@@ -1,5 +1,7 @@
 "use client";
 
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+
 import { SessionProvider } from "next-auth/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -18,6 +20,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  useKeyboardShortcuts();
   const [queryClient] = useState(
     () =>
       new QueryClient({
