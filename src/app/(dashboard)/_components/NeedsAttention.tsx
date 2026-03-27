@@ -70,13 +70,13 @@ export function NeedsAttention({ quotes, loading }: NeedsAttentionProps) {
       <div className="animate-fade-in rounded-2xl border border-gold/20 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/10">
-            <AlertTriangle className="h-4 w-4 text-gold" />
+            <AlertTriangle className="h-4 w-4 text-amber-700" />
           </div>
-          <h2 className="text-base font-semibold text-text-primary">Necesita atencion</h2>
+          <h2 className="text-base font-semibold text-slate-900">Necesita atencion</h2>
         </div>
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-warm-muted" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-100" />
           ))}
         </div>
       </div>
@@ -88,11 +88,11 @@ export function NeedsAttention({ quotes, loading }: NeedsAttentionProps) {
       <div className="animate-fade-in rounded-2xl border border-sage/20 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sage/10">
-            <AlertTriangle className="h-4 w-4 text-sage" />
+            <AlertTriangle className="h-4 w-4 text-green-700" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-text-primary">Necesita atencion</h2>
-            <p className="text-xs text-text-secondary">Sin elementos pendientes</p>
+            <h2 className="text-base font-semibold text-slate-900">Necesita atencion</h2>
+            <p className="text-xs text-slate-500">Sin elementos pendientes</p>
           </div>
         </div>
       </div>
@@ -104,11 +104,11 @@ export function NeedsAttention({ quotes, loading }: NeedsAttentionProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/10">
-            <AlertTriangle className="h-4 w-4 text-gold" />
+            <AlertTriangle className="h-4 w-4 text-amber-700" />
           </div>
-          <h2 className="text-base font-semibold text-text-primary">Necesita atencion</h2>
+          <h2 className="text-base font-semibold text-slate-900">Necesita atencion</h2>
         </div>
-        <span className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-semibold text-gold">
+        <span className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
           {urgent.length}
         </span>
       </div>
@@ -123,19 +123,19 @@ export function NeedsAttention({ quotes, loading }: NeedsAttentionProps) {
             : "border-l-gold";
           const badgeColor = isOverdue || isToday
             ? "bg-muted-red/10 text-muted-red"
-            : "bg-gold/10 text-gold";
+            : "bg-gold/10 text-amber-700";
 
           return (
             <Link
               key={q.id}
               href="/presupuestos"
-              className={`group flex items-center justify-between rounded-xl border border-border border-l-[3px] ${urgencyColor} bg-white p-3 transition-colors hover:bg-warm-muted/50`}
+              className={`group flex items-center justify-between rounded-xl border border-border border-l-[3px] ${urgencyColor} bg-white p-3 transition-colors hover:bg-slate-100/50`}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-text-primary truncate">
+                <p className="text-sm font-medium text-slate-900 truncate">
                   {q.clientName}
                 </p>
-                <div className="mt-0.5 flex items-center gap-3 text-xs text-text-secondary">
+                <div className="mt-0.5 flex items-center gap-3 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {STATION_LABELS[q.destination] ?? q.destination}
@@ -148,7 +148,7 @@ export function NeedsAttention({ quotes, loading }: NeedsAttentionProps) {
                   <Clock className="h-3 w-3" />
                   {expiryLabel(days)}
                 </span>
-                <ChevronRight className="h-4 w-4 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronRight className="h-4 w-4 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </Link>
           );

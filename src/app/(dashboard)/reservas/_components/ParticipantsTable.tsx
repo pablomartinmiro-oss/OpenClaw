@@ -18,16 +18,16 @@ export function ParticipantsTable({ participants, onChange }: ParticipantsTableP
 
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-semibold text-text-primary">Participantes</legend>
+      <legend className="text-sm font-semibold text-slate-900">Participantes</legend>
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nombre</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Tipo</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Servicio</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nivel</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Material</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Nombre</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Tipo</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Servicio</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Nivel</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Material</th>
               <th className="w-10"></th>
             </tr>
           </thead>
@@ -39,7 +39,7 @@ export function ParticipantsTable({ participants, onChange }: ParticipantsTableP
                     type="text"
                     value={p.name}
                     onChange={(e) => updateParticipant(i, { name: e.target.value })}
-                    className="w-full rounded border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral"
+                    className="w-full rounded border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </td>
                 <td className="px-2 py-1.5">

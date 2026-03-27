@@ -124,7 +124,7 @@ export default function ReservasPage() {
                 <div className="flex items-center border-b border-border px-3 py-2 md:hidden">
                   <button
                     onClick={() => setSelectedId(null)}
-                    className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors min-h-[44px]"
+                    className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors min-h-[44px]"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Volver
@@ -172,7 +172,7 @@ export default function ReservasPage() {
                   <div className="flex items-center border-b border-border px-3 py-2 md:hidden">
                     <button
                       onClick={() => { setCalendarDate(null); setSelectedId(null); }}
-                      className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors min-h-[44px]"
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors min-h-[44px]"
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Volver

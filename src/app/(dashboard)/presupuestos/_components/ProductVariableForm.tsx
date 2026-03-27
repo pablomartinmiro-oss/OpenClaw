@@ -32,9 +32,9 @@ interface Props {
   onChange: (vars: Partial<ProductVariables>) => void;
 }
 
-const INPUT_CLS = "w-full rounded-lg border border-border px-2.5 py-1.5 text-sm focus:border-coral focus:outline-none";
+const INPUT_CLS = "w-full rounded-lg border border-border px-2.5 py-1.5 text-sm focus:border-blue-500 focus:outline-none";
 const SELECT_CLS = INPUT_CLS;
-const LABEL_CLS = "text-xs font-medium text-text-secondary";
+const LABEL_CLS = "text-xs font-medium text-slate-500";
 
 export function ProductVariableForm({ category, variables, onChange }: Props) {
   const [open, setOpen] = useState(false);
@@ -49,7 +49,7 @@ export function ProductVariableForm({ category, variables, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 text-xs text-coral hover:text-coral-hover transition-colors"
+        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-600-hover transition-colors"
       >
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         Detalles del producto
@@ -230,7 +230,7 @@ export function ProductVariableForm({ category, variables, onChange }: Props) {
                   type="checkbox"
                   checked={variables.casco ?? false}
                   onChange={(e) => onChange({ casco: e.target.checked })}
-                  className="rounded border-border text-coral focus:ring-coral"
+                  className="rounded border-border text-blue-600 focus:ring-blue-500"
                 />
                 Incluido
               </label>
@@ -243,7 +243,7 @@ export function ProductVariableForm({ category, variables, onChange }: Props) {
                   type="checkbox"
                   checked={variables.seguroIncluido ?? false}
                   onChange={(e) => onChange({ seguroIncluido: e.target.checked })}
-                  className="rounded border-border text-coral focus:ring-coral"
+                  className="rounded border-border text-blue-600 focus:ring-blue-500"
                 />
                 Incluido
               </label>

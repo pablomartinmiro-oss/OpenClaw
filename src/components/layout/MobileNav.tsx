@@ -62,7 +62,7 @@ export function MobileNav() {
       <SheetContent side="left" className="w-64 bg-sidebar-bg p-0">
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
         <div className="flex h-14 items-center border-b border-border px-4">
-          <span className="text-lg font-semibold text-text-primary">Skicenter</span>
+          <span className="text-lg font-semibold text-slate-900">Skicenter</span>
         </div>
         <nav className="space-y-1 px-2 py-3">
           {visibleItems.map((item) => {
@@ -80,8 +80,8 @@ export function MobileNav() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors min-h-[44px]",
                   isActive
-                    ? "border-l-[3px] border-coral bg-warm-muted text-text-primary"
-                    : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
+                    ? "border-l-[3px] border-blue-500 bg-slate-100 text-slate-900"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 )}
               >
                 <Icon className="h-5 w-5" />

@@ -84,11 +84,11 @@ export function SeasonCalendarCard() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-coral" />
-          <h3 className="text-lg font-semibold text-text-primary">Calendario de Temporadas</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Calendario de Temporadas</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
+          className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors"
         >
           <Plus className="h-4 w-4" />
           Añadir periodo
@@ -100,18 +100,18 @@ export function SeasonCalendarCard() {
         {showForm && (
           <form onSubmit={handleCreate} className="rounded-lg border border-border p-4 space-y-3 bg-surface/30">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-text-primary">Nuevo periodo</h4>
-              <button type="button" onClick={() => setShowForm(false)} className="text-text-secondary hover:text-text-primary">
+              <h4 className="text-sm font-semibold text-slate-900">Nuevo periodo</h4>
+              <button type="button" onClick={() => setShowForm(false)} className="text-slate-500 hover:text-slate-900">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Estación</label>
+                <label className="block text-xs text-slate-500 mb-1">Estación</label>
                 <select
                   value={form.station}
                   onChange={(e) => setForm({ ...form, station: e.target.value })}
-                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
                   {STATION_OPTIONS.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
@@ -119,52 +119,52 @@ export function SeasonCalendarCard() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Temporada</label>
+                <label className="block text-xs text-slate-500 mb-1">Temporada</label>
                 <select
                   value={form.season}
                   onChange={(e) => setForm({ ...form, season: e.target.value as "media" | "alta" })}
-                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="alta">Temporada Alta</option>
                   <option value="media">Temporada Media</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Fecha inicio</label>
+                <label className="block text-xs text-slate-500 mb-1">Fecha inicio</label>
                 <input
                   type="date"
                   value={form.startDate}
                   onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Fecha fin</label>
+                <label className="block text-xs text-slate-500 mb-1">Fecha fin</label>
                 <input
                   type="date"
                   value={form.endDate}
                   onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                   required
                 />
               </div>
             </div>
             <div className="flex items-end gap-3">
               <div className="flex-1">
-                <label className="block text-xs text-text-secondary mb-1">Etiqueta (opcional)</label>
+                <label className="block text-xs text-slate-500 mb-1">Etiqueta (opcional)</label>
                 <input
                   type="text"
                   value={form.label}
                   onChange={(e) => setForm({ ...form, label: e.target.value })}
                   placeholder="Ej: Navidades, Semana Santa..."
-                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none"
+                  className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={createEntry.isPending}
-                className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-hover disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-blue-600-hover disabled:opacity-50 transition-colors"
               >
                 Crear
               </button>
@@ -180,7 +180,7 @@ export function SeasonCalendarCard() {
             ))}
           </div>
         ) : Object.keys(grouped).length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-text-secondary">
+          <div className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-slate-500">
             No hay periodos de temporada configurados.
             <br />
             Todo será Temporada Media por defecto.
@@ -188,7 +188,7 @@ export function SeasonCalendarCard() {
         ) : (
           Object.entries(grouped).map(([station, stationEntries]) => (
             <div key={station}>
-              <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 {STATION_LABELS[station] || station}
               </h4>
               <div className="space-y-2">
@@ -200,22 +200,22 @@ export function SeasonCalendarCard() {
                     <div className="flex items-center gap-3">
                       <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         entry.season === "alta"
-                          ? "bg-coral-light text-coral"
-                          : "bg-sage-light text-sage"
+                          ? "bg-blue-50 text-coral"
+                          : "bg-green-50 text-green-700"
                       }`}>
                         {entry.season === "alta" ? <Snowflake className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
                         {entry.season === "alta" ? "Alta" : "Media"}
                       </span>
-                      <span className="text-sm text-text-primary">
+                      <span className="text-sm text-slate-900">
                         {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
                       </span>
                       {entry.label && (
-                        <span className="text-xs text-text-secondary">({entry.label})</span>
+                        <span className="text-xs text-slate-500">({entry.label})</span>
                       )}
                     </div>
                     <button
                       onClick={() => handleDelete(entry.id)}
-                      className="rounded-lg p-1.5 text-text-secondary hover:bg-red-50 hover:text-danger transition-colors"
+                      className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-danger transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

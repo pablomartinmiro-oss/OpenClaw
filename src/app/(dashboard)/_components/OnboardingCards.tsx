@@ -82,7 +82,7 @@ export function OnboardingCards() {
   return (
     <div className="rounded-2xl border border-warm-border bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-text-primary">
+        <h2 className="text-lg font-semibold text-slate-900">
           ¡Bienvenido! Tu cuenta de GHL está conectada con {contactCount.toLocaleString("es-ES")} contactos.
         </h2>
       </div>
@@ -99,25 +99,25 @@ export function OnboardingCards() {
           >
             <div
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                step.done ? "bg-sage/20" : "bg-warm-muted"
+                step.done ? "bg-sage/20" : "bg-slate-100"
               }`}
             >
               {step.done ? (
-                <Check className="h-5 w-5 text-sage" />
+                <Check className="h-5 w-5 text-green-700" />
               ) : (
-                <step.icon className="h-5 w-5 text-text-secondary" />
+                <step.icon className="h-5 w-5 text-slate-500" />
               )}
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-medium ${step.done ? "text-sage line-through" : "text-text-primary"}`}>
+              <p className={`text-sm font-medium ${step.done ? "text-green-700 line-through" : "text-slate-900"}`}>
                 {step.title}
               </p>
-              <p className="mt-0.5 text-xs text-text-secondary">{step.description}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{step.description}</p>
             </div>
             {!step.done && (
               <Link
                 href={step.href}
-                className="shrink-0 rounded-[8px] bg-coral px-3 py-1.5 text-xs font-medium text-white hover:bg-coral-hover transition-colors"
+                className="shrink-0 rounded-[8px] bg-coral px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600-hover transition-colors"
               >
                 {step.linkLabel} →
               </Link>
@@ -128,7 +128,7 @@ export function OnboardingCards() {
 
       <button
         onClick={() => dismissMutation.mutate()}
-        className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors"
+        className="mt-3 text-xs text-slate-500 hover:text-slate-900 transition-colors"
       >
         Ocultar guía
       </button>

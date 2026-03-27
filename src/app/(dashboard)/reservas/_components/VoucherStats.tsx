@@ -40,14 +40,14 @@ export function VoucherStats() {
     <div className="space-y-2">
       {/* Expiry alert banner */}
       {hasExpiring && (
-        <div className="flex items-center gap-2 rounded-2xl bg-gold-light border border-gold/30 px-4 py-2">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-gold" />
-          <span className="text-sm text-text-primary">
+        <div className="flex items-center gap-2 rounded-2xl bg-amber-50 border border-gold/30 px-4 py-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700" />
+          <span className="text-sm text-slate-900">
             {data.caducanSemana} {data.caducanSemana === 1 ? "cupón caduca" : "cupones caducan"} esta semana — contacta a estos clientes
           </span>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="ml-auto shrink-0 text-gold hover:text-text-primary"
+            className="ml-auto shrink-0 text-amber-700 hover:text-slate-900"
           >
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
@@ -60,17 +60,17 @@ export function VoucherStats() {
           <table className="w-full text-sm">
             <thead className="bg-yellow-50">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Cliente</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Teléfono</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Cupón</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Caduca</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Cliente</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Teléfono</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Cupón</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Caduca</th>
               </tr>
             </thead>
             <tbody>
               {data.expiring.map((v) => (
                 <tr key={v.id} className="border-t border-border">
                   <td className="px-3 py-2 font-medium">{v.clientName}</td>
-                  <td className="px-3 py-2 text-text-secondary">{v.clientPhone}</td>
+                  <td className="px-3 py-2 text-slate-500">{v.clientPhone}</td>
                   <td className="px-3 py-2 font-mono text-xs">{v.voucherCouponCode ?? "—"}</td>
                   <td className="px-3 py-2 text-muted-red font-medium">{formatDate(v.voucherExpiry)}</td>
                 </tr>
@@ -83,9 +83,9 @@ export function VoucherStats() {
       {/* Stats row */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-4 rounded-2xl border border-warm-border bg-white px-4 py-3 text-left hover:bg-warm-muted/50 transition-colors"
+        className="flex w-full items-center gap-4 rounded-2xl border border-warm-border bg-white px-4 py-3 text-left hover:bg-slate-100/50 transition-colors"
       >
-        <span className="text-sm font-semibold text-text-primary">Cupones Groupon</span>
+        <span className="text-sm font-semibold text-slate-900">Cupones Groupon</span>
         <div className="flex flex-1 flex-wrap items-center gap-4 text-xs">
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full bg-gold" />
@@ -100,18 +100,18 @@ export function VoucherStats() {
             Ingresos: {formatEUR(data.ingresosMes)}
           </span>
           {data.caducanSemana > 0 && (
-            <span className="flex items-center gap-1 text-gold font-medium">
+            <span className="flex items-center gap-1 text-amber-700 font-medium">
               <AlertTriangle className="h-3 w-3" />
               Caducan semana: {data.caducanSemana}
             </span>
           )}
           {data.caducanMes > 0 && (
-            <span className="text-text-secondary">
+            <span className="text-slate-500">
               Caducan mes: {data.caducanMes}
             </span>
           )}
         </div>
-        {expanded ? <ChevronUp className="h-4 w-4 text-text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-secondary" />}
+        {expanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
       </button>
     </div>
   );

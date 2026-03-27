@@ -105,25 +105,25 @@ export function CancellationModal({ quote, onClose }: Props) {
     }
   };
 
-  const INPUT_CLS = "w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral";
+  const INPUT_CLS = "w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-muted-red" />
             Cancelar Presupuesto
           </h3>
           <button onClick={onClose} className="rounded p-1 hover:bg-surface transition-colors">
-            <X className="h-5 w-5 text-text-secondary" />
+            <X className="h-5 w-5 text-slate-500" />
           </button>
         </div>
 
         {step === "reason" && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-text-primary">Motivo de cancelación *</label>
+              <label className="text-sm font-medium text-slate-900">Motivo de cancelación *</label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -137,7 +137,7 @@ export function CancellationModal({ quote, onClose }: Props) {
             </div>
             {reason === "otro" && (
               <div>
-                <label className="text-sm font-medium text-text-primary">Descripción</label>
+                <label className="text-sm font-medium text-slate-900">Descripción</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -148,7 +148,7 @@ export function CancellationModal({ quote, onClose }: Props) {
               </div>
             )}
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors">
+              <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-900 hover:bg-surface transition-colors">
                 Volver
               </button>
               <button
@@ -164,7 +164,7 @@ export function CancellationModal({ quote, onClose }: Props) {
 
         {step === "options" && (
           <div className="space-y-4">
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-slate-500">
               La cancelación es con más de 15 días de antelación.
               Puede elegir entre un bono o solicitar la devolución.
             </p>
@@ -172,24 +172,24 @@ export function CancellationModal({ quote, onClose }: Props) {
               <button
                 onClick={handleBono}
                 disabled={cancelQuote.isPending}
-                className="flex items-center gap-3 rounded-xl border-2 border-gold/30 bg-gold-light/30 p-4 text-left hover:border-gold transition-colors disabled:opacity-50"
+                className="flex items-center gap-3 rounded-xl border-2 border-gold/30 bg-amber-50/30 p-4 text-left hover:border-gold transition-colors disabled:opacity-50"
               >
-                <Gift className="h-8 w-8 text-gold" />
+                <Gift className="h-8 w-8 text-amber-700" />
                 <div>
-                  <div className="text-sm font-semibold text-text-primary">Generar Bono</div>
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-sm font-semibold text-slate-900">Generar Bono</div>
+                  <div className="text-xs text-slate-500">
                     Bono por {quote.totalAmount.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}, válido 1 año
                   </div>
                 </div>
               </button>
               <button
                 onClick={handleRequestRefund}
-                className="flex items-center gap-3 rounded-xl border-2 border-border p-4 text-left hover:border-coral transition-colors"
+                className="flex items-center gap-3 rounded-xl border-2 border-border p-4 text-left hover:border-blue-500 transition-colors"
               >
-                <CreditCard className="h-8 w-8 text-text-secondary" />
+                <CreditCard className="h-8 w-8 text-slate-500" />
                 <div>
-                  <div className="text-sm font-semibold text-text-primary">Solicitar Devolución</div>
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-sm font-semibold text-slate-900">Solicitar Devolución</div>
+                  <div className="text-xs text-slate-500">
                     Devolución al IBAN del cliente
                   </div>
                 </div>
@@ -200,11 +200,11 @@ export function CancellationModal({ quote, onClose }: Props) {
 
         {step === "refund_form" && (
           <div className="space-y-4">
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-slate-500">
               Introduzca los datos bancarios del cliente para la devolución.
             </p>
             <div>
-              <label className="text-sm font-medium text-text-primary">IBAN *</label>
+              <label className="text-sm font-medium text-slate-900">IBAN *</label>
               <input
                 type="text"
                 value={iban}
@@ -214,7 +214,7 @@ export function CancellationModal({ quote, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-text-primary">Titular de la cuenta *</label>
+              <label className="text-sm font-medium text-slate-900">Titular de la cuenta *</label>
               <input
                 type="text"
                 value={titular}
@@ -224,13 +224,13 @@ export function CancellationModal({ quote, onClose }: Props) {
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setStep("options")} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface transition-colors">
+              <button onClick={() => setStep("options")} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-900 hover:bg-surface transition-colors">
                 Volver
               </button>
               <button
                 onClick={handleSubmitRefund}
                 disabled={cancelQuote.isPending || !iban || !titular}
-                className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors disabled:opacity-50"
+                className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors disabled:opacity-50"
               >
                 {cancelQuote.isPending ? "Procesando..." : "Solicitar Devolución"}
               </button>
@@ -241,20 +241,20 @@ export function CancellationModal({ quote, onClose }: Props) {
         {step === "done" && result && (
           <div className="space-y-4">
             {result.cancelType === "bono" && result.bonoCode && (
-              <div className="rounded-xl bg-gold-light/30 border border-gold/30 p-4 text-center">
-                <Gift className="h-8 w-8 text-gold mx-auto mb-2" />
-                <p className="text-sm font-semibold text-text-primary">Bono generado</p>
-                <p className="text-2xl font-bold text-gold mt-1">{result.bonoCode}</p>
-                <p className="text-sm text-text-secondary mt-1">
+              <div className="rounded-xl bg-amber-50/30 border border-gold/30 p-4 text-center">
+                <Gift className="h-8 w-8 text-amber-700 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-900">Bono generado</p>
+                <p className="text-2xl font-bold text-amber-700 mt-1">{result.bonoCode}</p>
+                <p className="text-sm text-slate-500 mt-1">
                   Importe: {result.bonoAmount?.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                 </p>
               </div>
             )}
             {result.cancelType === "devolucion" && (
               <div className="rounded-xl bg-surface p-4 text-center">
-                <CreditCard className="h-8 w-8 text-coral mx-auto mb-2" />
-                <p className="text-sm font-semibold text-text-primary">Solicitud de devolución registrada</p>
-                <p className="text-xs text-text-secondary mt-1">
+                <CreditCard className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-900">Solicitud de devolución registrada</p>
+                <p className="text-xs text-slate-500 mt-1">
                   Se ha enviado un email a administracion@skicenter.es
                 </p>
               </div>
@@ -262,14 +262,14 @@ export function CancellationModal({ quote, onClose }: Props) {
             {result.cancelType === "sin_devolucion" && (
               <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-center">
                 <AlertTriangle className="h-8 w-8 text-muted-red mx-auto mb-2" />
-                <p className="text-sm font-semibold text-text-primary">Cancelado sin devolución</p>
-                <p className="text-xs text-text-secondary mt-1">
+                <p className="text-sm font-semibold text-slate-900">Cancelado sin devolución</p>
+                <p className="text-xs text-slate-500 mt-1">
                   Según la política de cancelación, no se admiten devoluciones con menos de 15 días de antelación.
                 </p>
               </div>
             )}
             <div className="flex justify-end pt-2">
-              <button onClick={onClose} className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors">
+              <button onClick={onClose} className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors">
                 Cerrar
               </button>
             </div>

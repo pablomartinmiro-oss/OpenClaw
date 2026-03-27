@@ -87,7 +87,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
           />
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-text-primary">Notas</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Notas</h2>
 
             {can("contacts:edit") && (
               <AddNoteForm
@@ -100,7 +100,7 @@ export default function ContactDetailPage({ params }: ContactDetailPageProps) {
           </div>
         </div>
       ) : (
-        <p className="text-text-secondary">Contacto no encontrado.</p>
+        <p className="text-slate-500">Contacto no encontrado.</p>
       )}
     </div>
   );

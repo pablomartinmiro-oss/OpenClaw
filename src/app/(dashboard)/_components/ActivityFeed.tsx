@@ -133,13 +133,13 @@ const TYPE_CONFIG: Record<
     icon: CalendarCheck,
     stripe: "border-l-sage",
     iconBg: "bg-sage/10",
-    iconColor: "text-sage",
+    iconColor: "text-green-700",
   },
   quote: {
     icon: FileText,
     stripe: "border-l-coral",
     iconBg: "bg-coral/10",
-    iconColor: "text-coral",
+    iconColor: "text-blue-600",
   },
   opportunity: {
     icon: TrendingUp,
@@ -160,10 +160,10 @@ export function ActivityFeed({
   if (loading) {
     return (
       <div className="animate-fade-in rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h2 className="mb-4 text-base font-semibold text-text-primary">Actividad Reciente</h2>
+        <h2 className="mb-4 text-base font-semibold text-slate-900">Actividad Reciente</h2>
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl bg-warm-muted" />
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
           ))}
         </div>
       </div>
@@ -173,19 +173,19 @@ export function ActivityFeed({
   return (
     <div className="animate-fade-in rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-text-primary">Actividad Reciente</h2>
+        <h2 className="text-base font-semibold text-slate-900">Actividad Reciente</h2>
         <div className="flex gap-3">
-          <Link href="/reservas" className="text-xs text-coral hover:underline">
+          <Link href="/reservas" className="text-xs text-blue-600 hover:underline">
             Ver reservas &rarr;
           </Link>
-          <Link href="/presupuestos" className="text-xs text-coral hover:underline">
+          <Link href="/presupuestos" className="text-xs text-blue-600 hover:underline">
             Ver presupuestos &rarr;
           </Link>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <p className="py-6 text-center text-sm text-text-secondary">
+        <p className="py-6 text-center text-sm text-slate-500">
           Sin actividad reciente
         </p>
       ) : (
@@ -197,24 +197,24 @@ export function ActivityFeed({
             return (
               <div
                 key={item.id}
-                className={`flex items-center justify-between rounded-xl border border-border border-l-[3px] ${cfg.stripe} p-3 transition-colors hover:bg-warm-muted/30`}
+                className={`flex items-center justify-between rounded-xl border border-border border-l-[3px] ${cfg.stripe} p-3 transition-colors hover:bg-slate-100/30`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cfg.iconBg}`}>
                     <IconComponent className={`h-4 w-4 ${cfg.iconColor}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">
+                    <p className="text-sm font-medium text-slate-900 truncate">
                       {item.name}
                     </p>
-                    <p className="text-xs text-text-secondary truncate">{item.detail}</p>
+                    <p className="text-xs text-slate-500 truncate">{item.detail}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end shrink-0 ml-3">
-                  <span className="text-xs font-medium text-text-primary">
+                  <span className="text-xs font-medium text-slate-900">
                     {item.amount != null ? formatCurrency(item.amount) : "\u2014"}
                   </span>
-                  <span className="text-[11px] text-text-secondary">
+                  <span className="text-[11px] text-slate-500">
                     {formatRelativeTime(item.date)}
                   </span>
                 </div>

@@ -30,8 +30,8 @@ export function TopOpportunities({
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-text-primary">Top Opportunities</h2>
-        <Link href="/pipeline" className="text-xs text-coral hover:underline">
+        <h2 className="text-base font-semibold text-slate-900">Top Opportunities</h2>
+        <Link href="/pipeline" className="text-xs text-blue-600 hover:underline">
           View all
         </Link>
       </div>
@@ -47,7 +47,7 @@ export function TopOpportunities({
             </div>
           ))
         ) : sorted.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-secondary">No opportunities yet</p>
+          <p className="py-6 text-center text-sm text-slate-500">No opportunities yet</p>
         ) : (
           sorted.map((opp) => (
             <Link
@@ -59,7 +59,7 @@ export function TopOpportunities({
                 <DollarSign className="h-4 w-4 text-success" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-text-primary">{opp.name}</p>
+                <p className="truncate text-sm font-medium text-slate-900">{opp.name}</p>
                 <p className="text-xs font-semibold text-success">
                   {formatCurrency(opp.monetaryValue)}
                 </p>
@@ -68,8 +68,8 @@ export function TopOpportunities({
                 opp.status === "won"
                   ? "bg-success/10 text-success"
                   : opp.status === "open"
-                    ? "bg-coral-light text-coral"
-                    : "bg-muted text-text-secondary"
+                    ? "bg-blue-50 text-coral"
+                    : "bg-muted text-slate-500"
               }`}>
                 {opp.status}
               </span>

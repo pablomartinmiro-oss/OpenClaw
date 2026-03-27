@@ -76,12 +76,12 @@ export function ConversationList({
       {/* Search */}
       <div className="p-3">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <Input
             placeholder="Buscar conversaciones..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 rounded-lg border-border bg-surface pl-8 text-sm placeholder:text-text-secondary"
+            className="h-8 rounded-lg border-border bg-surface pl-8 text-sm placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -100,7 +100,7 @@ export function ConversationList({
         {loading ? (
           <ConversationListSkeleton />
         ) : filtered.length === 0 ? (
-          <p className="p-4 text-center text-sm text-text-secondary">
+          <p className="p-4 text-center text-sm text-slate-500">
             No se encontraron conversaciones
           </p>
         ) : (
@@ -109,11 +109,11 @@ export function ConversationList({
               key={conv.id}
               onClick={() => onSelect(conv.id)}
               className={cn(
-                "flex w-full items-start gap-3 border-b border-warm-border/50 p-3 text-left transition-colors hover:bg-warm-muted/50",
-                selectedId === conv.id && "bg-warm-muted border-l-[3px] border-l-coral"
+                "flex w-full items-start gap-3 border-b border-warm-border/50 p-3 text-left transition-colors hover:bg-slate-100/50",
+                selectedId === conv.id && "bg-slate-100 border-l-[3px] border-l-coral"
               )}
             >
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-coral-light text-sm font-semibold text-coral">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-coral">
                 {conv.contactName
                   .split(" ")
                   .map((n) => n[0])
@@ -125,14 +125,14 @@ export function ConversationList({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="truncate text-sm font-medium text-text-primary">
+                  <p className="truncate text-sm font-medium text-slate-900">
                     {conv.contactName}
                   </p>
-                  <span className="shrink-0 text-xs text-text-secondary">
+                  <span className="shrink-0 text-xs text-slate-500">
                     {formatRelativeTime(conv.lastMessageDate)}
                   </span>
                 </div>
-                <p className="truncate text-xs text-text-secondary">
+                <p className="truncate text-xs text-slate-500">
                   {conv.lastMessageBody}
                 </p>
               </div>

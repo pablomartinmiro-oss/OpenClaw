@@ -55,7 +55,7 @@ export function ClientSearch({ value, onChange, onSelect, reservations, inputRef
 
   return (
     <div ref={wrapperRef} className="relative">
-      <label className="mb-1 block text-xs text-text-secondary">Nombre completo *</label>
+      <label className="mb-1 block text-xs text-slate-500">Nombre completo *</label>
       <div className="relative">
         <input
           ref={inputRef}
@@ -63,11 +63,11 @@ export function ClientSearch({ value, onChange, onSelect, reservations, inputRef
           value={value}
           onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
           onFocus={() => { if (value.length >= 2) setIsOpen(true); }}
-          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+          className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           autoComplete="off"
         />
         {knownClients.length > 0 && (
-          <Search className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-secondary/50" />
+          <Search className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500/50" />
         )}
       </div>
       {isOpen && matches.length > 0 && (
@@ -79,8 +79,8 @@ export function ClientSearch({ value, onChange, onSelect, reservations, inputRef
               onClick={() => { onSelect(client); setIsOpen(false); }}
               className="flex w-full flex-col px-3 py-2 text-left hover:bg-surface transition-colors"
             >
-              <span className="text-sm font-medium text-text-primary">{client.name}</span>
-              <span className="text-xs text-text-secondary">{client.phone} · {client.email}</span>
+              <span className="text-sm font-medium text-slate-900">{client.name}</span>
+              <span className="text-xs text-slate-500">{client.phone} · {client.email}</span>
             </button>
           ))}
         </div>

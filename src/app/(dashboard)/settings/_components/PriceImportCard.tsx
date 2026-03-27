@@ -108,14 +108,14 @@ export function PriceImportCard() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-coral" />
-          <h3 className="text-lg font-semibold text-text-primary">Importar Tarifas</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Importar Tarifas</h3>
         </div>
       </div>
 
       <div className="p-6 space-y-4">
         {!preview ? (
           <>
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-slate-500">
               Sube un archivo CSV con los precios de tus productos. Columnas requeridas: <strong>nombre</strong>, <strong>precio</strong>.
               Opcionales: categoría, estación, tipo_precio.
             </p>
@@ -125,23 +125,23 @@ export function PriceImportCard() {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-10 transition-colors ${
-                dragOver ? "border-coral bg-coral-light/20" : "border-border bg-surface/30"
+                dragOver ? "border-blue-500 bg-blue-50/20" : "border-border bg-surface/30"
               }`}
             >
-              <Upload className="h-8 w-8 text-text-secondary mb-3" />
-              <p className="text-sm font-medium text-text-primary">
+              <Upload className="h-8 w-8 text-slate-500 mb-3" />
+              <p className="text-sm font-medium text-slate-900">
                 Arrastra un archivo aquí o haz clic para seleccionar
               </p>
-              <p className="text-xs text-text-secondary mt-1">Formato admitido: .csv</p>
-              <label className="mt-4 cursor-pointer rounded-lg border border-coral px-4 py-2 text-sm font-medium text-coral hover:bg-coral-light transition-colors">
+              <p className="text-xs text-slate-500 mt-1">Formato admitido: .csv</p>
+              <label className="mt-4 cursor-pointer rounded-lg border border-blue-500 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
                 Seleccionar archivo
                 <input type="file" accept=".csv" className="hidden" onChange={handleFileInput} />
               </label>
             </div>
 
             <div className="rounded-lg border border-border p-4">
-              <h4 className="text-sm font-semibold text-text-primary mb-2">Formato esperado</h4>
-              <code className="block text-xs text-text-secondary bg-surface rounded p-2">
+              <h4 className="text-sm font-semibold text-slate-900 mb-2">Formato esperado</h4>
+              <code className="block text-xs text-slate-500 bg-surface rounded p-2">
                 nombre,categoría,estación,precio,tipo_precio{"\n"}
                 Esquí Adulto Alta Calidad,alquiler,baqueira,36,per_day{"\n"}
                 Forfait Adulto,forfait,sierra_nevada,45,per_day
@@ -152,8 +152,8 @@ export function PriceImportCard() {
           <>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-sage" />
-                <span className="text-sm font-medium text-text-primary">
+                <CheckCircle className="h-4 w-4 text-green-700" />
+                <span className="text-sm font-medium text-slate-900">
                   {fileName} — {preview.length} productos
                 </span>
               </div>
@@ -166,19 +166,19 @@ export function PriceImportCard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-surface/50 border-b border-border">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Producto</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Categoría</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Estación</th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-text-secondary">Precio</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Producto</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Categoría</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Estación</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-slate-500">Precio</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {preview.slice(0, 20).map((row, i) => (
                     <tr key={i}>
-                      <td className="px-3 py-2 text-text-primary">{row.name}</td>
-                      <td className="px-3 py-2 text-text-secondary">{row.category || "—"}</td>
-                      <td className="px-3 py-2 text-text-secondary">{row.station}</td>
-                      <td className="px-3 py-2 text-right font-medium text-text-primary">
+                      <td className="px-3 py-2 text-slate-900">{row.name}</td>
+                      <td className="px-3 py-2 text-slate-500">{row.category || "—"}</td>
+                      <td className="px-3 py-2 text-slate-500">{row.station}</td>
+                      <td className="px-3 py-2 text-right font-medium text-slate-900">
                         {row.price.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                       </td>
                     </tr>
@@ -186,21 +186,21 @@ export function PriceImportCard() {
                 </tbody>
               </table>
               {preview.length > 20 && (
-                <div className="px-3 py-2 text-xs text-text-secondary text-center bg-surface/50">
+                <div className="px-3 py-2 text-xs text-slate-500 text-center bg-surface/50">
                   ... y {preview.length - 20} más
                 </div>
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-gold" />
-              <span className="text-xs text-text-secondary">
+              <AlertCircle className="h-4 w-4 text-amber-700" />
+              <span className="text-xs text-slate-500">
                 Los productos existentes con el mismo nombre se actualizarán. Los nuevos se crearán.
               </span>
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={handleImport} disabled={importing} className="gap-2 bg-coral text-white hover:bg-coral-hover">
+              <Button onClick={handleImport} disabled={importing} className="gap-2 bg-coral text-white hover:bg-blue-600-hover">
                 <Upload className="h-4 w-4" />
                 {importing ? "Importando..." : `Importar ${preview.length} productos`}
               </Button>

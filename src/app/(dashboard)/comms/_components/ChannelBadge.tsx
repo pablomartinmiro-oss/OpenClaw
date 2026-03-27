@@ -6,7 +6,7 @@ const CHANNEL_CONFIG: Record<string, { label: string; color: string; icon: strin
   WhatsApp: { label: "WhatsApp", color: "bg-green-50 text-green-600", icon: "💬" },
   Instagram: { label: "Instagram", color: "bg-pink-50 text-pink-600", icon: "📸" },
   Facebook: { label: "Facebook", color: "bg-blue-50 text-blue-600", icon: "👤" },
-  SMS: { label: "SMS", color: "bg-coral-light text-coral", icon: "📱" },
+  SMS: { label: "SMS", color: "bg-blue-50 text-coral", icon: "📱" },
   Email: { label: "Email", color: "bg-soft-blue-light text-soft-blue", icon: "✉️" },
   GMB: { label: "Google", color: "bg-yellow-50 text-yellow-600", icon: "🔍" },
 };
@@ -17,7 +17,7 @@ interface ChannelBadgeProps {
 }
 
 export function ChannelBadge({ type, size = "sm" }: ChannelBadgeProps) {
-  const config = CHANNEL_CONFIG[type] || { label: type, color: "bg-muted text-text-secondary", icon: "💬" };
+  const config = CHANNEL_CONFIG[type] || { label: type, color: "bg-muted text-slate-500", icon: "💬" };
 
   return (
     <span

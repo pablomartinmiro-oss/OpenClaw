@@ -70,43 +70,43 @@ export function ProductSearchPicker({ products, excludeIds, onSelect, onClose }:
   return (
     <div className="mb-3 rounded-xl border border-border bg-white shadow-lg overflow-hidden">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <Search className="h-4 w-4 text-text-secondary" />
+        <Search className="h-4 w-4 text-slate-500" />
         <input
           ref={inputRef}
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar producto... (ej: forfait 2 días)"
-          className="flex-1 bg-transparent text-sm placeholder:text-text-secondary focus:outline-none"
+          className="flex-1 bg-transparent text-sm placeholder:text-slate-500 focus:outline-none"
         />
         <button onClick={onClose} className="rounded p-0.5 hover:bg-surface transition-colors">
-          <X className="h-4 w-4 text-text-secondary" />
+          <X className="h-4 w-4 text-slate-500" />
         </button>
       </div>
       <div className="max-h-64 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="px-4 py-6 text-center text-sm text-text-secondary">
+          <div className="px-4 py-6 text-center text-sm text-slate-500">
             No se encontraron productos
           </div>
         ) : (
           Array.from(grouped.entries()).map(([cat, prods]) => (
             <div key={cat}>
-              <div className="sticky top-0 bg-surface/80 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              <div className="sticky top-0 bg-surface/80 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 {CATEGORY_LABELS[cat] ?? cat}
               </div>
               {prods.map((product) => (
                 <button
                   key={product.id}
                   onClick={() => onSelect(product)}
-                  className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-coral-light/30 transition-colors"
+                  className="flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-blue-50/30 transition-colors"
                 >
                   <div>
-                    <span className="text-text-primary">{product.name}</span>
+                    <span className="text-slate-900">{product.name}</span>
                     {product.station !== "all" && (
-                      <span className="ml-2 text-xs text-text-secondary">({product.station})</span>
+                      <span className="ml-2 text-xs text-slate-500">({product.station})</span>
                     )}
                   </div>
-                  <span className="text-text-secondary font-medium">
+                  <span className="text-slate-500 font-medium">
                     {product.price.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                   </span>
                 </button>

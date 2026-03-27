@@ -71,10 +71,10 @@ export default function ContactsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Contactos</h1>
-          <p className="text-sm text-text-secondary">Gestiona tu base de datos de contactos</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Contactos</h1>
+          <p className="text-sm text-slate-500">Gestiona tu base de datos de contactos</p>
         </div>
-        <span className="text-sm text-text-secondary">
+        <span className="text-sm text-slate-500">
           {total.toLocaleString("es-ES")} contactos
           {isFetching && !isLoading && <span className="ml-2 text-xs text-coral">cargando...</span>}
         </span>
@@ -112,7 +112,7 @@ export default function ContactsPage() {
       {/* Pagination with page numbers */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-slate-500">
             Mostrando {((page - 1) * PAGE_SIZE) + 1}-{Math.min(page * PAGE_SIZE, total)} de {total.toLocaleString("es-ES")}
           </p>
           <div className="flex items-center gap-1">
@@ -128,7 +128,7 @@ export default function ContactsPage() {
 
             {pageNumbers.map((p, idx) =>
               p === "ellipsis" ? (
-                <span key={`ellipsis-${idx}`} className="px-1 text-xs text-text-secondary">
+                <span key={`ellipsis-${idx}`} className="px-1 text-xs text-slate-500">
                   ...
                 </span>
               ) : (
@@ -139,7 +139,7 @@ export default function ContactsPage() {
                   onClick={() => setPage(p)}
                   className={cn(
                     "h-8 w-8 p-0 text-xs",
-                    page === p && "bg-coral text-white border-coral hover:bg-coral-hover hover:text-white"
+                    page === p && "bg-coral text-white border-blue-500 hover:bg-blue-600-hover hover:text-white"
                   )}
                 >
                   {p}

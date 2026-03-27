@@ -207,21 +207,21 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Mode toggle + shortcuts */}
       <div className="flex items-center gap-2 border-b border-border px-5 py-3">
-        <button onClick={() => setMode("individual")} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${mode === "individual" ? "bg-coral text-white" : "bg-warm-muted text-text-secondary hover:bg-warm-border"}`}>Reserva Individual</button>
-        <button onClick={() => setMode("grupal")} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${mode === "grupal" ? "bg-coral text-white" : "bg-warm-muted text-text-secondary hover:bg-warm-border"}`}>Reserva Grupal</button>
+        <button onClick={() => setMode("individual")} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${mode === "individual" ? "bg-coral text-white" : "bg-slate-100 text-slate-500 hover:bg-warm-border"}`}>Reserva Individual</button>
+        <button onClick={() => setMode("grupal")} className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${mode === "grupal" ? "bg-coral text-white" : "bg-slate-100 text-slate-500 hover:bg-warm-border"}`}>Reserva Grupal</button>
         <div className="ml-auto flex gap-1">
-          <button onClick={clearForm} className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-gray-200" title="F1">Nueva (F1)</button>
-          <button onClick={duplicateLast} className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-gray-200" title="F4">Duplicar (F4)</button>
+          <button onClick={clearForm} className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-gray-200" title="F1">Nueva (F1)</button>
+          <button onClick={duplicateLast} className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-gray-200" title="F4">Duplicar (F4)</button>
         </div>
       </div>
 
       <div className="flex-1 space-y-5 p-5">
         {/* Source selection */}
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">Origen</label>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">Origen</label>
           <div className="grid grid-cols-3 gap-2">
             {([{ value: "groupon", label: "CUPÓN GROUPON" }, { value: "caja", label: "VENTA EN CAJA" }, { value: "presupuesto", label: "DESDE PRESUPUESTO" }] as const).map((s) => (
-              <button key={s.value} onClick={() => setSource(s.value)} className={`rounded-lg border-2 p-3 text-center text-sm font-semibold transition-colors ${source === s.value ? "border-coral bg-coral-light text-coral" : "border-warm-border bg-white text-text-secondary hover:border-coral/50"}`}>
+              <button key={s.value} onClick={() => setSource(s.value)} className={`rounded-lg border-2 p-3 text-center text-sm font-semibold transition-colors ${source === s.value ? "border-blue-500 bg-blue-50 text-coral" : "border-warm-border bg-white text-slate-500 hover:border-blue-500/50"}`}>
                 <div className="text-xs">{s.label}</div>
               </button>
             ))}
@@ -236,7 +236,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
 
         {/* Cliente */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Cliente</legend>
+          <legend className="text-sm font-semibold text-slate-900">Cliente</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <ClientSearch
@@ -248,30 +248,30 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
               />
               {duplicateWarning && <div className="mt-1 flex items-center gap-1 text-xs text-yellow-600"><AlertTriangle className="h-3 w-3" /> Ya existe una reserva para este cliente en esta fecha.</div>}
             </div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Teléfono *</label><input type="tel" value={form.clientPhone} onChange={(e) => updateField("clientPhone", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Email *</label><input type="email" value={form.clientEmail} onChange={(e) => updateField("clientEmail", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
-            {source === "groupon" && <div><label className="mb-1 block text-xs text-text-secondary">Código cupón</label><input type="text" value={form.couponCode} onChange={(e) => updateField("couponCode", e.target.value)} placeholder="GRP-XXXX" className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>}
+            <div><label className="mb-1 block text-xs text-slate-500">Teléfono *</label><input type="tel" value={form.clientPhone} onChange={(e) => updateField("clientPhone", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Email *</label><input type="email" value={form.clientEmail} onChange={(e) => updateField("clientEmail", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+            {source === "groupon" && <div><label className="mb-1 block text-xs text-slate-500">Código cupón</label><input type="text" value={form.couponCode} onChange={(e) => updateField("couponCode", e.target.value)} placeholder="GRP-XXXX" className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>}
           </div>
         </fieldset>
 
         {/* Reserva */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Reserva</legend>
+          <legend className="text-sm font-semibold text-slate-900">Reserva</legend>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div><label className="mb-1 block text-xs text-text-secondary">Estación *</label><select value={form.station} onChange={(e) => updateField("station", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"><option value="">Seleccionar estación</option>{STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Estación *</label><select value={form.station} onChange={(e) => updateField("station", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="">Seleccionar estación</option>{STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Fecha de actividad *</label>
-              <input type="date" lang="es" value={form.activityDate} onChange={(e) => updateField("activityDate", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" />
+              <label className="mb-1 block text-xs text-slate-500">Fecha de actividad *</label>
+              <input type="date" lang="es" value={form.activityDate} onChange={(e) => updateField("activityDate", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               {form.activityDate && form.station && (
                 <div className="mt-1">
                   {detectedSeason === "alta"
-                    ? <span className="inline-flex items-center gap-1 rounded-full bg-coral-light px-2 py-0.5 text-[10px] font-semibold text-coral"><Snowflake className="h-3 w-3" /> Temporada Alta</span>
-                    : <span className="inline-flex items-center gap-1 rounded-full bg-sage-light px-2 py-0.5 text-[10px] font-semibold text-sage"><Sun className="h-3 w-3" /> Temporada Media</span>}
+                    ? <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-coral"><Snowflake className="h-3 w-3" /> Temporada Alta</span>
+                    : <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700"><Sun className="h-3 w-3" /> Temporada Media</span>}
                 </div>
               )}
             </div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Horario *</label><select value={form.schedule} onChange={(e) => updateField("schedule", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"><option value="">Seleccionar horario</option>{SCHEDULES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Idioma</label><select value={form.language} onChange={(e) => updateField("language", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral">{LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}</select></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Horario *</label><select value={form.schedule} onChange={(e) => updateField("schedule", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="">Seleccionar horario</option>{SCHEDULES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Idioma</label><select value={form.language} onChange={(e) => updateField("language", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}</select></div>
           </div>
           {capacitySummary.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -284,33 +284,33 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
 
         {/* Precio */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Precio</legend>
+          <legend className="text-sm font-semibold text-slate-900">Precio</legend>
           {source !== "groupon" && <PriceBreakdown lines={priceBreakdown} total={autoTotal} season={detectedSeason} />}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Precio total (€)</label>
+              <label className="mb-1 block text-xs text-slate-500">Precio total (€)</label>
               <input type="number" step="0.01" value={effectivePrice} onChange={(e) => { updateField("totalPrice", e.target.value); setManualPriceOverride(true); }}
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${!manualPriceOverride && autoTotal > 0 && source !== "groupon" ? "border-sage bg-sage-light/30" : "border-border"}`} />
-              {!manualPriceOverride && autoTotal > 0 && source !== "groupon" && <span className="mt-0.5 block text-[10px] text-sage">Auto-calculado</span>}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${!manualPriceOverride && autoTotal > 0 && source !== "groupon" ? "border-sage bg-green-50/30" : "border-border"}`} />
+              {!manualPriceOverride && autoTotal > 0 && source !== "groupon" && <span className="mt-0.5 block text-[10px] text-green-700">Auto-calculado</span>}
               {manualPriceOverride && autoTotal > 0 && source !== "groupon" && (
-                <button type="button" onClick={() => { setManualPriceOverride(false); updateField("totalPrice", String(autoTotal)); }} className="mt-0.5 block text-[10px] text-coral hover:underline">
+                <button type="button" onClick={() => { setManualPriceOverride(false); updateField("totalPrice", String(autoTotal)); }} className="mt-0.5 block text-[10px] text-blue-600 hover:underline">
                   Restaurar precio automático ({formatEUR(autoTotal)})
                 </button>
               )}
             </div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Descuento %</label><input type="number" min="0" max="100" value={form.discount} onChange={(e) => updateField("discount", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Método de pago</label><select value={form.paymentMethod} onChange={(e) => updateField("paymentMethod", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"><option value="">Seleccionar</option><option value="groupon">Groupon</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="transferencia">Transferencia</option></select></div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Ref. pago</label><input type="text" value={form.paymentRef} onChange={(e) => updateField("paymentRef", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Descuento %</label><input type="number" min="0" max="100" value={form.discount} onChange={(e) => updateField("discount", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Método de pago</label><select value={form.paymentMethod} onChange={(e) => updateField("paymentMethod", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="">Seleccionar</option><option value="groupon">Groupon</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="transferencia">Transferencia</option></select></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Ref. pago</label><input type="text" value={form.paymentRef} onChange={(e) => updateField("paymentRef", e.target.value)} className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
           </div>
-          {effectivePrice && form.discount && Number(form.discount) > 0 && <div className="text-sm text-text-secondary">Precio final: {formatEUR(Number(effectivePrice) * (1 - Number(form.discount) / 100))}</div>}
+          {effectivePrice && form.discount && Number(form.discount) > 0 && <div className="text-sm text-slate-500">Precio final: {formatEUR(Number(effectivePrice) * (1 - Number(form.discount) / 100))}</div>}
         </fieldset>
 
         {/* Notas */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Notas</legend>
+          <legend className="text-sm font-semibold text-slate-900">Notas</legend>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div><label className="mb-1 block text-xs text-text-secondary">Notas para el cliente</label><textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={2} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
-            <div><label className="mb-1 block text-xs text-text-secondary">Notas internas (no se envían)</label><textarea value={form.internalNotes} onChange={(e) => updateField("internalNotes", e.target.value)} rows={2} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" /></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Notas para el cliente</label><textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={2} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+            <div><label className="mb-1 block text-xs text-slate-500">Notas internas (no se envían)</label><textarea value={form.internalNotes} onChange={(e) => updateField("internalNotes", e.target.value)} rows={2} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
           </div>
         </fieldset>
       </div>
@@ -318,7 +318,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
       {/* Confirm bar */}
       <div className="border-t border-border bg-white p-4">
         <div className="mb-3 flex items-center gap-4">
-          <span className="text-xs font-medium text-text-secondary">Notificar por:</span>
+          <span className="text-xs font-medium text-slate-500">Notificar por:</span>
           {(["email", "whatsapp", "ambos"] as const).map((m) => (
             <label key={m} className="flex items-center gap-1.5 text-sm"><input type="radio" name="notify" value={m} checked={notifyMethod === m} onChange={() => setNotifyMethod(m)} className="accent-coral" />{m === "email" ? "Email" : m === "whatsapp" ? "WhatsApp" : "Ambos"}</label>
           ))}
@@ -327,7 +327,7 @@ export function ReservationForm({ existingReservations, lastReservation, onCreat
           <Button size="lg" className="gap-2 bg-sage text-white hover:bg-sage/90" onClick={() => handleSubmit("confirmada")} disabled={createReservation.isPending}><CheckCircle className="h-5 w-5" /> CONFIRMAR (F2)</Button>
           <Button size="lg" variant="destructive" className="gap-2" onClick={() => handleSubmit("sin_disponibilidad")} disabled={createReservation.isPending}><XCircle className="h-5 w-5" /> SIN DISP. (F3)</Button>
         </div>
-        <div className="mt-2 text-center text-[10px] text-text-secondary">F1 = Nueva | F2 = Confirmar | F3 = Sin disp. | F4 = Duplicar | Ctrl+Enter = Confirmar</div>
+        <div className="mt-2 text-center text-[10px] text-slate-500">F1 = Nueva | F2 = Confirmar | F3 = Sin disp. | F4 = Duplicar | Ctrl+Enter = Confirmar</div>
       </div>
     </div>
   );

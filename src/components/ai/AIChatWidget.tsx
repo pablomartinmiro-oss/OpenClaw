@@ -115,9 +115,9 @@ export function AIChatWidget() {
           onClick={() => setIsOpen(true)}
           className={cn(
             "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center",
-            "rounded-full bg-coral text-white shadow-lg hover:bg-coral-hover",
+            "rounded-full bg-coral text-white shadow-lg hover:bg-blue-600-hover",
             "transition-all hover:scale-105 active:scale-95",
-            "focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2"
+            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           )}
           aria-label="Open AI assistant"
         >
@@ -165,7 +165,7 @@ export function AIChatWidget() {
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                       message.role === "user"
                         ? "bg-coral text-white"
-                        : "bg-warm-muted text-text-secondary"
+                        : "bg-slate-100 text-slate-500"
                     )}
                   >
                     {message.role === "user" ? (
@@ -179,7 +179,7 @@ export function AIChatWidget() {
                       "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
                       message.role === "user"
                         ? "bg-coral text-white rounded-br-md"
-                        : "bg-warm-muted text-text-primary rounded-bl-md"
+                        : "bg-slate-100 text-slate-900 rounded-bl-md"
                     )}
                   >
                     <div className="whitespace-pre-wrap">{message.content}</div>
@@ -207,12 +207,12 @@ export function AIChatWidget() {
               
               {isLoading && (
                 <div className="flex gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warm-muted text-text-secondary">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                     <Bot className="h-4 w-4" />
                   </div>
-                  <div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-warm-muted px-4 py-2.5">
-                    <Loader2 className="h-4 w-4 animate-spin text-text-secondary" />
-                    <span className="text-sm text-text-secondary">Pensando...</span>
+                  <div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-slate-100 px-4 py-2.5">
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                    <span className="text-sm text-slate-500">Pensando...</span>
                   </div>
                 </div>
               )}
@@ -234,12 +234,12 @@ export function AIChatWidget() {
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
                 size="icon"
-                className="bg-coral hover:bg-coral-hover"
+                className="bg-coral hover:bg-blue-600-hover"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <p className="mt-2 text-[10px] text-text-secondary text-center">
+            <p className="mt-2 text-[10px] text-slate-500 text-center">
               Powered by Claude • Puede cometer errores
             </p>
           </div>

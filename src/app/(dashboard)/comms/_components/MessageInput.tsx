@@ -47,19 +47,19 @@ export function MessageInput({
           }
           disabled={disabled || sending}
           rows={2}
-          className="flex-1 resize-none rounded-[10px] border border-warm-border bg-surface px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-secondary focus:border-coral focus:ring-1 focus:ring-coral disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-1 resize-none rounded-[10px] border border-warm-border bg-surface px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         />
         <Button
           onClick={handleSend}
           disabled={disabled || sending || !message.trim()}
           size="icon"
-          className="h-auto self-end rounded-[10px] bg-coral text-white hover:bg-coral-hover"
+          className="h-auto self-end rounded-[10px] bg-coral text-white hover:bg-blue-600-hover"
         >
           <Send className="h-4 w-4" />
         </Button>
       </div>
       {message.length > 0 && (
-        <p className="mt-1 text-xs text-text-secondary">
+        <p className="mt-1 text-xs text-slate-500">
           {message.length} caracteres &middot; {segments} segmento{segments !== 1 ? "s" : ""} SMS
         </p>
       )}

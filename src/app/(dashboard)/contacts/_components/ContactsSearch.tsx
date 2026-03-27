@@ -11,12 +11,12 @@ interface ContactsSearchProps {
 export function ContactsSearch({ value, onChange }: ContactsSearchProps) {
   return (
     <div className="relative w-full max-w-sm">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
       <Input
         placeholder="Buscar contactos..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border-border bg-white pl-9 placeholder:text-text-secondary"
+        className="rounded-lg border-border bg-white pl-9 placeholder:text-slate-500"
       />
     </div>
   );

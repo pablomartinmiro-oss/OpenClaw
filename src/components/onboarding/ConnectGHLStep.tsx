@@ -54,7 +54,7 @@ export function ConnectGHLStep({ paramConnected, error }: ConnectGHLStepProps) {
   if (checking) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-text-secondary" />
+        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
       </div>
     );
   }
@@ -62,12 +62,12 @@ export function ConnectGHLStep({ paramConnected, error }: ConnectGHLStepProps) {
   if (isConnected) {
     return (
       <div className="space-y-6 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sage-light">
-          <CheckCircle2 className="h-8 w-8 text-sage" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+          <CheckCircle2 className="h-8 w-8 text-green-700" />
         </div>
         <div>
           <h2 className="text-xl font-semibold">GoHighLevel conectado</h2>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-1 text-sm text-slate-500">
             Tu sub-cuenta de GHL está vinculada correctamente.
           </p>
         </div>
@@ -80,12 +80,12 @@ export function ConnectGHLStep({ paramConnected, error }: ConnectGHLStepProps) {
 
   return (
     <div className="space-y-6 text-center">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coral-light">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
         <LinkIcon className="h-8 w-8 text-coral" />
       </div>
       <div>
         <h2 className="text-xl font-semibold">Conectar GoHighLevel</h2>
-        <p className="mt-1 text-sm text-text-secondary">
+        <p className="mt-1 text-sm text-slate-500">
           Vincula tu sub-cuenta de GHL para sincronizar contactos,
           conversaciones y pipelines.
         </p>

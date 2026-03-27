@@ -22,19 +22,19 @@ export function StatsBar({ stats, loading }: StatsBarProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl bg-white px-5 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <div className="flex items-center gap-2 text-sm font-medium text-text-primary">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
         <span>Hoy:</span>
-        <span className="text-sage">{today.confirmed} confirmadas</span>
+        <span className="text-green-700">{today.confirmed} confirmadas</span>
         <span className="text-warm-border">|</span>
         <span className="text-muted-red">{today.noAvailability} sin disponibilidad</span>
         <span className="text-warm-border">|</span>
-        <span className="text-gold">{today.pending} pendientes</span>
+        <span className="text-amber-700">{today.pending} pendientes</span>
         <span className="text-gray-400">|</span>
         <span className="font-semibold">Total: {today.total}</span>
       </div>
 
       {Object.entries(stationCapacity).length > 0 && (
-        <div className="flex items-center gap-3 border-l border-border pl-4 text-xs text-text-secondary">
+        <div className="flex items-center gap-3 border-l border-border pl-4 text-xs text-slate-500">
           {Object.entries(stationCapacity).map(([station, cap]) => (
             <span key={station} className={cap.booked >= cap.max ? "text-muted-red font-medium" : ""}>
               {getStationLabel(station)}: {cap.booked}/{cap.max} cursillos

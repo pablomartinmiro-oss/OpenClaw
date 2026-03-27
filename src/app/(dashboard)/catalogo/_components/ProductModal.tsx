@@ -67,10 +67,10 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-lg font-semibold text-text-primary">
+          <h2 className="text-lg font-semibold text-slate-900">
             {product ? "Editar Producto" : "Nuevo Producto"}
           </h2>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-text-secondary hover:bg-surface transition-colors">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-surface transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -78,11 +78,11 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Categoría</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Categoría</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -90,11 +90,11 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Estación</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Estación</label>
               <select
                 value={form.station}
                 onChange={(e) => setForm({ ...form, station: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {Object.entries(STATION_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -104,33 +104,33 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-slate-900 mb-1">Nombre</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">Descripción</label>
+            <label className="block text-sm font-medium text-slate-900 mb-1">Descripción</label>
             <input
               type="text"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Tipo persona</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Tipo persona</label>
               <select
                 value={form.personType}
                 onChange={(e) => setForm({ ...form, personType: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Sin especificar</option>
                 <option value="adulto">Adulto</option>
@@ -139,11 +139,11 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Calidad</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Calidad</label>
               <select
                 value={form.tier}
                 onChange={(e) => setForm({ ...form, tier: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Sin especificar</option>
                 <option value="media">Media calidad</option>
@@ -151,12 +151,12 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               </select>
             </div>
             <div className="flex items-end pb-1">
-              <label className="flex items-center gap-2 text-sm text-text-primary">
+              <label className="flex items-center gap-2 text-sm text-slate-900">
                 <input
                   type="checkbox"
                   checked={form.includesHelmet}
                   onChange={(e) => setForm({ ...form, includesHelmet: e.target.checked })}
-                  className="h-4 w-4 rounded border-border text-coral focus:ring-coral"
+                  className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
                 />
                 Incluye casco
               </label>
@@ -165,23 +165,23 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Precio base (€)</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Precio base (€)</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Tipo de Precio</label>
+              <label className="block text-sm font-medium text-slate-900 mb-1">Tipo de Precio</label>
               <select
                 value={form.priceType}
                 onChange={(e) => setForm({ ...form, priceType: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {Object.entries(PRICE_TYPE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -196,22 +196,22 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               id="isActive"
               checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="h-4 w-4 rounded border-border text-coral focus:ring-coral"
+              className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="isActive" className="text-sm text-text-primary">Producto activo</label>
+            <label htmlFor="isActive" className="text-sm text-slate-900">Producto activo</label>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface transition-colors"
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-500 hover:bg-surface transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
+              className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors"
             >
               {product ? "Guardar Cambios" : "Crear Producto"}
             </button>

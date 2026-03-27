@@ -101,15 +101,15 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-border px-5 py-3">
-        <button onClick={onBack} className="rounded-lg p-1.5 text-text-secondary hover:bg-warm-muted">
+        <button onClick={onBack} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
             {sourceCfg && <span className="text-base">{sourceCfg.icon}</span>}
-            <h2 className="text-base font-semibold text-text-primary">{reservation.clientName}</h2>
+            <h2 className="text-base font-semibold text-slate-900">{reservation.clientName}</h2>
           </div>
-          <p className="text-xs text-text-secondary">Creada {formatDate(reservation.createdAt)}</p>
+          <p className="text-xs text-slate-500">Creada {formatDate(reservation.createdAt)}</p>
         </div>
         <Badge className={cn("text-xs", statusCfg.color)}>{statusCfg.label}</Badge>
       </div>
@@ -128,12 +128,12 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
             </Button>
           )}
           {reservation.status !== "cancelada" && (
-            <Button size="sm" variant="outline" className="gap-1.5 text-text-secondary" onClick={() => handleStatusChange("cancelada")} disabled={updateReservation.isPending}>
+            <Button size="sm" variant="outline" className="gap-1.5 text-slate-500" onClick={() => handleStatusChange("cancelada")} disabled={updateReservation.isPending}>
               <X className="h-3.5 w-3.5" /> Cancelar
             </Button>
           )}
           {reservation.status !== "pendiente" && (
-            <Button size="sm" variant="outline" className="gap-1.5 text-gold" onClick={() => handleStatusChange("pendiente")} disabled={updateReservation.isPending}>
+            <Button size="sm" variant="outline" className="gap-1.5 text-amber-700" onClick={() => handleStatusChange("pendiente")} disabled={updateReservation.isPending}>
               <Clock className="h-3.5 w-3.5" /> Pendiente
             </Button>
           )}

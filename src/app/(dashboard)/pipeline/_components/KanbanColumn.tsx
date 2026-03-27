@@ -40,19 +40,19 @@ export function KanbanColumn({ stage, opportunities, dotColor, onCardClick }: Ka
       className={cn(
         "flex w-72 shrink-0 flex-col rounded-2xl transition-colors",
         "bg-[#f5f3ef] shadow-[0_1px_3px_rgba(0,0,0,0.04)]",
-        isOver && "ring-2 ring-coral/40 bg-coral/5"
+        isOver && "ring-2 ring-blue-500/40 bg-coral/5"
       )}
     >
       {/* Stage header */}
       <div className="flex items-center justify-between rounded-t-2xl bg-white/70 p-3 border-b border-border/50">
         <div className="flex items-center gap-2">
           <div className={cn("h-2.5 w-2.5 rounded-full", color)} />
-          <h3 className="text-sm font-semibold text-text-primary">{stage.name}</h3>
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-bold text-text-secondary shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-900">{stage.name}</h3>
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-bold text-slate-500 shadow-sm">
             {opportunities.length}
           </span>
         </div>
-        <span className="text-xs font-semibold text-text-secondary">
+        <span className="text-xs font-semibold text-slate-500">
           {formatCurrency(total)}
         </span>
       </div>
@@ -63,12 +63,12 @@ export function KanbanColumn({ stage, opportunities, dotColor, onCardClick }: Ka
           <KanbanCard key={opp.id} opportunity={opp} onClick={() => onCardClick?.(opp)} />
         ))}
         {opportunities.length === 0 && !isOver && (
-          <div className="rounded-[10px] border border-dashed border-border p-6 text-center text-xs text-text-secondary">
+          <div className="rounded-[10px] border border-dashed border-border p-6 text-center text-xs text-slate-500">
             Sin oportunidades
           </div>
         )}
         {opportunities.length === 0 && isOver && (
-          <div className="rounded-[10px] border-2 border-dashed border-coral/30 p-4 text-center text-xs text-text-secondary">
+          <div className="rounded-[10px] border-2 border-dashed border-blue-500/30 p-4 text-center text-xs text-slate-500">
             Soltar aqui
           </div>
         )}

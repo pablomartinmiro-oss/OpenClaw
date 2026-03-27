@@ -100,19 +100,19 @@ export function SyncStatusCard({
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-text-primary">Sincronización GHL</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Sincronización GHL</h2>
             {isError ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-muted-red">
                 <AlertTriangle className="h-3 w-3" />
                 Error
               </span>
             ) : isSyncing ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-gold-light px-2.5 py-0.5 text-xs font-medium text-gold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Sincronizando...
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-sage-light px-2.5 py-0.5 text-xs font-medium text-sage">
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">
                 <CheckCircle className="h-3 w-3" />
                 Conectado
               </span>
@@ -125,15 +125,15 @@ export function SyncStatusCard({
 
           {/* Show live progress message while syncing */}
           {isSyncing && syncProgressMsg && (
-            <p className="text-sm font-medium text-gold">{syncProgressMsg}</p>
+            <p className="text-sm font-medium text-amber-700">{syncProgressMsg}</p>
           )}
 
           {syncStatus && (
-            <div className="space-y-1 text-xs text-text-secondary">
+            <div className="space-y-1 text-xs text-slate-500">
               {lastSync && (
                 <p>
                   Última sincronización:{" "}
-                  <span className="font-medium text-text-primary">
+                  <span className="font-medium text-slate-900">
                     {new Date(lastSync).toLocaleString("es-ES")}
                   </span>
                 </p>

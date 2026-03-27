@@ -45,22 +45,25 @@ function formatRelativeDate(dateStr: string | undefined): string {
 }
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
-  if (col !== sortKey) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-text-secondary/50" />;
+  if (col !== sortKey) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-slate-500/50" />;
   return sortDir === "asc"
-    ? <ArrowUp className="ml-1 inline h-3 w-3 text-coral" />
-    : <ArrowDown className="ml-1 inline h-3 w-3 text-coral" />;
+    ? <ArrowUp className="ml-1 inline h-3 w-3 text-blue-600" />
+    : <ArrowDown className="ml-1 inline h-3 w-3 text-blue-600" />;
 }
 
 const TAG_COLORS: Record<string, string> = {
-  vip: "bg-gold-light text-gold border-gold/20",
-  nuevo: "bg-soft-blue-light text-soft-blue border-soft-blue/20",
-  activo: "bg-sage-light text-sage border-sage/20",
-  lead: "bg-coral-light text-coral border-coral/20",
+  vip: "bg-amber-50 text-amber-700 border border-amber-100",
+  nuevo: "bg-blue-50 text-blue-700 border border-blue-100",
+  activo: "bg-green-50 text-green-700 border border-green-100",
+  lead: "bg-blue-50 text-blue-600 border border-blue-100",
+  "new": "bg-blue-50 text-blue-600 border border-blue-100",
+  won: "bg-green-50 text-green-700 border border-green-100",
+  lost: "bg-red-50 text-red-600 border border-red-100",
 };
 
 function getTagStyle(tag: string): string {
   const lower = tag.toLowerCase();
-  return TAG_COLORS[lower] ?? "bg-warm-muted text-text-secondary border-border";
+  return TAG_COLORS[lower] ?? "bg-slate-100 text-slate-600 border border-slate-200";
 }
 
 export function ContactsTable({ contacts }: ContactsTableProps) {
@@ -101,12 +104,12 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
       <TableHeader>
         <TableRow className="bg-[#f9f8f6]">
           <TableHead>
-            <button onClick={() => toggleSort("name")} className="flex items-center font-medium hover:text-coral transition-colors">
+            <button onClick={() => toggleSort("name")} className="flex items-center font-medium hover:text-blue-600 transition-colors">
               Nombre <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
             </button>
           </TableHead>
           <TableHead>
-            <button onClick={() => toggleSort("email")} className="flex items-center font-medium hover:text-coral transition-colors">
+            <button onClick={() => toggleSort("email")} className="flex items-center font-medium hover:text-blue-600 transition-colors">
               Email <SortIcon col="email" sortKey={sortKey} sortDir={sortDir} />
             </button>
           </TableHead>
@@ -114,12 +117,12 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
           <TableHead>Origen</TableHead>
           <TableHead>Etiquetas</TableHead>
           <TableHead>
-            <button onClick={() => toggleSort("lastActivity")} className="flex items-center font-medium hover:text-coral transition-colors">
+            <button onClick={() => toggleSort("lastActivity")} className="flex items-center font-medium hover:text-blue-600 transition-colors">
               Actividad <SortIcon col="lastActivity" sortKey={sortKey} sortDir={sortDir} />
             </button>
           </TableHead>
           <TableHead>
-            <button onClick={() => toggleSort("dateAdded")} className="flex items-center font-medium hover:text-coral transition-colors">
+            <button onClick={() => toggleSort("dateAdded")} className="flex items-center font-medium hover:text-blue-600 transition-colors">
               Fecha <SortIcon col="dateAdded" sortKey={sortKey} sortDir={sortDir} />
             </button>
           </TableHead>
@@ -129,43 +132,43 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
         {sorted.map((contact) => (
           <TableRow
             key={contact.id}
-            className="transition-colors hover:bg-warm-muted/50 cursor-pointer group"
+            className="transition-colors hover:bg-slate-50/50 cursor-pointer group"
           >
             <TableCell>
               <Link
                 href={`/contacts/${contact.id}`}
-                className="font-medium text-text-primary group-hover:text-coral transition-colors"
+                className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors"
               >
                 {contact.firstName} {contact.lastName}
               </Link>
             </TableCell>
             <TableCell>
               {contact.email ? (
-                <a href={`mailto:${contact.email}`} className="flex items-center gap-1.5 text-text-secondary hover:text-coral transition-colors">
+                <a href={`mailto:${contact.email}`} className="flex items-center gap-1.5 text-slate-500 hover:text-blue-600 transition-colors">
                   <Mail className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate max-w-[180px]">{contact.email}</span>
                 </a>
               ) : (
-                <span className="text-text-secondary">—</span>
+                <span className="text-slate-500">—</span>
               )}
             </TableCell>
             <TableCell>
               {contact.phone ? (
-                <a href={`tel:${contact.phone}`} className="flex items-center gap-1.5 text-text-secondary hover:text-coral transition-colors">
+                <a href={`tel:${contact.phone}`} className="flex items-center gap-1.5 text-slate-500 hover:text-blue-600 transition-colors">
                   <Phone className="h-3.5 w-3.5 shrink-0" />
                   {contact.phone}
                 </a>
               ) : (
-                <span className="text-text-secondary">—</span>
+                <span className="text-slate-500">—</span>
               )}
             </TableCell>
             <TableCell>
               {contact.source ? (
-                <span className="rounded-[6px] bg-warm-muted px-2 py-0.5 text-[11px] font-medium text-text-secondary">
+                <span className="rounded-[6px] bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
                   {contact.source}
                 </span>
               ) : (
-                <span className="text-text-secondary">—</span>
+                <span className="text-slate-500">—</span>
               )}
             </TableCell>
             <TableCell>
@@ -180,18 +183,18 @@ export function ContactsTable({ contacts }: ContactsTableProps) {
                   </Badge>
                 ))}
                 {contact.tags.length > 3 && (
-                  <Badge variant="outline" className="text-[10px] border-border text-text-secondary">
+                  <Badge variant="outline" className="text-[10px] border-border text-slate-500">
                     +{contact.tags.length - 3}
                   </Badge>
                 )}
               </div>
             </TableCell>
             <TableCell>
-              <span className="text-xs text-text-secondary">
+              <span className="text-xs text-slate-500">
                 {formatRelativeDate(contact.lastActivity)}
               </span>
             </TableCell>
-            <TableCell className="text-text-secondary text-xs">
+            <TableCell className="text-slate-500 text-xs">
               {formatDate(contact.dateAdded)}
             </TableCell>
           </TableRow>

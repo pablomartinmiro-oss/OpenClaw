@@ -14,8 +14,8 @@ export function SourceFilter({ sources, selected, onSelect }: SourceFilterProps)
         type="button"
         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
           selected === null
-            ? "bg-coral-light text-coral"
-            : "bg-muted text-text-secondary hover:bg-warm-muted"
+            ? "bg-blue-50 text-coral"
+            : "bg-muted text-slate-500 hover:bg-slate-100"
         }`}
       >
         Todos
@@ -27,8 +27,8 @@ export function SourceFilter({ sources, selected, onSelect }: SourceFilterProps)
           type="button"
           className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
             source === selected
-              ? "bg-coral-light text-coral"
-              : "bg-muted text-text-secondary hover:bg-warm-muted"
+              ? "bg-blue-50 text-coral"
+              : "bg-muted text-slate-500 hover:bg-slate-100"
           }`}
         >
           {source}

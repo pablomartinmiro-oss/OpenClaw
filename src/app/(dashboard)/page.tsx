@@ -124,15 +124,15 @@ export default function DashboardHome() {
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Dashboard</h1>
-          <p className="text-sm text-text-secondary">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+          <p className="text-sm text-slate-500">
             Centro de mando de Skicenter
             {hasGHLData && stats?.lastSync && (
-              <span className="ml-2 text-xs text-sage">· Sincronizado {formatRelativeSync(stats.lastSync)}</span>
+              <span className="ml-2 text-xs text-green-700">· Sincronizado {formatRelativeSync(stats.lastSync)}</span>
             )}
           </p>
         </div>
-        <button onClick={handleRefresh} disabled={statsFetching} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface transition-colors disabled:opacity-50">
+        <button onClick={handleRefresh} disabled={statsFetching} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-surface transition-colors disabled:opacity-50">
           <RefreshCw className={`h-3.5 w-3.5 ${statsFetching ? "animate-spin" : ""}`} />
           Actualizar
         </button>
@@ -143,10 +143,10 @@ export default function DashboardHome() {
       {/* ── Top KPI Row (GHL) ──────────────────────────────────── */}
       {hasGHLData && stats && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/contacts"><StatCard title="Contactos" value={stats.totalContacts.toLocaleString("es-ES")} description="en GoHighLevel" icon={Users} loading={statsLoading} iconColor="text-coral" iconBg="bg-coral-light" trend={{ value: 12, label: "vs semana anterior" }} sparkline={makeSparkline(stats.totalContacts)} /></Link>
-          <Link href="/pipeline"><StatCard title="Oportunidades" value={stats.totalOpportunities.toLocaleString("es-ES")} description={`${stats.pipelineCount} pipelines`} icon={Target} loading={statsLoading} iconColor="text-soft-blue" iconBg="bg-soft-blue-light" trend={{ value: 8, label: "vs semana anterior" }} sparkline={makeSparkline(stats.totalOpportunities)} /></Link>
-          <Link href="/pipeline"><StatCard title="Valor Pipeline" value={formatCurrency(stats.pipelineValue)} description="oportunidades abiertas" icon={BarChart3} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" trend={{ value: 15, label: "vs semana anterior" }} sparkline={makeSparkline(stats.pipelineValue / 100)} /></Link>
-          <Link href="/comms"><StatCard title="Conversaciones" value={stats.activeConversations} description="ultimos 7 dias" icon={MessageCircle} loading={statsLoading} iconColor="text-gold" iconBg="bg-gold-light" trend={{ value: -3, label: "vs semana anterior" }} sparkline={makeSparkline(stats.activeConversations)} /></Link>
+          <Link href="/contacts"><StatCard title="Contactos" value={stats.totalContacts.toLocaleString("es-ES")} description="en GoHighLevel" icon={Users} loading={statsLoading} iconColor="text-blue-600" iconBg="bg-blue-50" trend={{ value: 12, label: "vs semana anterior" }} sparkline={makeSparkline(stats.totalContacts)} /></Link>
+          <Link href="/pipeline"><StatCard title="Oportunidades" value={stats.totalOpportunities.toLocaleString("es-ES")} description={`${stats.pipelineCount} pipelines`} icon={Target} loading={statsLoading} iconColor="text-sky-600" iconBg="bg-sky-50" trend={{ value: 8, label: "vs semana anterior" }} sparkline={makeSparkline(stats.totalOpportunities)} /></Link>
+          <Link href="/pipeline"><StatCard title="Valor Pipeline" value={formatCurrency(stats.pipelineValue)} description="oportunidades abiertas" icon={BarChart3} loading={statsLoading} iconColor="text-green-600" iconBg="bg-green-50" trend={{ value: 15, label: "vs semana anterior" }} sparkline={makeSparkline(stats.pipelineValue / 100)} /></Link>
+          <Link href="/comms"><StatCard title="Conversaciones" value={stats.activeConversations} description="ultimos 7 dias" icon={MessageCircle} loading={statsLoading} iconColor="text-amber-600" iconBg="bg-amber-50" trend={{ value: -3, label: "vs semana anterior" }} sparkline={makeSparkline(stats.activeConversations)} /></Link>
         </div>
       )}
 
@@ -154,12 +154,12 @@ export default function DashboardHome() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {hasGHLData && stats && (
           <>
-            <Link href="/pipeline"><StatCard title="Deals Ganados" value={stats.wonDeals} description="cerrados con exito" icon={Trophy} loading={statsLoading} iconColor="text-sage" iconBg="bg-sage-light" sparkline={makeSparkline(stats.wonDeals)} /></Link>
-            <Link href="/pipeline"><StatCard title="Deals Perdidos" value={stats.lostDeals} description="no convertidos" icon={XCircle} loading={statsLoading} iconColor="text-muted-red" iconBg="bg-red-50" sparkline={makeSparkline(stats.lostDeals)} /></Link>
+            <Link href="/pipeline"><StatCard title="Deals Ganados" value={stats.wonDeals} description="cerrados con exito" icon={Trophy} loading={statsLoading} iconColor="text-green-600" iconBg="bg-green-50" sparkline={makeSparkline(stats.wonDeals)} /></Link>
+            <Link href="/pipeline"><StatCard title="Deals Perdidos" value={stats.lostDeals} description="no convertidos" icon={XCircle} loading={statsLoading} iconColor="text-red-500" iconBg="bg-red-50" sparkline={makeSparkline(stats.lostDeals)} /></Link>
           </>
         )}
-        <Link href="/reservas"><StatCard title="Reservas Hoy" value={resStats?.today.total ?? 0} description={`${resStats?.today.confirmed ?? 0} confirmadas`} icon={CalendarCheck} loading={resStatsLoading} iconColor="text-coral" iconBg="bg-coral-light" sparkline={makeSparkline(resStats?.today.total ?? 0)} /></Link>
-        <Link href="/reservas"><StatCard title="Ingresos Semanales" value={formatCurrency(resStats?.weekly.totalRevenue ?? 0)} description={`${resStats?.weekly.totalReservations ?? 0} reservas`} icon={Euro} loading={resStatsLoading} iconColor="text-sage" iconBg="bg-sage-light" trend={{ value: conversionRate > 0 ? conversionRate : 5, label: "conversion" }} sparkline={makeSparkline(resStats?.weekly.totalRevenue ? resStats.weekly.totalRevenue / 100 : 1)} /></Link>
+        <Link href="/reservas"><StatCard title="Reservas Hoy" value={resStats?.today.total ?? 0} description={`${resStats?.today.confirmed ?? 0} confirmadas`} icon={CalendarCheck} loading={resStatsLoading} iconColor="text-blue-600" iconBg="bg-blue-50" sparkline={makeSparkline(resStats?.today.total ?? 0)} /></Link>
+        <Link href="/reservas"><StatCard title="Ingresos Semanales" value={formatCurrency(resStats?.weekly.totalRevenue ?? 0)} description={`${resStats?.weekly.totalReservations ?? 0} reservas`} icon={Euro} loading={resStatsLoading} iconColor="text-green-600" iconBg="bg-green-50" trend={{ value: conversionRate > 0 ? conversionRate : 5, label: "conversion" }} sparkline={makeSparkline(resStats?.weekly.totalRevenue ? resStats.weekly.totalRevenue / 100 : 1)} /></Link>
       </div>
 
       {/* ── Needs Attention ────────────────────────────────────── */}
@@ -170,12 +170,12 @@ export default function DashboardHome() {
         {pipelineBreakdown.length > 0 && (
           <div className="animate-fade-in card-hover rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-text-primary">Oportunidades por Pipeline</h2>
-              <span className="text-xs text-text-secondary">{stats?.totalOpportunities.toLocaleString("es-ES")} total</span>
+              <h2 className="text-base font-semibold text-slate-900">Oportunidades por Pipeline</h2>
+              <span className="text-xs text-slate-500">{stats?.totalOpportunities.toLocaleString("es-ES")} total</span>
             </div>
             <div className="space-y-3">
               {pipelineBreakdown.map((p, i) => { const pct = (p.count / maxPipelineCount) * 100; const colors = ["bg-coral","bg-sage","bg-gold","bg-soft-blue","bg-muted-red","bg-coral/60","bg-sage/60"]; return (
-                <div key={p.pipelineId}><div className="mb-1 flex items-center justify-between"><span className="text-sm text-text-primary">{p.pipelineName}</span><span className="text-xs font-medium text-text-secondary">{p.count} · {formatCurrency(p.value)}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} /></div></div>
+                <div key={p.pipelineId}><div className="mb-1 flex items-center justify-between"><span className="text-sm text-slate-900">{p.pipelineName}</span><span className="text-xs font-medium text-slate-500">{p.count} · {formatCurrency(p.value)}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} /></div></div>
               ); })}
             </div>
           </div>
@@ -183,12 +183,12 @@ export default function DashboardHome() {
         {leadSources.length > 0 && (
           <div className="animate-fade-in card-hover rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-text-primary">Leads por Origen</h2>
-              <span className="text-xs text-text-secondary">{stats?.totalContacts.toLocaleString("es-ES")} contactos</span>
+              <h2 className="text-base font-semibold text-slate-900">Leads por Origen</h2>
+              <span className="text-xs text-slate-500">{stats?.totalContacts.toLocaleString("es-ES")} contactos</span>
             </div>
             <div className="space-y-3">
               {leadSources.map((s, i) => { const pct = (s.count / maxSourceCount) * 100; const colors = ["bg-sage","bg-coral","bg-gold","bg-soft-blue","bg-muted-red"]; return (
-                <div key={s.source}><div className="mb-1 flex items-center justify-between"><span className="text-sm text-text-primary">{s.source}</span><span className="text-xs font-medium text-text-secondary">{s.count.toLocaleString("es-ES")}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} /></div></div>
+                <div key={s.source}><div className="mb-1 flex items-center justify-between"><span className="text-sm text-slate-900">{s.source}</span><span className="text-xs font-medium text-slate-500">{s.count.toLocaleString("es-ES")}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${colors[i % colors.length]} transition-all`} style={{ width: `${Math.max(pct, 4)}%` }} /></div></div>
               ); })}
             </div>
           </div>
@@ -199,35 +199,35 @@ export default function DashboardHome() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="animate-fade-in card-hover rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Reservas</h2>
-            <span className="text-xs text-text-secondary">{resStats?.weekly.totalReservations ?? 0} total</span>
+            <h2 className="text-base font-semibold text-slate-900">Reservas</h2>
+            <span className="text-xs text-slate-500">{resStats?.weekly.totalReservations ?? 0} total</span>
           </div>
           <div className="mb-3 flex flex-wrap gap-1.5">
             {PRESETS.map(({ label, getValue }) => (
-              <button key={label} onClick={() => { setDateRange(getValue()); setActivePreset(label); }} className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${activePreset === label ? "bg-coral text-white" : "bg-warm-muted text-text-secondary hover:bg-coral/10 hover:text-coral"}`}>{label}</button>
+              <button key={label} onClick={() => { setDateRange(getValue()); setActivePreset(label); }} className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${activePreset === label ? "bg-coral text-white" : "bg-slate-100 text-slate-500 hover:bg-blue-600/10 hover:text-blue-600"}`}>{label}</button>
             ))}
             <div className="flex items-center gap-1 ml-auto">
-              <input type="date" value={dateRange.from} onChange={(e) => { setDateRange((r) => ({ ...r, from: e.target.value })); setActivePreset(""); }} className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-coral focus:outline-none" />
-              <span className="text-[11px] text-text-secondary">&ndash;</span>
-              <input type="date" value={dateRange.to} min={dateRange.from} onChange={(e) => { setDateRange((r) => ({ ...r, to: e.target.value })); setActivePreset(""); }} className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-coral focus:outline-none" />
+              <input type="date" value={dateRange.from} onChange={(e) => { setDateRange((r) => ({ ...r, from: e.target.value })); setActivePreset(""); }} className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-blue-500 focus:outline-none" />
+              <span className="text-[11px] text-slate-500">&ndash;</span>
+              <input type="date" value={dateRange.to} min={dateRange.from} onChange={(e) => { setDateRange((r) => ({ ...r, to: e.target.value })); setActivePreset(""); }} className="rounded-lg border border-border px-2 py-1 text-[11px] focus:border-blue-500 focus:outline-none" />
             </div>
           </div>
           <div className="flex h-40 items-end gap-1 overflow-x-auto">
             {dailyVolume.map((d, i) => (
               <div key={i} className="flex min-w-[24px] flex-1 flex-col items-center gap-1">
-                <span className="text-[10px] font-medium text-text-primary">{d.count > 0 ? d.count : ""}</span>
+                <span className="text-[10px] font-medium text-slate-900">{d.count > 0 ? d.count : ""}</span>
                 <div className="w-full rounded-t-lg bg-gradient-to-t from-coral to-coral/40 transition-all" style={{ height: `${d.count > 0 ? Math.max((d.count / maxDayCount) * 100, 4) : 0}%` }} />
-                <span className="text-[10px] text-text-secondary">{d.day}</span>
+                <span className="text-[10px] text-slate-500">{d.day}</span>
               </div>
             ))}
-            {dailyVolume.length === 0 && <div className="flex w-full items-center justify-center text-sm text-text-secondary">Sin datos</div>}
+            {dailyVolume.length === 0 && <div className="flex w-full items-center justify-center text-sm text-slate-500">Sin datos</div>}
           </div>
         </div>
 
         <div className="animate-fade-in card-hover rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-shadow">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Embudo de Conversion</h2>
-            <span className="text-xs text-text-secondary">{allQuotes.length} presupuestos</span>
+            <h2 className="text-base font-semibold text-slate-900">Embudo de Conversion</h2>
+            <span className="text-xs text-slate-500">{allQuotes.length} presupuestos</span>
           </div>
           <FunnelChart quotes={allQuotes} totalReservations={resStats?.weekly.totalReservations ?? 0} />
         </div>
@@ -238,14 +238,14 @@ export default function DashboardHome() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {resStats.weekly.topStation && (
             <div className="animate-fade-in flex items-center gap-4 rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-coral-light"><Snowflake className="h-5 w-5 text-coral" /></div>
-              <div><p className="text-xs font-medium text-text-secondary">Estacion Mas Activa</p><p className="text-lg font-bold text-text-primary">{getStationLabel(resStats.weekly.topStation.name)}</p><p className="text-xs text-text-secondary">{resStats.weekly.topStation.count} reservas esta semana</p></div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50"><Snowflake className="h-5 w-5 text-coral" /></div>
+              <div><p className="text-xs font-medium text-slate-500">Estacion Mas Activa</p><p className="text-lg font-bold text-slate-900">{getStationLabel(resStats.weekly.topStation.name)}</p><p className="text-xs text-slate-500">{resStats.weekly.topStation.count} reservas esta semana</p></div>
             </div>
           )}
           {Object.entries(resStats.weekly.bySource).map(([src, revenue]) => (
             <div key={src} className="animate-fade-in flex items-center gap-4 rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${src === "groupon" ? "bg-sage-light" : "bg-gold-light"}`}><Send className={`h-5 w-5 ${src === "groupon" ? "text-sage" : "text-gold"}`} /></div>
-              <div><p className="text-xs font-medium text-text-secondary capitalize">{src === "caja" ? "Venta en caja" : src === "groupon" ? "Groupon" : src}</p><p className="text-lg font-bold text-text-primary">{formatCurrency(revenue)}</p><p className="text-xs text-text-secondary">ingresos esta semana</p></div>
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${src === "groupon" ? "bg-green-50" : "bg-amber-50"}`}><Send className={`h-5 w-5 ${src === "groupon" ? "text-green-700" : "text-amber-700"}`} /></div>
+              <div><p className="text-xs font-medium text-slate-500 capitalize">{src === "caja" ? "Venta en caja" : src === "groupon" ? "Groupon" : src}</p><p className="text-lg font-bold text-slate-900">{formatCurrency(revenue)}</p><p className="text-xs text-slate-500">ingresos esta semana</p></div>
             </div>
           ))}
         </div>

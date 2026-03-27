@@ -32,7 +32,7 @@ export function TeamInviteCard({ onInvite, isPending, inviteUrl }: TeamInviteCar
 
   return (
     <div className="rounded-lg border border-border bg-white p-4">
-      <h3 className="text-sm font-semibold text-text-primary">Invitar miembro</h3>
+      <h3 className="text-sm font-semibold text-slate-900">Invitar miembro</h3>
       <form onSubmit={handleSubmit} className="mt-2 flex gap-2">
         <Input
           type="email"
@@ -48,14 +48,14 @@ export function TeamInviteCard({ onInvite, isPending, inviteUrl }: TeamInviteCar
       </form>
 
       {inviteUrl && (
-        <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-warm-muted p-2">
-          <code className="flex-1 truncate text-xs text-text-secondary">{inviteUrl}</code>
+        <div className="mt-3 flex items-center gap-2 rounded-[10px] bg-slate-100 p-2">
+          <code className="flex-1 truncate text-xs text-slate-500">{inviteUrl}</code>
           <button
             onClick={handleCopy}
             className="shrink-0 rounded p-1 hover:bg-gray-200"
             title="Copiar enlace"
           >
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-text-secondary" />}
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-slate-500" />}
           </button>
         </div>
       )}

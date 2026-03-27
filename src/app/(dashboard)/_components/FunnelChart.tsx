@@ -44,12 +44,12 @@ export function FunnelChart({ quotes, totalReservations }: FunnelChartProps) {
         return (
           <div key={stage.label}>
             {i > 0 && dropRate > 0 && (
-              <div className="mb-1 ml-2 text-[10px] text-text-secondary">
+              <div className="mb-1 ml-2 text-[10px] text-slate-500">
                 &darr; -{dropRate}%
               </div>
             )}
             <div className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-right text-xs font-medium text-text-primary">
+              <span className="w-24 shrink-0 text-right text-xs font-medium text-slate-900">
                 {stage.label}
               </span>
               <div className="flex-1">

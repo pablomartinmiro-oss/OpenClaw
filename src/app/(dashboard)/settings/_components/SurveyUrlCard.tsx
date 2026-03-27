@@ -27,8 +27,8 @@ export function SurveyUrlCard({ slug, loading }: SurveyUrlCardProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-5 animate-pulse space-y-3">
-        <div className="h-4 w-32 rounded bg-warm-muted" />
-        <div className="h-10 rounded-lg bg-warm-muted" />
+        <div className="h-4 w-32 rounded bg-slate-100" />
+        <div className="h-10 rounded-lg bg-slate-100" />
       </div>
     );
   }
@@ -37,36 +37,36 @@ export function SurveyUrlCard({ slug, loading }: SurveyUrlCardProps) {
     <div className="rounded-2xl border border-border bg-surface p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Link2 className="h-4 w-4 text-coral" />
-        <h3 className="font-semibold text-text-primary">Formulario de captación</h3>
+        <h3 className="font-semibold text-slate-900">Formulario de captación</h3>
       </div>
 
-      <p className="text-sm text-text-secondary">
+      <p className="text-sm text-slate-500">
         Comparte este enlace o incrústalo en tu web para que los clientes soliciten presupuesto directamente.
       </p>
 
       <div className="flex items-center gap-2">
-        <div className="flex-1 rounded-[10px] border border-border bg-warm-muted/40 px-3 py-2.5 text-sm text-text-secondary font-mono truncate">
+        <div className="flex-1 rounded-[10px] border border-border bg-slate-100/40 px-3 py-2.5 text-sm text-slate-500 font-mono truncate">
           {surveyUrl}
         </div>
         <button
           onClick={handleCopy}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface hover:bg-warm-muted/60 transition-colors"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface hover:bg-slate-100/60 transition-colors"
           title="Copiar URL"
         >
           {copied ? (
-            <Check className="h-4 w-4 text-sage" />
+            <Check className="h-4 w-4 text-green-700" />
           ) : (
-            <Copy className="h-4 w-4 text-text-secondary" />
+            <Copy className="h-4 w-4 text-slate-500" />
           )}
         </button>
         <a
           href={surveyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface hover:bg-warm-muted/60 transition-colors"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface hover:bg-slate-100/60 transition-colors"
           title="Abrir formulario"
         >
-          <ExternalLink className="h-4 w-4 text-text-secondary" />
+          <ExternalLink className="h-4 w-4 text-slate-500" />
         </a>
       </div>
 

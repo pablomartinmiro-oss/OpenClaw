@@ -52,14 +52,14 @@ export default function PresupuestosPage() {
         )}>
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
-              <h1 className="text-lg font-bold text-text-primary">Presupuestos</h1>
-              <p className="text-xs text-text-secondary mt-0.5">
+              <h1 className="text-lg font-bold text-slate-900">Presupuestos</h1>
+              <p className="text-xs text-slate-500 mt-0.5">
                 {quotes?.length || 0} solicitudes
               </p>
             </div>
             <div className="flex items-center gap-2">
               {currentQuote && (
-                <span className="text-xs text-coral font-medium">
+                <span className="text-xs text-blue-600 font-medium">
                   Selected: {currentQuote.clientName}
                 </span>
               )}
@@ -68,7 +68,7 @@ export default function PresupuestosPage() {
                   setShowNewForm(true); 
                   setSelectedQuote(null); 
                 }}
-                className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-coral-hover transition-colors min-h-[44px]"
+                className="flex items-center gap-1.5 rounded-lg bg-coral px-3 py-2 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors min-h-[44px]"
               >
                 <Plus className="h-4 w-4" /> Nuevo
               </button>
@@ -94,7 +94,7 @@ export default function PresupuestosPage() {
             <div className="flex items-center border-b border-border px-3 py-2 md:hidden">
               <button
                 onClick={() => { setSelectedQuote(null); setShowNewForm(false); }}
-                className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors min-h-[44px]"
+                className="flex items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors min-h-[44px]"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Volver
@@ -111,13 +111,13 @@ export default function PresupuestosPage() {
             <div className="h-full overflow-auto">
               {/* Debug view - simple version */}
               <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-text-primary">{currentQuote.clientName}</h2>
-                <p className="text-text-secondary">{currentQuote.clientEmail}</p>
-                <p className="text-coral font-bold text-lg mt-2">{currentQuote.totalAmount} €</p>
-                <p className="text-sm text-text-secondary mt-1">Status: {currentQuote.status}</p>
-                <p className="text-sm text-text-secondary">Destination: {currentQuote.destination}</p>
-                <p className="text-sm text-text-secondary">Dates: {currentQuote.checkIn} to {currentQuote.checkOut}</p>
-                <p className="text-sm text-text-secondary">Adults: {currentQuote.adults}, Children: {currentQuote.children}</p>
+                <h2 className="text-xl font-bold text-slate-900">{currentQuote.clientName}</h2>
+                <p className="text-slate-500">{currentQuote.clientEmail}</p>
+                <p className="text-blue-600 font-bold text-lg mt-2">{currentQuote.totalAmount} €</p>
+                <p className="text-sm text-slate-500 mt-1">Status: {currentQuote.status}</p>
+                <p className="text-sm text-slate-500">Destination: {currentQuote.destination}</p>
+                <p className="text-sm text-slate-500">Dates: {currentQuote.checkIn} to {currentQuote.checkOut}</p>
+                <p className="text-sm text-slate-500">Adults: {currentQuote.adults}, Children: {currentQuote.children}</p>
               </div>
               <QuoteDetail
                 key={currentQuote.id}
@@ -128,7 +128,7 @@ export default function PresupuestosPage() {
               />
             </div>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center text-text-secondary">
+            <div className="flex h-full flex-col items-center justify-center text-slate-500">
               <FileText className="h-12 w-12 mb-3 opacity-30" />
               <p className="text-sm">Selecciona un presupuesto para ver los detalles</p>
             </div>

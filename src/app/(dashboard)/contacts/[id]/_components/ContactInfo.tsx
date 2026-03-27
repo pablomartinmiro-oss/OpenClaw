@@ -58,7 +58,7 @@ export function ContactInfo({ contact, canEdit, onSave, saving }: ContactInfoPro
           {contact.firstName} {contact.lastName}
         </CardTitle>
         {canEdit && !editing && (
-          <Button variant="ghost" size="sm" onClick={() => setEditing(true)} className="gap-1.5 text-text-secondary">
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)} className="gap-1.5 text-slate-500">
             <Pencil className="h-3.5 w-3.5" /> Editar
           </Button>
         )}
@@ -67,7 +67,7 @@ export function ContactInfo({ contact, canEdit, onSave, saving }: ContactInfoPro
             <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 bg-sage text-white hover:bg-sage/90">
               <Save className="h-3.5 w-3.5" /> Guardar
             </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancel} className="gap-1.5 text-text-secondary">
+            <Button size="sm" variant="ghost" onClick={handleCancel} className="gap-1.5 text-slate-500">
               <X className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -78,45 +78,45 @@ export function ContactInfo({ contact, canEdit, onSave, saving }: ContactInfoPro
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-text-secondary">Nombre</label>
+                <label className="text-xs font-medium text-slate-500">Nombre</label>
                 <input
                   value={fields.firstName}
                   onChange={(e) => setFields((f) => ({ ...f, firstName: e.target.value }))}
-                  className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                  className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-text-secondary">Apellido</label>
+                <label className="text-xs font-medium text-slate-500">Apellido</label>
                 <input
                   value={fields.lastName}
                   onChange={(e) => setFields((f) => ({ ...f, lastName: e.target.value }))}
-                  className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                  className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-text-secondary">Email</label>
+              <label className="text-xs font-medium text-slate-500">Email</label>
               <input
                 type="email"
                 value={fields.email}
                 onChange={(e) => setFields((f) => ({ ...f, email: e.target.value }))}
-                className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-text-secondary">Teléfono</label>
+              <label className="text-xs font-medium text-slate-500">Teléfono</label>
               <input
                 type="tel"
                 value={fields.phone}
                 onChange={(e) => setFields((f) => ({ ...f, phone: e.target.value }))}
-                className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+                className="w-full rounded-lg border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
         ) : (
           <div className="grid gap-3 text-sm">
             {contact.email && (
-              <div className="flex items-center gap-2 text-text-secondary">
+              <div className="flex items-center gap-2 text-slate-500">
                 <Mail className="h-4 w-4" />
                 <a href={`mailto:${contact.email}`} className="hover:underline">
                   {contact.email}
@@ -124,7 +124,7 @@ export function ContactInfo({ contact, canEdit, onSave, saving }: ContactInfoPro
               </div>
             )}
             {contact.phone && (
-              <div className="flex items-center gap-2 text-text-secondary">
+              <div className="flex items-center gap-2 text-slate-500">
                 <Phone className="h-4 w-4" />
                 <a href={`tel:${contact.phone}`} className="hover:underline">
                   {contact.phone}
@@ -132,12 +132,12 @@ export function ContactInfo({ contact, canEdit, onSave, saving }: ContactInfoPro
               </div>
             )}
             {contact.source && (
-              <div className="flex items-center gap-2 text-text-secondary">
+              <div className="flex items-center gap-2 text-slate-500">
                 <Globe className="h-4 w-4" />
                 {contact.source}
               </div>
             )}
-            <div className="flex items-center gap-2 text-text-secondary">
+            <div className="flex items-center gap-2 text-slate-500">
               <Calendar className="h-4 w-4" />
               Añadido {formatDate(contact.dateAdded)}
             </div>

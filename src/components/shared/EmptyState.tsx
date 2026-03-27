@@ -22,13 +22,13 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="animate-fade-in flex min-h-[320px] flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-border bg-white p-10 text-center">
-      <div className="rounded-full bg-coral-light p-5">
+      <div className="rounded-full bg-blue-50 p-5">
         <Icon className="h-10 w-10 text-coral" />
       </div>
       <div className="space-y-1.5">
-        <h3 className="text-xl font-semibold text-text-primary">{title}</h3>
+        <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
         {description && (
-          <p className="mx-auto max-w-sm text-sm leading-relaxed text-text-secondary">
+          <p className="mx-auto max-w-sm text-sm leading-relaxed text-slate-500">
             {description}
           </p>
         )}

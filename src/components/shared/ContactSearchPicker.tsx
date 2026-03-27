@@ -79,20 +79,20 @@ export function ContactSearchPicker({ onSelect, onClear, selectedName }: Contact
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={(e) => handleInput(e.target.value)}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
           placeholder="Buscar contacto en GHL..."
-          className="w-full rounded-lg border border-border bg-white pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+          className="w-full rounded-lg border border-border bg-white pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-text-secondary hover:text-text-primary"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-500 hover:text-slate-900"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -100,11 +100,11 @@ export function ContactSearchPicker({ onSelect, onClear, selectedName }: Contact
       </div>
 
       {selected && (
-        <p className="mt-1 text-xs text-sage font-medium">✓ Contacto GHL vinculado</p>
+        <p className="mt-1 text-xs text-green-700 font-medium">✓ Contacto GHL vinculado</p>
       )}
 
       {loading && (
-        <div className="mt-1 text-xs text-text-secondary px-1">Buscando...</div>
+        <div className="mt-1 text-xs text-slate-500 px-1">Buscando...</div>
       )}
 
       {open && results.length > 0 && (
@@ -114,14 +114,14 @@ export function ContactSearchPicker({ onSelect, onClear, selectedName }: Contact
               <button
                 type="button"
                 onClick={() => handleSelect(c)}
-                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-warm-muted transition-colors"
+                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-slate-100 transition-colors"
               >
-                <User className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary" />
+                <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {c.name || `${c.firstName} ${c.lastName}`.trim() || "Sin nombre"}
                   </p>
-                  <p className="text-xs text-text-secondary truncate">
+                  <p className="text-xs text-slate-500 truncate">
                     {[c.email, c.phone].filter(Boolean).join(" · ")}
                   </p>
                 </div>

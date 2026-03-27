@@ -9,7 +9,7 @@ import { STATIONS } from "../../reservas/_components/constants";
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgClass: string }> = {
   nuevo: { label: "Nuevo", color: "text-gray-600", bgClass: "bg-gray-100" },
   borrador: { label: "Borrador", color: "text-gray-600", bgClass: "bg-gray-100" },
-  en_proceso: { label: "En Proceso", color: "text-gold", bgClass: "bg-gold-light" },
+  en_proceso: { label: "En Proceso", color: "text-amber-700", bgClass: "bg-amber-50" },
   enviado: { label: "Enviado", color: "text-soft-blue", bgClass: "bg-soft-blue-light animate-pulse-soft" },
   pagado: { label: "Pagado", color: "text-white", bgClass: "bg-sage" },
   expirado: { label: "Expirado", color: "text-muted-red", bgClass: "bg-muted-red-light" },
@@ -78,13 +78,13 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
       {/* Search */}
       <div className="border-b border-border p-4 space-y-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder="Buscar por nombre, email o teléfono..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-[10px] border border-border bg-surface pl-10 pr-3 py-2 text-sm placeholder:text-text-secondary focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral"
+            className="w-full rounded-[10px] border border-border bg-surface pl-10 pr-3 py-2 text-sm placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
@@ -101,7 +101,7 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
                   "rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors",
                   isActive
                     ? "bg-coral text-white"
-                    : "bg-warm-muted text-text-secondary hover:bg-warm-muted/80"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-100/80"
                 )}
               >
                 {tab.label}
@@ -115,7 +115,7 @@ export function QuoteList({ quotes, selectedId, onSelect }: QuoteListProps) {
       {/* Quote cards */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-text-secondary">
+          <div className="p-8 text-center text-sm text-slate-500">
             No se encontraron presupuestos
           </div>
         ) : (
@@ -156,28 +156,28 @@ function QuoteCard({
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onSelect()}
       className={cn(
-        "w-full border-b border-warm-border p-4 text-left transition-all hover:bg-warm-muted/50 cursor-pointer",
-        isSelected && "bg-warm-muted border-l-[3px] border-l-coral"
+        "w-full border-b border-warm-border p-4 text-left transition-all hover:bg-slate-100/50 cursor-pointer",
+        isSelected && "bg-slate-100 border-l-[3px] border-l-coral"
       )}
     >
       {/* Row 1: Name + amount */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5 min-w-0">
           <h3 className={cn(
-            "font-semibold text-sm text-text-primary truncate",
+            "font-semibold text-sm text-slate-900 truncate",
             isExpired && "line-through opacity-60"
           )}>
             {quote.clientName}
           </h3>
           {quote.source === "survey" && (
-            <span className="flex items-center gap-0.5 rounded-[6px] bg-coral-light px-1.5 py-0.5 text-[10px] font-medium text-coral shrink-0">
+            <span className="flex items-center gap-0.5 rounded-[6px] bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 shrink-0">
               <FormInput className="h-2.5 w-2.5" /> Desde formulario
             </span>
           )}
         </div>
         {quote.totalAmount > 0 && (
           <span className={cn(
-            "text-sm font-bold text-text-primary whitespace-nowrap",
+            "text-sm font-bold text-slate-900 whitespace-nowrap",
             isExpired && "line-through opacity-60"
           )}>
             {formatEUR(quote.totalAmount)}
@@ -186,7 +186,7 @@ function QuoteCard({
       </div>
 
       {/* Row 2: Destination + dates */}
-      <div className="mt-2 flex flex-wrap gap-3 text-xs text-text-secondary">
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
         <span className="flex items-center gap-1">
           <MapPin className="h-3 w-3" />
           {getStationLabel(quote.destination)}
@@ -204,14 +204,14 @@ function QuoteCard({
             {quote.status === "pagado" && <Check className="h-3 w-3" />}
             {config.label}
           </span>
-          <span className="flex items-center gap-0.5 rounded-[6px] bg-warm-muted px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
+          <span className="flex items-center gap-0.5 rounded-[6px] bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
             <Users className="h-2.5 w-2.5" /> {totalPax} pax
           </span>
           {quote.status === "enviado" && quote.expiresAt && (
             <ExpiryBadge expiresAt={quote.expiresAt} />
           )}
         </div>
-        <span className="text-[10px] text-text-secondary">
+        <span className="text-[10px] text-slate-500">
           {new Date(quote.createdAt).toLocaleDateString("es-ES", {
             day: "numeric",
             month: "short",
@@ -237,13 +237,13 @@ function ExpiryBadge({ expiresAt }: { expiresAt: string }) {
   }
   if (diffDays <= 2) {
     return (
-      <span className="flex items-center gap-0.5 rounded-[6px] bg-gold-light px-1.5 py-0.5 text-[10px] font-medium text-gold">
+      <span className="flex items-center gap-0.5 rounded-[6px] bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
         <Clock className="h-2.5 w-2.5" /> {diffDays}d
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-0.5 text-[10px] text-text-secondary">
+    <span className="flex items-center gap-0.5 text-[10px] text-slate-500">
       <Clock className="h-2.5 w-2.5" /> {diffDays}d
     </span>
   );

@@ -21,10 +21,10 @@ import { toast } from "sonner";
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-coral-light">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
         <Icon className="h-4 w-4 text-coral" />
       </div>
-      <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
+      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
     </div>
   );
 }
@@ -97,8 +97,8 @@ export default function SettingsPage() {
         <SettingsToast />
       </Suspense>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">Ajustes</h1>
-        <p className="text-sm text-text-secondary">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Ajustes</h1>
+        <p className="text-sm text-slate-500">
           Gestiona tu cuenta y equipo
         </p>
       </div>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
         <section>
           <div className="flex items-center justify-between">
             <SectionHeader icon={Users} title="Equipo" />
-            <span className="text-sm text-text-secondary">
+            <span className="text-sm text-slate-500">
               {users.length} miembros
             </span>
           </div>

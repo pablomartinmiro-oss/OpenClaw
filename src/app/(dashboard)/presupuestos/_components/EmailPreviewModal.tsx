@@ -129,7 +129,7 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
             onClick={onClose}
             className="rounded-lg bg-white p-1.5 shadow-sm hover:bg-surface transition-colors"
           >
-            <X className="h-5 w-5 text-text-secondary" />
+            <X className="h-5 w-5 text-slate-500" />
           </button>
         </div>
 
@@ -149,10 +149,10 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
           <div className="px-8 py-6 space-y-6">
             {/* Greeting */}
             <div>
-              <p className="text-base text-text-primary">
+              <p className="text-base text-slate-900">
                 Hola <strong>{quote.clientName.split(" ")[0]}</strong>,
               </p>
-              <p className="text-sm text-text-secondary mt-2">
+              <p className="text-sm text-slate-500 mt-2">
                 Encantados de saludarte. Te enviamos presupuesto para vuestra estancia
                 en <strong>{getStationLabel(quote.destination)}</strong> del{" "}
                 <strong>{formatDate(new Date(quote.checkIn))}</strong> al{" "}
@@ -162,8 +162,8 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
 
             {/* Payment info */}
             <div className="rounded-lg bg-surface p-4">
-              <p className="text-sm font-medium text-text-primary mb-2">Formas de pago:</p>
-              <ul className="text-sm text-text-secondary space-y-1">
+              <p className="text-sm font-medium text-slate-900 mb-2">Formas de pago:</p>
+              <ul className="text-sm text-slate-500 space-y-1">
                 <li>• Transferencia bancaria: ES12 3456 7890 1234 5678 9012</li>
                 <li>• Enlace de pago: se enviará tras la confirmación</li>
               </ul>
@@ -174,27 +174,27 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
 
             {/* Client info */}
             <div className="rounded-lg border border-border p-4">
-              <h3 className="text-sm font-semibold text-text-primary mb-2">Datos del cliente</h3>
+              <h3 className="text-sm font-semibold text-slate-900 mb-2">Datos del cliente</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-text-secondary">Nombre: </span>
-                  <span className="text-text-primary">{quote.clientName}</span>
+                  <span className="text-slate-500">Nombre: </span>
+                  <span className="text-slate-900">{quote.clientName}</span>
                 </div>
                 {quote.clientPhone && (
                   <div>
-                    <span className="text-text-secondary">Teléfono: </span>
-                    <span className="text-text-primary">{quote.clientPhone}</span>
+                    <span className="text-slate-500">Teléfono: </span>
+                    <span className="text-slate-900">{quote.clientPhone}</span>
                   </div>
                 )}
                 {quote.clientEmail && (
                   <div>
-                    <span className="text-text-secondary">Email: </span>
-                    <span className="text-text-primary">{quote.clientEmail}</span>
+                    <span className="text-slate-500">Email: </span>
+                    <span className="text-slate-900">{quote.clientEmail}</span>
                   </div>
                 )}
                 <div>
-                  <span className="text-text-secondary">Personas: </span>
-                  <span className="text-text-primary">
+                  <span className="text-slate-500">Personas: </span>
+                  <span className="text-slate-900">
                     {quote.adults} adultos{quote.children > 0 ? `, ${quote.children} niños` : ""}
                   </span>
                 </div>
@@ -206,26 +206,26 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-border">
-                    <th className="py-2 text-left font-semibold text-text-primary">Descripción</th>
-                    <th className="py-2 text-center font-semibold text-text-primary w-16">Cant.</th>
-                    <th className="py-2 text-center font-semibold text-text-primary w-16">Dto.</th>
-                    <th className="py-2 text-right font-semibold text-text-primary w-24">Precio</th>
+                    <th className="py-2 text-left font-semibold text-slate-900">Descripción</th>
+                    <th className="py-2 text-center font-semibold text-slate-900 w-16">Cant.</th>
+                    <th className="py-2 text-center font-semibold text-slate-900 w-16">Dto.</th>
+                    <th className="py-2 text-right font-semibold text-slate-900 w-24">Precio</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {items.map((item, i) => (
                     <tr key={i}>
                       <td className="py-2.5">
-                        <div className="font-medium text-text-primary">{item.name}</div>
+                        <div className="font-medium text-slate-900">{item.name}</div>
                         {item.description && (
-                          <div className="text-xs text-text-secondary">{item.description}</div>
+                          <div className="text-xs text-slate-500">{item.description}</div>
                         )}
                       </td>
-                      <td className="py-2.5 text-center text-text-secondary">{item.quantity}</td>
-                      <td className="py-2.5 text-center text-text-secondary">
+                      <td className="py-2.5 text-center text-slate-500">{item.quantity}</td>
+                      <td className="py-2.5 text-center text-slate-500">
                         {item.discount > 0 ? `${item.discount}%` : "-"}
                       </td>
-                      <td className="py-2.5 text-right font-medium text-text-primary">
+                      <td className="py-2.5 text-right font-medium text-slate-900">
                         {formatCurrency(item.totalPrice)}
                       </td>
                     </tr>
@@ -234,15 +234,15 @@ export function EmailPreviewModal({ quote, items, isOpen, onClose }: EmailPrevie
               </table>
 
               {/* Total */}
-              <div className="mt-3 flex justify-between items-center border-t-2 border-coral pt-3">
-                <span className="text-base font-bold text-text-primary">TOTAL</span>
+              <div className="mt-3 flex justify-between items-center border-t-2 border-blue-500 pt-3">
+                <span className="text-base font-bold text-slate-900">TOTAL</span>
                 <span className="text-xl font-bold text-coral">{formatCurrency(totalAmount)}</span>
               </div>
             </div>
 
             {/* Terms */}
-            <div className="text-xs text-text-secondary space-y-1 border-t border-border pt-4">
-              <p className="font-semibold text-text-primary">Términos y condiciones:</p>
+            <div className="text-xs text-slate-500 space-y-1 border-t border-border pt-4">
+              <p className="font-semibold text-slate-900">Términos y condiciones:</p>
               <p>
                 El presupuesto incluye IVA. Los precios pueden variar según disponibilidad.
                 La reserva se confirma con el pago del 30% del total. Cancelación gratuita

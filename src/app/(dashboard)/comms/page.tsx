@@ -72,11 +72,11 @@ export default function CommsPage() {
         />
         {/* Pagination */}
         {convoData && convoData.meta && convoData.meta.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border bg-white px-3 py-2 text-xs text-text-secondary">
+          <div className="flex items-center justify-between border-t border-border bg-white px-3 py-2 text-xs text-slate-500">
             <button
               disabled={convoPage <= 1}
               onClick={() => setConvoPage(p => Math.max(1, p - 1))}
-              className="rounded px-2 py-1 hover:bg-warm-muted disabled:opacity-40"
+              className="rounded px-2 py-1 hover:bg-slate-100 disabled:opacity-40"
             >
               ← Anterior
             </button>
@@ -84,7 +84,7 @@ export default function CommsPage() {
             <button
               disabled={convoPage >= convoData.meta.totalPages}
               onClick={() => setConvoPage(p => p + 1)}
-              className="rounded px-2 py-1 hover:bg-warm-muted disabled:opacity-40"
+              className="rounded px-2 py-1 hover:bg-slate-100 disabled:opacity-40"
             >
               Siguiente →
             </button>
@@ -100,11 +100,11 @@ export default function CommsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelectedId(null)}
-                className="flex items-center gap-1 rounded-lg p-1 text-text-secondary hover:text-text-primary hover:bg-warm-muted transition-colors md:hidden min-h-[44px] min-w-[44px] justify-center"
+                className="flex items-center gap-1 rounded-lg p-1 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors md:hidden min-h-[44px] min-w-[44px] justify-center"
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
-              <h2 className="text-sm font-semibold text-text-primary">
+              <h2 className="text-sm font-semibold text-slate-900">
                 {selectedConvo?.contactName ?? "Conversación"}
               </h2>
               {selectedConvo && (

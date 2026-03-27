@@ -52,31 +52,31 @@ function TaskRow({ task, onToggle, isPending }: {
         className="mt-0.5 flex-shrink-0 transition-colors disabled:opacity-50"
       >
         {isCompleted ? (
-          <CheckCircle className="h-5 w-5 text-sage" />
+          <CheckCircle className="h-5 w-5 text-green-700" />
         ) : (
-          <Circle className="h-5 w-5 text-text-secondary hover:text-coral" />
+          <Circle className="h-5 w-5 text-slate-500 hover:text-blue-600" />
         )}
       </button>
       <div className="flex-1 min-w-0">
-        <div className={`text-sm font-medium ${isCompleted ? "line-through text-text-secondary" : "text-text-primary"}`}>
+        <div className={`text-sm font-medium ${isCompleted ? "line-through text-slate-500" : "text-slate-900"}`}>
           {task.title}
         </div>
         {task.description && (
-          <div className="text-xs text-text-secondary mt-0.5 line-clamp-1">{task.description}</div>
+          <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">{task.description}</div>
         )}
         <div className="flex items-center gap-3 mt-1">
-          <span className="flex items-center gap-1 text-xs text-text-secondary">
+          <span className="flex items-center gap-1 text-xs text-slate-500">
             {getTaskIcon(task.type)}
             {task.type.replace(/_/g, " ")}
           </span>
           {task.dueDate && (
-            <span className={`flex items-center gap-1 text-xs ${isOverdue ? "text-muted-red font-medium" : "text-text-secondary"}`}>
+            <span className={`flex items-center gap-1 text-xs ${isOverdue ? "text-muted-red font-medium" : "text-slate-500"}`}>
               <Clock className="h-3 w-3" />
               {formatDueDate(task.dueDate)}
             </span>
           )}
           {task.quoteItem && (
-            <span className="text-xs text-text-secondary">
+            <span className="text-xs text-slate-500">
               {task.quoteItem.name}
             </span>
           )}
@@ -121,10 +121,10 @@ export function TaskList({ quoteId }: Props) {
   return (
     <div className="border-t border-border px-6 py-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-text-primary">
+        <h3 className="text-sm font-semibold text-slate-900">
           Tareas
         </h3>
-        <span className="text-xs text-text-secondary">
+        <span className="text-xs text-slate-500">
           {completed.length}/{tasks.length} completadas
         </span>
       </div>

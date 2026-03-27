@@ -26,9 +26,9 @@ function getDaysInStage(createdAt: string): number {
 }
 
 function getBorderColor(days: number): string {
-  if (days <= 3) return "border-l-sage";
-  if (days <= 7) return "border-l-gold";
-  return "border-l-muted-red";
+  if (days <= 3) return "border-l-green-500";
+  if (days <= 7) return "border-l-amber-400";
+  return "border-l-red-400";
 }
 
 export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardProps) {
@@ -57,21 +57,21 @@ export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardPr
         "border-l-[3px]",
         borderColor,
         isDragging && "opacity-40",
-        isDragOverlay && "shadow-lg ring-1 ring-coral/20 rotate-2"
+        isDragOverlay && "shadow-lg ring-1 ring-blue-500/20 rotate-2"
       )}
     >
       {/* Contact name */}
-      <p className="mb-1.5 text-sm font-medium leading-tight text-text-primary">
+      <p className="mb-1.5 text-sm font-medium leading-tight text-slate-900">
         {opportunity.contactName || opportunity.name}
       </p>
 
       {/* Deal value (bold) */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-text-primary">
+        <span className="text-sm font-bold text-slate-900">
           {formatCurrency(opportunity.monetaryValue)}
         </span>
         {opportunity.assignedTo && (
-          <div className="flex items-center gap-1 text-[10px] text-text-secondary">
+          <div className="flex items-center gap-1 text-[10px] text-slate-500">
             <User className="h-3 w-3" />
             Asignado
           </div>
@@ -80,13 +80,13 @@ export function KanbanCard({ opportunity, isDragOverlay, onClick }: KanbanCardPr
 
       {/* Days in stage + status */}
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-[10px] text-text-secondary capitalize">{opportunity.status}</p>
+        <p className="text-[10px] text-slate-500 capitalize">{opportunity.status}</p>
         <span className={cn(
           "flex items-center gap-0.5 rounded-[6px] px-1.5 py-0.5 text-[10px] font-medium",
           daysInStage <= 3
-            ? "bg-sage-light text-sage"
+            ? "bg-green-50 text-green-700"
             : daysInStage <= 7
-            ? "bg-gold-light text-gold"
+            ? "bg-amber-50 text-amber-700"
             : "bg-muted-red-light text-muted-red"
         )}>
           <Clock className="h-2.5 w-2.5" />

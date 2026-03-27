@@ -109,8 +109,8 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Catálogo de Productos</h1>
-          <p className="text-sm text-text-secondary mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Catálogo de Productos</h1>
+          <p className="text-sm text-slate-500 mt-1">
             {products.length} productos en el catálogo
           </p>
         </div>
@@ -120,7 +120,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
               onClick={() => setSeason("media")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors",
-                season === "media" ? "bg-sage text-white" : "bg-white text-text-secondary hover:bg-surface"
+                season === "media" ? "bg-sage text-white" : "bg-white text-slate-500 hover:bg-surface"
               )}
             >
               <Sun className="h-3.5 w-3.5" />
@@ -130,7 +130,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
               onClick={() => setSeason("alta")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors",
-                season === "alta" ? "bg-coral text-white" : "bg-white text-text-secondary hover:bg-surface"
+                season === "alta" ? "bg-coral text-white" : "bg-white text-slate-500 hover:bg-surface"
               )}
             >
               <Snowflake className="h-3.5 w-3.5" />
@@ -139,7 +139,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
           </div>
           <button
             onClick={onAdd}
-            className="flex items-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
+            className="flex items-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors"
           >
             <Plus className="h-4 w-4" />
             Añadir Producto
@@ -150,13 +150,13 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
       {/* Search + Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder="Buscar producto..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-lg border border-border bg-white pl-10 pr-3 py-1.5 text-sm placeholder:text-text-secondary focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral w-48"
+            className="rounded-lg border border-border bg-white pl-10 pr-3 py-1.5 text-sm placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -164,7 +164,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
             onClick={() => setFilterCategory("")}
             className={cn(
               "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              !filterCategory ? "bg-coral text-white" : "bg-white text-text-secondary border border-border hover:bg-surface"
+              !filterCategory ? "bg-coral text-white" : "bg-white text-slate-500 border border-border hover:bg-surface"
             )}
           >
             Todos
@@ -175,7 +175,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
               onClick={() => setFilterCategory(cat)}
               className={cn(
                 "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                filterCategory === cat ? "bg-coral text-white" : "bg-white text-text-secondary border border-border hover:bg-surface"
+                filterCategory === cat ? "bg-coral text-white" : "bg-white text-slate-500 border border-border hover:bg-surface"
               )}
             >
               {CATEGORY_LABELS[cat]}
@@ -186,7 +186,7 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
         <select
           value={filterStation}
           onChange={(e) => setFilterStation(e.target.value)}
-          className="rounded-lg border border-border px-3 py-1.5 text-sm focus:border-coral focus:outline-none"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
         >
           <option value="">Todas las estaciones</option>
           {Object.entries(STATION_LABELS).filter(([k]) => k !== "all").map(([key, label]) => (
@@ -198,14 +198,14 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
       {/* Tables by category */}
       {Object.keys(grouped).length === 0 && (
         <div className="rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-12 text-center">
-          <p className="text-sm text-text-secondary">No se encontraron productos</p>
-          <p className="text-xs text-text-secondary mt-1">Prueba a cambiar los filtros o añade un nuevo producto</p>
+          <p className="text-sm text-slate-500">No se encontraron productos</p>
+          <p className="text-xs text-slate-500 mt-1">Prueba a cambiar los filtros o añade un nuevo producto</p>
         </div>
       )}
       {Object.entries(grouped).map(([category, categoryProducts]) => (
         <div key={category} className="rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="border-b border-border px-6 py-4">
-            <h2 className="text-lg font-semibold text-text-primary">
+            <h2 className="text-lg font-semibold text-slate-900">
               {CATEGORY_LABELS[category] || category}
             </h2>
           </div>
@@ -214,13 +214,13 @@ export function ProductTable({ products, onEdit, onDelete, onAdd }: ProductTable
               <thead>
                 <tr className="border-b border-border bg-surface/50">
                   <th className="pl-6 py-3 w-8"></th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Producto</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Estación</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Producto</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Estación</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Precio ({season === "alta" ? "Alta" : "Media"})
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-text-secondary uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Acciones</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -261,13 +261,13 @@ function ProductRow({ product, season, isExpanded, hasMatrix, onToggle, onEdit, 
       <tr className="hover:bg-surface/30 transition-colors">
         <td className="pl-6 py-4">
           {hasMatrix && (
-            <button onClick={onToggle} className="rounded p-0.5 text-text-secondary hover:text-text-primary transition-colors">
+            <button onClick={onToggle} className="rounded p-0.5 text-slate-500 hover:text-slate-900 transition-colors">
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
           )}
         </td>
         <td className="px-6 py-4">
-          <div className="font-medium text-sm text-text-primary">{product.name}</div>
+          <div className="font-medium text-sm text-slate-900">{product.name}</div>
           <div className="flex gap-1.5 mt-1">
             {product.personType && (
               <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
@@ -284,27 +284,27 @@ function ProductRow({ product, season, isExpanded, hasMatrix, onToggle, onEdit, 
             )}
           </div>
         </td>
-        <td className="px-6 py-4 text-sm text-text-secondary">
+        <td className="px-6 py-4 text-sm text-slate-500">
           {STATION_LABELS[product.station] || product.station}
         </td>
         <td className="px-6 py-4 text-right">
-          <span className="font-semibold text-sm text-text-primary">{getPriceDisplay(product, season)}</span>
-          <span className="text-xs text-text-secondary ml-1">{PRICE_TYPE_LABELS[product.priceType] || product.priceType}</span>
+          <span className="font-semibold text-sm text-slate-900">{getPriceDisplay(product, season)}</span>
+          <span className="text-xs text-slate-500 ml-1">{PRICE_TYPE_LABELS[product.priceType] || product.priceType}</span>
         </td>
         <td className="px-6 py-4 text-center">
           <span className={cn(
             "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-            product.isActive ? "bg-sage-light text-sage" : "bg-muted-red-light text-muted-red"
+            product.isActive ? "bg-green-50 text-green-700" : "bg-muted-red-light text-muted-red"
           )}>
             {product.isActive ? "Activo" : "Inactivo"}
           </span>
         </td>
         <td className="px-6 py-4 text-right">
           <div className="flex items-center justify-end gap-2">
-            <button onClick={onEdit} className="rounded-lg p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral transition-colors" title="Editar">
+            <button onClick={onEdit} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors" title="Editar">
               <Pencil className="h-4 w-4" />
             </button>
-            <button onClick={onDelete} className="rounded-lg p-1.5 text-text-secondary hover:bg-red-50 hover:text-danger transition-colors" title="Eliminar">
+            <button onClick={onDelete} className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-danger transition-colors" title="Eliminar">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>

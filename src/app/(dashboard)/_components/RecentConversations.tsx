@@ -19,9 +19,9 @@ function timeAgo(dateStr: string): string {
 }
 
 const AVATAR_COLORS = [
-  "bg-coral-light text-coral",
-  "bg-sage-light text-sage",
-  "bg-gold-light text-gold",
+  "bg-blue-50 text-coral",
+  "bg-green-50 text-green-700",
+  "bg-amber-50 text-amber-700",
   "bg-soft-blue-light text-soft-blue",
   "bg-muted-red-light text-muted-red",
 ];
@@ -56,16 +56,16 @@ export function RecentConversations({
   }
 
   if (conversations.length === 0) {
-    return <p className="py-6 text-center text-sm text-text-secondary">No recent activity</p>;
+    return <p className="py-6 text-center text-sm text-slate-500">No recent activity</p>;
   }
 
   return (
     <table className="w-full">
       <thead>
         <tr className="border-b border-border text-left">
-          <th className="pb-2 text-xs font-medium text-text-secondary">Contact</th>
-          <th className="pb-2 text-xs font-medium text-text-secondary">Last Message</th>
-          <th className="pb-2 text-right text-xs font-medium text-text-secondary">Time</th>
+          <th className="pb-2 text-xs font-medium text-slate-500">Contact</th>
+          <th className="pb-2 text-xs font-medium text-slate-500">Last Message</th>
+          <th className="pb-2 text-right text-xs font-medium text-slate-500">Time</th>
         </tr>
       </thead>
       <tbody>
@@ -76,14 +76,14 @@ export function RecentConversations({
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${AVATAR_COLORS[i % AVATAR_COLORS.length]}`}>
                   {getInitials(convo.contactName)}
                 </div>
-                <span className="text-sm font-medium text-text-primary">{convo.contactName}</span>
+                <span className="text-sm font-medium text-slate-900">{convo.contactName}</span>
               </Link>
             </td>
             <td className="max-w-[200px] py-3">
-              <p className="truncate text-sm text-text-secondary">{convo.lastMessageBody}</p>
+              <p className="truncate text-sm text-slate-500">{convo.lastMessageBody}</p>
             </td>
             <td className="py-3 text-right">
-              <span className="text-xs text-text-secondary">{timeAgo(convo.lastMessageDate)}</span>
+              <span className="text-xs text-slate-500">{timeAgo(convo.lastMessageDate)}</span>
             </td>
           </tr>
         ))}

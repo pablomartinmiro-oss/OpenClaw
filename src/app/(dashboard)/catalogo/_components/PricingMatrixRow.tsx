@@ -24,9 +24,9 @@ function DayMatrix({ matrix }: { matrix: DayPricingMatrix }) {
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border">
-            <th className="px-2 py-1.5 text-left text-text-secondary font-medium w-20">Temporada</th>
+            <th className="px-2 py-1.5 text-left text-slate-500 font-medium w-20">Temporada</th>
             {days.map((d) => (
-              <th key={d} className="px-2 py-1.5 text-right text-text-secondary font-medium">
+              <th key={d} className="px-2 py-1.5 text-right text-slate-500 font-medium">
                 {d} {d === 1 ? "día" : "días"}
               </th>
             ))}
@@ -35,24 +35,24 @@ function DayMatrix({ matrix }: { matrix: DayPricingMatrix }) {
         <tbody>
           <tr className="border-b border-border/50">
             <td className="px-2 py-1.5">
-              <span className="inline-flex items-center gap-1 text-sage font-medium">
+              <span className="inline-flex items-center gap-1 text-green-700 font-medium">
                 <Sun className="h-3 w-3" /> Media
               </span>
             </td>
             {days.map((d) => (
-              <td key={d} className="px-2 py-1.5 text-right text-text-primary font-medium">
+              <td key={d} className="px-2 py-1.5 text-right text-slate-900 font-medium">
                 {matrix.media?.[String(d)] !== undefined ? EUR.format(matrix.media[String(d)]) : "—"}
               </td>
             ))}
           </tr>
           <tr>
             <td className="px-2 py-1.5">
-              <span className="inline-flex items-center gap-1 text-coral font-medium">
+              <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
                 <Snowflake className="h-3 w-3" /> Alta
               </span>
             </td>
             {days.map((d) => (
-              <td key={d} className="px-2 py-1.5 text-right text-text-primary font-medium">
+              <td key={d} className="px-2 py-1.5 text-right text-slate-900 font-medium">
                 {matrix.alta?.[String(d)] !== undefined ? EUR.format(matrix.alta[String(d)]) : "—"}
               </td>
             ))}
@@ -89,11 +89,11 @@ function LessonMatrix({ matrix }: { matrix: PrivateLessonMatrix }) {
           <div key={season}>
             <div className="flex items-center gap-1 mb-1">
               {season === "alta" ? (
-                <span className="inline-flex items-center gap-1 text-xs text-coral font-medium">
+                <span className="inline-flex items-center gap-1 text-xs text-blue-600 font-medium">
                   <Snowflake className="h-3 w-3" /> Alta
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs text-sage font-medium">
+                <span className="inline-flex items-center gap-1 text-xs text-green-700 font-medium">
                   <Sun className="h-3 w-3" /> Media
                 </span>
               )}
@@ -101,9 +101,9 @@ function LessonMatrix({ matrix }: { matrix: PrivateLessonMatrix }) {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="px-2 py-1 text-left text-text-secondary font-medium w-16"></th>
+                  <th className="px-2 py-1 text-left text-slate-500 font-medium w-16"></th>
                   {people.map((p) => (
-                    <th key={p} className="px-2 py-1 text-right text-text-secondary font-medium">
+                    <th key={p} className="px-2 py-1 text-right text-slate-500 font-medium">
                       {p.replace("p", " pers.")}
                     </th>
                   ))}
@@ -112,9 +112,9 @@ function LessonMatrix({ matrix }: { matrix: PrivateLessonMatrix }) {
               <tbody>
                 {hours.map((h) => (
                   <tr key={h} className="border-b border-border/50">
-                    <td className="px-2 py-1 text-text-secondary font-medium">{h.replace("h", " hora")}</td>
+                    <td className="px-2 py-1 text-slate-500 font-medium">{h.replace("h", " hora")}</td>
                     {people.map((p) => (
-                      <td key={p} className="px-2 py-1 text-right text-text-primary font-medium">
+                      <td key={p} className="px-2 py-1 text-right text-slate-900 font-medium">
                         {s[h]?.[p] !== undefined ? EUR.format(s[h][p]) : "—"}
                       </td>
                     ))}
@@ -133,11 +133,11 @@ function LessonMatrix({ matrix }: { matrix: PrivateLessonMatrix }) {
 function BundleInfo({ matrix }: { matrix: unknown }) {
   const m = matrix as Record<string, unknown>;
   const components = (m.components as string[]) || [];
-  if (components.length === 0) return <span className="text-xs text-text-secondary">Sin componentes</span>;
+  if (components.length === 0) return <span className="text-xs text-slate-500">Sin componentes</span>;
   return (
     <div className="flex flex-wrap gap-1.5">
       {components.map((c) => (
-        <span key={c} className="rounded-full bg-surface px-2.5 py-0.5 text-[10px] font-medium text-text-secondary">
+        <span key={c} className="rounded-full bg-surface px-2.5 py-0.5 text-[10px] font-medium text-slate-500">
           {c}
         </span>
       ))}
@@ -165,7 +165,7 @@ function isBundleMatrix(matrix: unknown): boolean {
 export function PricingMatrixRow({ product }: PricingMatrixRowProps) {
   if (!product.pricingMatrix) {
     return (
-      <span className="text-xs text-text-secondary">
+      <span className="text-xs text-slate-500">
         Precio fijo: {EUR.format(product.price)}
       </span>
     );

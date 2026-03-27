@@ -11,10 +11,10 @@ interface OpportunityModalProps {
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  open: { label: "Abierta", color: "bg-sage-light text-sage" },
-  won: { label: "Ganada", color: "bg-coral-light text-coral" },
+  open: { label: "Abierta", color: "bg-green-50 text-green-700" },
+  won: { label: "Ganada", color: "bg-blue-50 text-coral" },
   lost: { label: "Perdida", color: "bg-muted-red-light text-muted-red" },
-  abandoned: { label: "Abandonada", color: "bg-muted text-text-secondary" },
+  abandoned: { label: "Abandonada", color: "bg-muted text-slate-500" },
 };
 
 function formatCurrency(value: number): string {
@@ -47,7 +47,7 @@ export function OpportunityModal({ opportunity, stageName, onClose }: Opportunit
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-lg font-semibold text-text-primary">{opportunity.name}</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{opportunity.name}</h2>
           <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
             <X className="h-4 w-4" />
           </Button>
@@ -59,7 +59,7 @@ export function OpportunityModal({ opportunity, stageName, onClose }: Opportunit
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-coral" />
-              <span className="text-2xl font-bold text-text-primary">
+              <span className="text-2xl font-bold text-slate-900">
                 {formatCurrency(opportunity.monetaryValue)}
               </span>
             </div>
@@ -94,11 +94,11 @@ export function OpportunityModal({ opportunity, stageName, onClose }: Opportunit
 function InfoRow({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="flex items-center gap-2 text-text-secondary">
+      <span className="flex items-center gap-2 text-slate-500">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </span>
-      <span className="font-medium text-text-primary">{value}</span>
+      <span className="font-medium text-slate-900">{value}</span>
     </div>
   );
 }

@@ -79,8 +79,8 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
-        <h2 className="text-lg font-bold text-text-primary">Nuevo Presupuesto</h2>
-        <button onClick={onClose} className="rounded-lg p-1.5 text-text-secondary hover:bg-warm-muted">
+        <h2 className="text-lg font-bold text-slate-900">Nuevo Presupuesto</h2>
+        <button onClick={onClose} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -88,7 +88,7 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
       <form onSubmit={handleSubmit} className="flex-1 space-y-5 p-6">
         {/* Client info */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Datos del cliente</legend>
+          <legend className="text-sm font-semibold text-slate-900">Datos del cliente</legend>
 
           {/* GHL contact search */}
           <ContactSearchPicker
@@ -103,7 +103,7 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
             placeholder="Nombre completo *"
             value={form.clientName}
             onChange={(e) => set("clientName", e.target.value)}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="grid grid-cols-2 gap-3">
             <input
@@ -111,14 +111,14 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
               placeholder="Email"
               value={form.clientEmail}
               onChange={(e) => set("clientEmail", e.target.value)}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
               type="tel"
               placeholder="Teléfono"
               value={form.clientPhone}
               onChange={(e) => set("clientPhone", e.target.value)}
-              className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+              className="rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <textarea
@@ -126,59 +126,59 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
             value={form.clientNotes}
             onChange={(e) => set("clientNotes", e.target.value)}
             rows={2}
-            className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+            className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </fieldset>
 
         {/* Trip details */}
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-text-primary">Datos del viaje</legend>
+          <legend className="text-sm font-semibold text-slate-900">Datos del viaje</legend>
           <select
             value={form.destination}
             onChange={(e) => set("destination", e.target.value)}
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Check-in *</label>
+              <label className="mb-1 block text-xs text-slate-500">Check-in *</label>
               <input
                 type="date"
                 value={form.checkIn}
                 onChange={(e) => set("checkIn", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Check-out *</label>
+              <label className="mb-1 block text-xs text-slate-500">Check-out *</label>
               <input
                 type="date"
                 value={form.checkOut}
                 onChange={(e) => set("checkOut", e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Adultos</label>
+              <label className="mb-1 block text-xs text-slate-500">Adultos</label>
               <input
                 type="number"
                 min={1}
                 value={form.adults}
                 onChange={(e) => set("adults", Number(e.target.value))}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Niños</label>
+              <label className="mb-1 block text-xs text-slate-500">Niños</label>
               <input
                 type="number"
                 min={0}
                 value={form.children}
                 onChange={(e) => set("children", Number(e.target.value))}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral"
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
 
         {/* Services */}
         <fieldset className="space-y-2">
-          <legend className="text-sm font-semibold text-text-primary">Servicios solicitados</legend>
+          <legend className="text-sm font-semibold text-slate-900">Servicios solicitados</legend>
           <div className="grid grid-cols-2 gap-2">
             {[
               { key: "wantsForfait", label: "Forfait" },
@@ -196,7 +196,7 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
             ].map(({ key, label }) => (
               <label
                 key={key}
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm cursor-pointer hover:bg-warm-muted"
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm cursor-pointer hover:bg-slate-100"
               >
                 <input
                   type="checkbox"
@@ -213,7 +213,7 @@ export function QuoteForm({ onClose, onCreated }: QuoteFormProps) {
         <button
           type="submit"
           disabled={createQuote.isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors disabled:opacity-50"
         >
           <Send className="h-4 w-4" /> Crear Presupuesto
         </button>

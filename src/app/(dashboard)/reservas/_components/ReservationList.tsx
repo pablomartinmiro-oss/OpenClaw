@@ -159,13 +159,13 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
       {/* Search */}
       <div className="border-b border-border p-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar reservas..."
-            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-coral"
+            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -180,7 +180,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
               "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
               dateFilter === f.value
                 ? "bg-coral text-white"
-                : "bg-warm-muted text-text-secondary hover:bg-warm-border"
+                : "bg-slate-100 text-slate-500 hover:bg-warm-border"
             )}
           >
             {f.label}
@@ -192,7 +192,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
             "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
             dateFilter === "custom"
               ? "bg-coral text-white"
-              : "bg-warm-muted text-text-secondary hover:bg-warm-border"
+              : "bg-slate-100 text-slate-500 hover:bg-warm-border"
           )}
         >
           Rango
@@ -204,12 +204,12 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
         <div className="flex gap-2 border-b border-border px-3 py-2">
           <input
             type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)}
-            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-coral"
+            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <span className="self-center text-xs text-text-secondary">—</span>
+          <span className="self-center text-xs text-slate-500">—</span>
           <input
             type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)}
-            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-coral"
+            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
       )}
@@ -224,7 +224,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
               "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
               statusFilter === f.value
                 ? "bg-coral text-white"
-                : "bg-warm-muted text-text-secondary hover:bg-warm-border"
+                : "bg-slate-100 text-slate-500 hover:bg-warm-border"
             )}
           >
             {f.label}
@@ -233,7 +233,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
         <select
           value={stationFilter}
           onChange={(e) => setStationFilter(e.target.value)}
-          className="ml-auto rounded-lg border border-border bg-white px-2 py-1 text-xs text-text-secondary"
+          className="ml-auto rounded-lg border border-border bg-white px-2 py-1 text-xs text-slate-500"
         >
           <option value="todas">Todas estaciones</option>
           {STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -243,7 +243,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="flex h-32 items-center justify-center text-sm text-text-secondary">
+          <div className="flex h-32 items-center justify-center text-sm text-slate-500">
             {emptyLabel ?? "No se encontraron reservas"}
           </div>
         ) : (
@@ -259,19 +259,19 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
                   className={cn(
                     "w-full rounded-lg border p-3 text-left transition-colors",
                     selectedId === r.id
-                      ? "border-coral bg-coral-light"
-                      : "border-transparent bg-white hover:bg-warm-muted/50"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-transparent bg-white hover:bg-slate-100/50"
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         {sourceCfg && <span className="text-sm">{sourceCfg.icon}</span>}
-                        <span className="truncate text-sm font-medium text-text-primary">
+                        <span className="truncate text-sm font-medium text-slate-900">
                           {r.clientName}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
+                      <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                         <span>{formatDate(r.activityDate)}</span>
                         <span>·</span>
                         <span>{getStationLabel(r.station)}</span>
@@ -281,7 +281,7 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
                       <Badge className={cn("text-[10px]", statusCfg.color)}>
                         {statusCfg.label}
                       </Badge>
-                      <span className="text-xs font-medium text-text-primary">
+                      <span className="text-xs font-medium text-slate-900">
                         {formatEUR(r.totalPrice)}
                       </span>
                     </div>
@@ -300,10 +300,10 @@ export function ReservationList({ reservations, loading, selectedId, onSelect, e
 
       {/* Count + Export */}
       <div className="flex items-center justify-between border-t border-border px-3 py-2">
-        <span className="text-xs text-text-secondary">
+        <span className="text-xs text-slate-500">
           {filtered.length} de {reservations?.length ?? 0} reservas
         </span>
-        <button onClick={handleExportCsv} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-text-secondary hover:text-coral hover:bg-warm-muted transition-colors">
+        <button onClick={handleExportCsv} className="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition-colors">
           <Download className="h-3 w-3" /> CSV
         </button>
       </div>

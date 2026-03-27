@@ -78,7 +78,7 @@ export function TeamTable({
               <TableCell className="font-medium">
                 {user.name ?? "—"}
               </TableCell>
-              <TableCell className="text-text-secondary">
+              <TableCell className="text-slate-500">
                 {user.email}
               </TableCell>
               <TableCell>
@@ -103,7 +103,7 @@ export function TeamTable({
                   {user.isActive ? "Activo" : "Inactivo"}
                 </Badge>
               </TableCell>
-              <TableCell className="text-text-secondary">
+              <TableCell className="text-slate-500">
                 {formatDate(user.lastLoginAt)}
               </TableCell>
               {canManage && (

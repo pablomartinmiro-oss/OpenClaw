@@ -45,28 +45,28 @@ export function GHLEmptyState({ message, action, children }: GHLEmptyStateProps)
   // Not connected — show empty state
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-[16px] border border-dashed border-warm-border bg-white p-12 text-center">
-      <div className="rounded-full bg-warm-muted p-5">
-        <Unplug className="h-10 w-10 text-text-secondary" />
+      <div className="rounded-full bg-slate-100 p-5">
+        <Unplug className="h-10 w-10 text-slate-500" />
       </div>
       <div>
-        <h3 className="text-lg font-semibold text-text-primary">
+        <h3 className="text-lg font-semibold text-slate-900">
           {message}
         </h3>
-        <p className="mt-2 max-w-md text-sm text-text-secondary">
+        <p className="mt-2 max-w-md text-sm text-slate-500">
           Conecta tu cuenta de GoHighLevel para sincronizar tus datos automáticamente.
         </p>
       </div>
       <div className="flex gap-3">
         <Link
           href="/api/crm/oauth/authorize"
-          className="rounded-[10px] bg-coral px-6 py-2.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
+          className="rounded-[10px] bg-coral px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-600-hover transition-colors"
         >
           Conectar GoHighLevel
         </Link>
         {action && (
           <Link
             href={action.href}
-            className="rounded-[10px] border border-warm-border px-6 py-2.5 text-sm font-medium text-text-primary hover:bg-warm-muted transition-colors"
+            className="rounded-[10px] border border-warm-border px-6 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-100 transition-colors"
           >
             {action.label}
           </Link>

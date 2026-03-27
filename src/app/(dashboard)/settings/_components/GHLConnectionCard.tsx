@@ -45,23 +45,23 @@ export function GHLConnectionCard({
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-text-primary">Conexión GHL</h3>
+        <h3 className="text-base font-semibold text-slate-900">Conexión GHL</h3>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
           isConnected ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
         }`}>
           {isConnected ? "Conectado" : "No conectado"}
         </span>
       </div>
-      <p className="mb-4 text-sm text-text-secondary">Gestiona tu integración con GoHighLevel</p>
+      <p className="mb-4 text-sm text-slate-500">Gestiona tu integración con GoHighLevel</p>
       {isConnected ? (
         <div className="space-y-4">
           <div className="grid gap-3 text-sm">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-success" />
-              <span className="text-text-primary">Location ID: {ghlLocationId}</span>
+              <span className="text-slate-900">Location ID: {ghlLocationId}</span>
             </div>
             {ghlConnectedAt && (
-              <div className="text-text-secondary">
+              <div className="text-slate-500">
                 Conectado el {formatDate(ghlConnectedAt)}
               </div>
             )}
@@ -72,7 +72,7 @@ export function GHLConnectionCard({
                 ) : (
                   <CheckCircle className="h-4 w-4 text-success" />
                 )}
-                <span className="text-text-primary">
+                <span className="text-slate-900">
                   Token {isTokenExpired ? "expiró" : "expira"}{" "}
                   {formatDate(ghlTokenExpiry)}
                 </span>
@@ -93,7 +93,7 @@ export function GHLConnectionCard({
         </div>
       ) : (
         <Button
-          className="rounded-[10px] bg-coral text-white hover:bg-coral-hover"
+          className="rounded-[10px] bg-coral text-white hover:bg-blue-600-hover"
           onClick={() => {
             window.location.href = "/api/crm/oauth/authorize";
           }}

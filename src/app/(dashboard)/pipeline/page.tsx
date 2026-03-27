@@ -97,11 +97,11 @@ export default function PipelinePage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">Pipeline</h1>
-          <p className="text-sm text-text-secondary">Gestiona tus oportunidades por etapa</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pipeline</h1>
+          <p className="text-sm text-slate-500">Gestiona tus oportunidades por etapa</p>
         </div>
         {!loading && (
-          <span className="text-sm text-text-secondary">
+          <span className="text-sm text-slate-500">
             {opportunities.length} oportunidades &middot;{" "}
             {new Intl.NumberFormat("es-ES", {
               style: "currency",

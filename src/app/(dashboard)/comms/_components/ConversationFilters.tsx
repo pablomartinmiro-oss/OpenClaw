@@ -50,15 +50,15 @@ export function ConversationFilters({
               className={cn(
                 "flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                 activeTab === tab.value
-                  ? "bg-coral-light text-coral"
-                  : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
+                  ? "bg-blue-50 text-coral"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               )}
             >
               {tab.label}
               {count !== undefined && count > 0 && (
                 <span className={cn(
                   "rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none",
-                  activeTab === tab.value ? "bg-coral text-white" : "bg-muted text-text-secondary"
+                  activeTab === tab.value ? "bg-coral text-white" : "bg-muted text-slate-500"
                 )}>
                   {count}
                 </span>
@@ -76,8 +76,8 @@ export function ConversationFilters({
             className={cn(
               "flex items-center gap-1 whitespace-nowrap rounded-[6px] px-2 py-1 text-[11px] font-medium transition-colors",
               activeChannel === ch.value
-                ? "bg-coral-light text-coral"
-                : "text-text-secondary hover:bg-warm-muted hover:text-text-primary"
+                ? "bg-blue-50 text-coral"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
             )}
           >
             <span>{ch.icon}</span>

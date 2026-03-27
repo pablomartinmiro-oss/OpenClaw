@@ -99,30 +99,30 @@ export function GrouponMappingCard() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-text-primary">Mapeo de productos Groupon</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Mapeo de productos Groupon</h2>
         <Button size="sm" onClick={() => setShowForm(true)} className="gap-1" disabled={showForm}>
           <Plus className="h-3.5 w-3.5" />
           Añadir mapeo
         </Button>
       </div>
 
-      <p className="text-sm text-text-secondary">
+      <p className="text-sm text-slate-500">
         Cuando el lector de cupones detecta un producto, usa estos mapeos para auto-seleccionar los servicios correspondientes.
       </p>
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-2xl border border-coral/30 bg-coral-light/20 p-4 space-y-3">
+        <div className="rounded-2xl border border-blue-500/30 bg-blue-50/20 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Nuevo mapeo</h3>
-            <button onClick={resetForm} className="text-text-secondary hover:text-text-primary">
+            <button onClick={resetForm} className="text-slate-500 hover:text-slate-900">
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="space-y-2">
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Descripción Groupon</label>
+              <label className="mb-1 block text-xs text-slate-500">Descripción Groupon</label>
               <Input
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
@@ -130,7 +130,7 @@ export function GrouponMappingCard() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Patrón regex (para coincidencia automática)</label>
+              <label className="mb-1 block text-xs text-slate-500">Patrón regex (para coincidencia automática)</label>
               <Input
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
@@ -139,7 +139,7 @@ export function GrouponMappingCard() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Servicios Skicenter</label>
+              <label className="mb-1 block text-xs text-slate-500">Servicios Skicenter</label>
               {services.map((s, i) => (
                 <div key={i} className="mt-1 flex items-center gap-2">
                   <Input
@@ -163,7 +163,7 @@ export function GrouponMappingCard() {
                     className="w-20"
                     min={1}
                   />
-                  <span className="text-xs text-text-secondary">días</span>
+                  <span className="text-xs text-slate-500">días</span>
                   {services.length > 1 && (
                     <button
                       onClick={() => setServices(services.filter((_, j) => j !== i))}
@@ -205,7 +205,7 @@ export function GrouponMappingCard() {
           <div className="h-10 rounded bg-gray-200" />
         </div>
       ) : mappings.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-text-secondary">
+        <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-slate-500">
           No hay mapeos configurados. Añade uno para que el lector de cupones auto-seleccione servicios.
         </div>
       ) : (
@@ -213,9 +213,9 @@ export function GrouponMappingCard() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Descripción Groupon</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Servicios Skicenter</th>
-                <th className="w-20 px-3 py-2 text-right text-xs font-medium text-text-secondary">Acciones</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Descripción Groupon</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Servicios Skicenter</th>
+                <th className="w-20 px-3 py-2 text-right text-xs font-medium text-slate-500">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -223,12 +223,12 @@ export function GrouponMappingCard() {
                 <tr key={m.id} className="border-t border-border">
                   <td className="px-3 py-2">
                     <div className="font-medium">{m.grouponDesc}</div>
-                    <div className="mt-0.5 font-mono text-[10px] text-text-secondary">{m.pattern}</div>
+                    <div className="mt-0.5 font-mono text-[10px] text-slate-500">{m.pattern}</div>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
                       {(m.services as Array<{ type: string; days?: number }>).map((s, i) => (
-                        <span key={i} className="rounded-full bg-coral-light px-2 py-0.5 text-xs text-coral">
+                        <span key={i} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-coral">
                           {s.type} {s.days ? `${s.days}d` : ""}
                         </span>
                       ))}

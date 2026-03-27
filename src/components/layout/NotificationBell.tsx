@@ -12,10 +12,10 @@ import {
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   new_lead: <UserPlus className="h-4 w-4 text-coral" />,
-  reservation_created: <CalendarCheck className="h-4 w-4 text-sage" />,
-  quote_expiring: <FileText className="h-4 w-4 text-gold" />,
+  reservation_created: <CalendarCheck className="h-4 w-4 text-green-700" />,
+  quote_expiring: <FileText className="h-4 w-4 text-amber-700" />,
   new_opportunity: <UserPlus className="h-4 w-4 text-soft-blue" />,
-  payment_received: <CircleDollarSign className="h-4 w-4 text-sage" />,
+  payment_received: <CircleDollarSign className="h-4 w-4 text-green-700" />,
 };
 
 const TYPE_BORDER: Record<string, string> = {
@@ -100,7 +100,7 @@ export function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative rounded-lg p-2 text-text-secondary transition-colors hover:bg-muted hover:text-text-primary"
+        className="relative rounded-lg p-2 text-slate-500 transition-colors hover:bg-muted hover:text-slate-900"
         aria-label="Notificaciones"
       >
         <Bell className="h-5 w-5" />
@@ -115,12 +115,12 @@ export function NotificationBell() {
         <div className="animate-slide-in-right absolute right-0 top-10 z-50 w-80 rounded-2xl border border-warm-border bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-warm-border px-4 py-3">
-            <span className="text-sm font-semibold text-text-primary">Notificaciones</span>
+            <span className="text-sm font-semibold text-slate-900">Notificaciones</span>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAll.mutate()}
-                  className="flex items-center gap-1 text-[11px] text-text-secondary transition-colors hover:text-coral"
+                  className="flex items-center gap-1 text-[11px] text-slate-500 transition-colors hover:text-blue-600"
                 >
                   <CheckCheck className="h-3.5 w-3.5" />
                   Marcar todo leído
@@ -130,7 +130,7 @@ export function NotificationBell() {
                 onClick={() => setOpen(false)}
                 className="rounded p-0.5 hover:bg-surface"
               >
-                <X className="h-3.5 w-3.5 text-text-secondary" />
+                <X className="h-3.5 w-3.5 text-slate-500" />
               </button>
             </div>
           </div>
@@ -138,7 +138,7 @@ export function NotificationBell() {
           {/* List */}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-sm text-text-secondary">
+              <div className="flex flex-col items-center gap-2 py-8 text-sm text-slate-500">
                 <Bell className="h-8 w-8 opacity-25" />
                 <span>Sin notificaciones</span>
               </div>
@@ -146,7 +146,7 @@ export function NotificationBell() {
               grouped.map((group) => (
                 <div key={group.label}>
                   <div className="sticky top-0 bg-white/95 px-4 py-1.5 backdrop-blur-sm">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                       {group.label}
                     </span>
                   </div>
@@ -161,23 +161,23 @@ export function NotificationBell() {
                       )}
                     >
                       <div className="mt-0.5 shrink-0">
-                        {TYPE_ICON[n.type] ?? <Bell className="h-4 w-4 text-text-secondary" />}
+                        {TYPE_ICON[n.type] ?? <Bell className="h-4 w-4 text-slate-500" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p
                           className={cn(
                             "text-sm leading-snug",
                             !n.isRead
-                              ? "font-semibold text-text-primary"
-                              : "font-medium text-text-primary"
+                              ? "font-semibold text-slate-900"
+                              : "font-medium text-slate-900"
                           )}
                         >
                           {n.title}
                         </p>
                         {n.body && (
-                          <p className="mt-0.5 truncate text-xs text-text-secondary">{n.body}</p>
+                          <p className="mt-0.5 truncate text-xs text-slate-500">{n.body}</p>
                         )}
-                        <p className="mt-1 text-[10px] text-text-secondary">{timeAgo(n.createdAt)}</p>
+                        <p className="mt-1 text-[10px] text-slate-500">{timeAgo(n.createdAt)}</p>
                       </div>
                       {!n.isRead && (
                         <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-coral" />

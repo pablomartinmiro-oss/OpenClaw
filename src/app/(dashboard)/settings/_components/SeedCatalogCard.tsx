@@ -37,19 +37,19 @@ export function SeedCatalogCard() {
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <Database className="h-5 w-5 text-coral" />
-          <h3 className="text-lg font-semibold text-text-primary">Catálogo Skicenter</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Catálogo Skicenter</h3>
         </div>
       </div>
 
       <div className="p-6 space-y-4">
-        <p className="text-sm text-text-secondary">
+        <p className="text-sm text-slate-500">
           Importa el catálogo completo de la temporada 2025/2026 con 93 productos y 7 periodos de temporada.
           Incluye: alquiler, forfaits, escuela, clases particulares, lockers, après-ski, menú, snowcamp, taxi y packs.
         </p>
 
         <div className="flex items-start gap-2 rounded-lg border border-gold/30 bg-gold/5 p-3">
-          <AlertTriangle className="h-4 w-4 text-gold mt-0.5 shrink-0" />
-          <p className="text-xs text-text-secondary">
+          <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+          <p className="text-xs text-slate-500">
             Esta acción <strong>eliminará</strong> todos los productos y periodos de temporada existentes para tu cuenta
             y los reemplazará con el catálogo Skicenter completo. Los presupuestos y reservas existentes no se verán afectados.
           </p>
@@ -57,8 +57,8 @@ export function SeedCatalogCard() {
 
         {result && (
           <div className="flex items-center gap-2 rounded-lg border border-sage/30 bg-sage/5 p-3">
-            <CheckCircle className="h-4 w-4 text-sage shrink-0" />
-            <p className="text-sm text-text-primary">
+            <CheckCircle className="h-4 w-4 text-green-700 shrink-0" />
+            <p className="text-sm text-slate-900">
               Catálogo importado: <strong>{result.products} productos</strong> y <strong>{result.seasons} periodos</strong> de temporada.
             </p>
           </div>
@@ -67,7 +67,7 @@ export function SeedCatalogCard() {
         <Button
           onClick={handleSeed}
           disabled={seeding}
-          className="gap-2 bg-coral text-white hover:bg-coral-hover"
+          className="gap-2 bg-coral text-white hover:bg-blue-600-hover"
         >
           {seeding ? (
             <>

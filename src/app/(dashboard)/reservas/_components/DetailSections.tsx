@@ -73,18 +73,18 @@ export function DetailSections(props: DetailSectionsProps) {
         {props.editingDetails ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between py-1">
-              <span className="text-xs text-text-secondary">Estación</span>
-              <select value={props.detailFields.station} onChange={(e) => props.setDetailFields({ ...props.detailFields, station: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral">
+              <span className="text-xs text-slate-500">Estación</span>
+              <select value={props.detailFields.station} onChange={(e) => props.setDetailFields({ ...props.detailFields, station: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {STATIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
             <div className="flex items-center justify-between py-1">
-              <span className="text-xs text-text-secondary">Fecha</span>
-              <input type="date" value={props.detailFields.activityDate} onChange={(e) => props.setDetailFields({ ...props.detailFields, activityDate: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral" />
+              <span className="text-xs text-slate-500">Fecha</span>
+              <input type="date" value={props.detailFields.activityDate} onChange={(e) => props.setDetailFields({ ...props.detailFields, activityDate: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
             </div>
             <div className="flex items-center justify-between py-1">
-              <span className="text-xs text-text-secondary">Horario</span>
-              <select value={props.detailFields.schedule} onChange={(e) => props.setDetailFields({ ...props.detailFields, schedule: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral">
+              <span className="text-xs text-slate-500">Horario</span>
+              <select value={props.detailFields.schedule} onChange={(e) => props.setDetailFields({ ...props.detailFields, schedule: e.target.value })} className="rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {SCHEDULES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
@@ -107,21 +107,21 @@ export function DetailSections(props: DetailSectionsProps) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nombre</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Tipo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Servicio</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Nivel</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-text-secondary">Material</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Nombre</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Tipo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Servicio</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Nivel</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-500">Material</th>
                 </tr>
               </thead>
               <tbody>
                 {(reservation.participants as Participant[]).map((p, i) => (
                   <tr key={i} className="border-t border-border">
-                    <td className="px-3 py-2 text-text-primary">{p.name || "—"}</td>
-                    <td className="px-3 py-2 capitalize text-text-secondary">{p.type}</td>
-                    <td className="px-3 py-2 text-text-secondary">{p.service}</td>
-                    <td className="px-3 py-2 text-text-secondary">{p.level}</td>
-                    <td className="px-3 py-2 text-text-secondary">{p.material ? "Sí" : "No"}</td>
+                    <td className="px-3 py-2 text-slate-900">{p.name || "—"}</td>
+                    <td className="px-3 py-2 capitalize text-slate-500">{p.type}</td>
+                    <td className="px-3 py-2 text-slate-500">{p.service}</td>
+                    <td className="px-3 py-2 text-slate-500">{p.level}</td>
+                    <td className="px-3 py-2 text-slate-500">{p.material ? "Sí" : "No"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -162,21 +162,21 @@ export function DetailSections(props: DetailSectionsProps) {
         {props.editingNotes ? (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Notas para el cliente</label>
-              <textarea value={props.notes} onChange={(e) => props.setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" />
+              <label className="mb-1 block text-xs text-slate-500">Notas para el cliente</label>
+              <textarea value={props.notes} onChange={(e) => props.setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-text-secondary">Notas internas</label>
-              <textarea value={props.internalNotes} onChange={(e) => props.setInternalNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral" />
+              <label className="mb-1 block text-xs text-slate-500">Notas internas</label>
+              <textarea value={props.internalNotes} onChange={(e) => props.setInternalNotes(e.target.value)} rows={3} className="w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
         ) : (
           <div className="space-y-2">
-            {reservation.notes ? <p className="text-sm text-text-primary">{reservation.notes}</p> : <p className="text-sm italic text-text-secondary">Sin notas para el cliente</p>}
+            {reservation.notes ? <p className="text-sm text-slate-900">{reservation.notes}</p> : <p className="text-sm italic text-slate-500">Sin notas para el cliente</p>}
             {reservation.internalNotes && (
-              <div className="rounded-lg bg-warm-muted p-2">
-                <span className="text-[10px] font-semibold uppercase text-text-secondary">Internas</span>
-                <p className="text-sm text-text-primary">{reservation.internalNotes}</p>
+              <div className="rounded-lg bg-slate-100 p-2">
+                <span className="text-[10px] font-semibold uppercase text-slate-500">Internas</span>
+                <p className="text-sm text-slate-900">{reservation.internalNotes}</p>
               </div>
             )}
           </div>
@@ -193,9 +193,9 @@ export function DetailSections(props: DetailSectionsProps) {
 
       {/* Linked quote */}
       {reservation.quote && (
-        <div className="rounded-lg border border-coral/30 bg-coral-light p-3">
+        <div className="rounded-lg border border-blue-500/30 bg-blue-50 p-3">
           <span className="text-xs font-medium text-coral">Vinculada a presupuesto #{reservation.quote.id.slice(-4).toUpperCase()}</span>
-          <p className="text-sm text-text-primary">{reservation.quote.clientName}</p>
+          <p className="text-sm text-slate-900">{reservation.quote.clientName}</p>
         </div>
       )}
     </>
@@ -208,7 +208,7 @@ function Section({ icon, title, action, children }: { icon: React.ReactNode; tit
   return (
     <fieldset className="space-y-2">
       <div className="flex items-center justify-between">
-        <legend className="flex items-center gap-1.5 text-sm font-semibold text-text-primary">
+        <legend className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
           {icon} {title}
         </legend>
         {action}
@@ -221,11 +221,11 @@ function Section({ icon, title, action, children }: { icon: React.ReactNode; tit
 function InfoRow({ label, value, onCopy, highlight }: { label: string; value: string; onCopy?: () => void; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-xs text-text-secondary">{label}</span>
+      <span className="text-xs text-slate-500">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className={cn("text-sm", highlight ? "font-semibold text-coral" : "text-text-primary")}>{value}</span>
+        <span className={cn("text-sm", highlight ? "font-semibold text-coral" : "text-slate-900")}>{value}</span>
         {onCopy && (
-          <button onClick={onCopy} className="rounded p-0.5 text-text-secondary hover:text-coral">
+          <button onClick={onCopy} className="rounded p-0.5 text-slate-500 hover:text-blue-600">
             <Copy className="h-3 w-3" />
           </button>
         )}
@@ -237,8 +237,8 @@ function InfoRow({ label, value, onCopy, highlight }: { label: string; value: st
 function EditField({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-xs text-text-secondary">{label}</span>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-48 rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-coral" />
+      <span className="text-xs text-slate-500">{label}</span>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-48 rounded-lg border border-border bg-white px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
     </div>
   );
 }

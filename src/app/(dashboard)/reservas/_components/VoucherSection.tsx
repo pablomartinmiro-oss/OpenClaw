@@ -90,8 +90,8 @@ export function VoucherSection({
   const hasData = !!(securityCode || couponCode || product);
 
   return (
-    <fieldset className="space-y-3 rounded-2xl border-2 border-dashed border-coral/30 bg-coral-light/30 p-4">
-      <legend className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+    <fieldset className="space-y-3 rounded-2xl border-2 border-dashed border-blue-500/30 bg-blue-50/30 p-4">
+      <legend className="flex items-center gap-2 text-sm font-semibold text-slate-900">
         <Upload className="h-4 w-4" />
         ESCANEAR CUPÓN
       </legend>
@@ -107,19 +107,19 @@ export function VoucherSection({
         onDragLeave={() => setDragOver(false)}
         className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragOver
-            ? "border-coral bg-coral-light"
-            : "border-warm-border bg-white hover:border-coral/50"
+            ? "border-blue-500 bg-blue-50"
+            : "border-warm-border bg-white hover:border-blue-500/50"
         }`}
       >
         {readVoucher.isPending ? (
           <div className="flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin text-coral" />
-            <span className="text-sm text-text-secondary">Leyendo cupón...</span>
+            <span className="text-sm text-slate-500">Leyendo cupón...</span>
           </div>
         ) : (
           <>
-            <Upload className="mx-auto h-8 w-8 text-text-secondary/50" />
-            <p className="mt-2 text-sm text-text-secondary">
+            <Upload className="mx-auto h-8 w-8 text-slate-500/50" />
+            <p className="mt-2 text-sm text-slate-500">
               Arrastra la imagen del cupón aquí o haz clic para seleccionar
             </p>
           </>
@@ -136,7 +136,7 @@ export function VoucherSection({
       {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
-        <span className="text-xs text-text-secondary">o introduce los datos manualmente</span>
+        <span className="text-xs text-slate-500">o introduce los datos manualmente</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
@@ -144,12 +144,12 @@ export function VoucherSection({
       <div className="space-y-2">
         {/* Security Code */}
         <div className="flex items-center gap-2">
-          <label className="w-40 shrink-0 text-xs text-text-secondary">Código de seguridad:</label>
+          <label className="w-40 shrink-0 text-xs text-slate-500">Código de seguridad:</label>
           <input
             type="text"
             value={securityCode}
             onChange={(e) => onFieldChange("voucherSecurityCode", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasData && securityCode ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -163,7 +163,7 @@ export function VoucherSection({
               {copiedField === "security" ? (
                 <Check className="h-4 w-4 text-green-600" />
               ) : (
-                <Copy className="h-4 w-4 text-text-secondary" />
+                <Copy className="h-4 w-4 text-slate-500" />
               )}
             </button>
           )}
@@ -171,12 +171,12 @@ export function VoucherSection({
 
         {/* Coupon Code */}
         <div className="flex items-center gap-2">
-          <label className="w-40 shrink-0 text-xs text-text-secondary">Código de cupón:</label>
+          <label className="w-40 shrink-0 text-xs text-slate-500">Código de cupón:</label>
           <input
             type="text"
             value={couponCode}
             onChange={(e) => onFieldChange("voucherCouponCode", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasData && couponCode ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -190,7 +190,7 @@ export function VoucherSection({
               {copiedField === "coupon" ? (
                 <Check className="h-4 w-4 text-green-600" />
               ) : (
-                <Copy className="h-4 w-4 text-text-secondary" />
+                <Copy className="h-4 w-4 text-slate-500" />
               )}
             </button>
           )}
@@ -198,12 +198,12 @@ export function VoucherSection({
 
         {/* Product */}
         <div className="flex items-center gap-2">
-          <label className="w-40 shrink-0 text-xs text-text-secondary">Producto:</label>
+          <label className="w-40 shrink-0 text-xs text-slate-500">Producto:</label>
           <input
             type="text"
             value={product}
             onChange={(e) => onFieldChange("voucherProduct", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasData && product ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -211,13 +211,13 @@ export function VoucherSection({
 
         {/* Price Paid */}
         <div className="flex items-center gap-2">
-          <label className="w-40 shrink-0 text-xs text-text-secondary">Precio pagado:</label>
+          <label className="w-40 shrink-0 text-xs text-slate-500">Precio pagado:</label>
           <input
             type="number"
             step="0.01"
             value={pricePaid}
             onChange={(e) => onFieldChange("voucherPricePaid", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasData && pricePaid ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -230,12 +230,12 @@ export function VoucherSection({
 
         {/* Expiry */}
         <div className="flex items-center gap-2">
-          <label className="w-40 shrink-0 text-xs text-text-secondary">Caduca:</label>
+          <label className="w-40 shrink-0 text-xs text-slate-500">Caduca:</label>
           <input
             type="date"
             value={expiry}
             onChange={(e) => onFieldChange("voucherExpiry", e.target.value)}
-            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-coral ${
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasData && expiry ? "border-green-300 bg-green-50" : "border-border bg-white"
             }`}
           />
@@ -246,7 +246,7 @@ export function VoucherSection({
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2 border-coral text-coral hover:bg-coral-light"
+        className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
         onClick={() => window.open("https://merchant.groupon.es", "_blank")}
       >
         <ExternalLink className="h-4 w-4" />
@@ -262,8 +262,8 @@ export function VoucherSection({
           onChange={(e) => onFieldChange("voucherRedeemed", e.target.checked)}
           className="h-5 w-5 rounded border-warm-border accent-sage"
         />
-        <CheckCircle2 className={`h-5 w-5 ${redeemed ? "text-sage" : "text-text-secondary/40"}`} />
-        <span className={`text-sm font-medium ${redeemed ? "text-sage" : "text-text-secondary"}`}>
+        <CheckCircle2 className={`h-5 w-5 ${redeemed ? "text-green-700" : "text-slate-500/40"}`} />
+        <span className={`text-sm font-medium ${redeemed ? "text-green-700" : "text-slate-500"}`}>
           Cupón canjeado en Groupon
         </span>
       </label>
