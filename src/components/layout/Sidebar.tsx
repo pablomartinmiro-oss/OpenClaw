@@ -115,7 +115,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-warm-border bg-sidebar-bg transition-all duration-200",
+        "flex h-screen flex-col border-r border-[#1E2A3B] bg-[#0F1623] transition-all duration-200",
         collapsed ? "w-16" : "w-[240px]"
       )}
     >
@@ -123,23 +123,23 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
       <div className="flex h-14 items-center border-b border-border px-4">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-coral text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-600 text-white">
               <Mountain className="h-4 w-4" />
             </div>
-            <span className="text-lg font-semibold text-text-primary tracking-tight">
+            <span className="text-lg font-semibold text-white tracking-tight">
               Skicenter
             </span>
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-[10px] bg-coral text-white">
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-[10px] bg-blue-600 text-white">
             <Mountain className="h-4 w-4" />
           </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "rounded-[10px] p-1.5 text-text-secondary hover:bg-warm-muted hover:text-coral transition-colors",
+            "rounded-[10px] p-1.5 text-slate-400 hover:bg-[#1E2A3B] hover:text-white transition-colors",
             collapsed ? "mx-auto mt-2" : "ml-auto"
           )}
           aria-label={collapsed ? "Expandir barra lateral" : "Contraer barra lateral"}
@@ -173,15 +173,15 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
               className={cn(
                 "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 isActive
-                  ? "border-l-[3px] border-coral bg-gradient-to-r from-coral/10 to-coral/[0.03] text-text-primary"
-                  : "text-text-secondary hover:bg-warm-muted hover:text-text-primary hover:translate-x-0.5",
+                  ? "border-l-[3px] border-blue-500 bg-blue-500/10 text-white"
+                  : "text-slate-400 hover:bg-[#1E2A3B] hover:text-white hover:translate-x-0.5",
                 collapsed && "justify-center px-2"
               )}
               title={collapsed ? item.label : undefined}
             >
               <Icon className={cn(
                 "h-5 w-5 shrink-0 transition-colors duration-150",
-                isActive && "text-coral"
+                isActive && "text-blue-400"
               )} />
               {!collapsed && (
                 <>
@@ -212,7 +212,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-sage" />
             </span>
-            <p className="truncate text-xs text-text-secondary">
+            <p className="truncate text-xs text-slate-500">
               Skicenter v1.0
             </p>
           </div>

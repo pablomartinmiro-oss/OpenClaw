@@ -9,18 +9,18 @@ export function DemoBanner() {
   if (!session?.user?.isDemo) return null;
 
   return (
-    <div
-      className="flex items-center justify-between border-l-4 border-coral px-4 py-2.5 text-sm"
-      style={{ backgroundColor: "rgba(232, 123, 90, 0.10)" }}
-    >
-      <span className="font-medium text-text-primary">
-        Modo demostración — los datos son ficticios.
-      </span>
+    <div className="flex items-center justify-between bg-slate-800/95 px-4 py-2 text-sm border-b border-slate-700">
+      <div className="flex items-center gap-2">
+        <div className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+        <span className="text-slate-300 text-xs">
+          Modo demo — datos ficticios
+        </span>
+      </div>
       <Link
         href="/register"
-        className="rounded-[10px] bg-coral px-4 py-1.5 text-sm font-medium text-white hover:bg-coral-hover transition-colors"
+        className="rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1 text-xs font-semibold text-white transition-colors"
       >
-        Crear tu cuenta real →
+        Crear cuenta real →
       </Link>
     </div>
   );
