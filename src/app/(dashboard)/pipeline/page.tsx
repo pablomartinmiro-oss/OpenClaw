@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { Kanban } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Kanban, List, Download } from "lucide-react";
 import {
   DndContext,
   DragOverlay,
@@ -18,9 +18,20 @@ import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { KanbanColumn } from "./_components/KanbanColumn";
 import { KanbanCard } from "./_components/KanbanCard";
 import { PipelineSelector } from "./_components/PipelineSelector";
+import { PipelineListView } from "./_components/PipelineListView";
 import { OpportunityModal } from "./_components/OpportunityModal";
+import { exportToCSV } from "@/lib/utils/export";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { GHLOpportunity } from "@/lib/ghl/types";
+
+const VIEW_STORAGE_KEY = "pipeline-view-preference";
+
+type ViewMode = "kanban" | "list";
+
+function getDaysInStage(createdAt: string): number {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
+}
 
 export default function PipelinePage() {
   const { data: pipelineData, isLoading: pipelinesLoading } = usePipelines();
@@ -29,6 +40,28 @@ export default function PipelinePage() {
   const [userSelectedId, setUserSelectedId] = useState<string | null>(null);
   const [activeOpp, setActiveOpp] = useState<GHLOpportunity | null>(null);
   const [selectedOpp, setSelectedOpp] = useState<GHLOpportunity | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
+
+  // Load preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode | null;
+      if (saved === "list" || saved === "kanban") {
+        setViewMode(saved);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleSetViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, mode);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const selectedPipelineId = userSelectedId ?? pipelines[0]?.id ?? null;
 
@@ -90,6 +123,34 @@ export default function PipelinePage() {
     );
   }, [opportunities, moveOpp]);
 
+  const handleExportCSV = useCallback(() => {
+    if (!opportunities.length) {
+      toast.error("No hay oportunidades para exportar");
+      return;
+    }
+    const stageMap = new Map(stages.map((s) => [s.id, s.name]));
+    exportToCSV(
+      opportunities.map((o) => ({
+        nombre: o.name,
+        contacto: o.contactName ?? "",
+        valor: o.monetaryValue,
+        etapa: stageMap.get(o.pipelineStageId) ?? o.pipelineStageId,
+        dias_en_etapa: getDaysInStage(o.createdAt),
+        estado: o.status,
+      })),
+      "pipeline-oportunidades",
+      [
+        { key: "nombre", label: "Nombre" },
+        { key: "contacto", label: "Contacto" },
+        { key: "valor", label: "Valor (€)" },
+        { key: "etapa", label: "Etapa" },
+        { key: "dias_en_etapa", label: "Días en etapa" },
+        { key: "estado", label: "Estado" },
+      ]
+    );
+    toast.success("CSV exportado");
+  }, [opportunities, stages]);
+
   const loading = pipelinesLoading || oppsLoading;
 
   return (
@@ -100,16 +161,58 @@ export default function PipelinePage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pipeline</h1>
           <p className="text-sm text-slate-500">Gestiona tus oportunidades por etapa</p>
         </div>
-        {!loading && (
-          <span className="text-sm text-slate-500">
-            {opportunities.length} oportunidades &middot;{" "}
-            {new Intl.NumberFormat("es-ES", {
-              style: "currency",
-              currency: "EUR",
-              minimumFractionDigits: 0,
-            }).format(totalValue)}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!loading && (
+            <span className="hidden sm:block text-sm text-slate-500">
+              {opportunities.length} oportunidades &middot;{" "}
+              {new Intl.NumberFormat("es-ES", {
+                style: "currency",
+                currency: "EUR",
+                minimumFractionDigits: 0,
+              }).format(totalValue)}
+            </span>
+          )}
+          {/* CSV Export button */}
+          {!loading && opportunities.length > 0 && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              title="Exportar CSV"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
+          )}
+          {/* View toggle */}
+          {!loading && stages.length > 0 && (
+            <div className="flex rounded-lg border border-border bg-white overflow-hidden">
+              <button
+                onClick={() => handleSetViewMode("kanban")}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-2 text-sm transition-colors",
+                  viewMode === "kanban"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-500 hover:bg-slate-50"
+                )}
+                title="Vista Kanban"
+              >
+                <Kanban className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleSetViewMode("list")}
+                className={cn(
+                  "flex items-center gap-1 px-2.5 py-2 text-sm transition-colors border-l border-border",
+                  viewMode === "list"
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-500 hover:bg-slate-50"
+                )}
+                title="Vista Lista"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <PipelineSelector
@@ -125,6 +228,12 @@ export default function PipelinePage() {
           icon={Kanban}
           title="Sin etapas de pipeline"
           description="Las etapas aparecerán aquí una vez sincronizadas desde GHL"
+        />
+      ) : viewMode === "list" ? (
+        <PipelineListView
+          stages={stages}
+          oppsByStage={oppsByStage}
+          onCardClick={setSelectedOpp}
         />
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

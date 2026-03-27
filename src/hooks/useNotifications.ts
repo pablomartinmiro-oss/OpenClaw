@@ -26,7 +26,7 @@ export function useNotifications() {
       fetchJSON<{ notifications: AppNotification[]; unreadCount: number }>(
         "/api/notifications"
       ),
-    refetchInterval: 20_000,
+    refetchInterval: 30_000,
   });
 }
 

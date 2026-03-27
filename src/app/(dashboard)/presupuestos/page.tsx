@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, Plus, ArrowLeft } from "lucide-react";
+import { useState, useCallback } from "react";
+import { FileText, Plus, ArrowLeft, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useProducts } from "@/hooks/useProducts";
+import { exportToCSV } from "@/lib/utils/export";
+import { toast } from "sonner";
 import type { Quote } from "@/hooks/useQuotes";
 import { QuoteList } from "./_components/QuoteList";
 import { QuoteDetail } from "./_components/QuoteDetail";
@@ -30,6 +32,39 @@ export default function PresupuestosPage() {
     quote: Quote;
     items: EmailItem[];
   } | null>(null);
+
+  const handleExportCSV = useCallback(() => {
+    if (!quotes?.length) {
+      toast.error("No hay presupuestos para exportar");
+      return;
+    }
+    exportToCSV(
+      quotes.map((q) => ({
+        cliente: q.clientName,
+        email: q.clientEmail ?? "",
+        importe: q.totalAmount,
+        estado: q.status,
+        destino: q.destination,
+        fecha_entrada: q.checkIn,
+        fecha_salida: q.checkOut,
+        adultos: q.adults,
+        creado: q.createdAt ? new Date(q.createdAt).toLocaleDateString("es-ES") : "",
+      })),
+      "presupuestos",
+      [
+        { key: "cliente", label: "Cliente" },
+        { key: "email", label: "Email" },
+        { key: "importe", label: "Importe (€)" },
+        { key: "estado", label: "Estado" },
+        { key: "destino", label: "Destino" },
+        { key: "fecha_entrada", label: "Entrada" },
+        { key: "fecha_salida", label: "Salida" },
+        { key: "adultos", label: "Adultos" },
+        { key: "creado", label: "Fecha creación" },
+      ]
+    );
+    toast.success("CSV exportado");
+  }, [quotes]);
 
   if (quotesLoading || productsLoading) return <PageSkeleton />;
 
@@ -59,10 +94,18 @@ export default function PresupuestosPage() {
             </div>
             <div className="flex items-center gap-2">
               {currentQuote && (
-                <span className="text-xs text-blue-600 font-medium">
+                <span className="text-xs text-blue-600 font-medium hidden sm:block">
                   Selected: {currentQuote.clientName}
                 </span>
               )}
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors min-h-[44px]"
+                title="Exportar CSV"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Exportar</span>
+              </button>
               <button
                 onClick={() => { 
                   setShowNewForm(true); 

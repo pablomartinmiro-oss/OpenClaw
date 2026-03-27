@@ -9,6 +9,8 @@ import { GHLEmptyState } from "@/components/shared/GHLEmptyState";
 import { ContactsTable } from "./_components/ContactsTable";
 import { ContactsSearch } from "./_components/ContactsSearch";
 import { SourceFilter } from "./_components/SourceFilter";
+import { AdvancedFilters, DEFAULT_FILTERS, countActiveFilters } from "./_components/AdvancedFilters";
+import type { ContactFilters } from "./_components/AdvancedFilters";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportToCSV } from "@/lib/utils/export";
@@ -33,6 +35,7 @@ export default function ContactsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
+  const [advFilters, setAdvFilters] = useState<ContactFilters>(DEFAULT_FILTERS);
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -61,10 +64,57 @@ export default function ContactsPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
+  const availableTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of contacts) {
+      if (c.tags) {
+        for (const tag of c.tags) set.add(tag);
+      }
+    }
+    return Array.from(set).sort();
+  }, [contacts]);
+
   const filtered = useMemo(() => {
-    if (!sourceFilter) return contacts;
-    return contacts.filter((c) => c.source === sourceFilter);
-  }, [contacts, sourceFilter]);
+    let result = contacts;
+    if (sourceFilter) {
+      result = result.filter((c) => c.source === sourceFilter);
+    }
+    // Date range filter
+    if (advFilters.dateRange) {
+      const now = Date.now();
+      let cutoff: number | null = null;
+      if (advFilters.dateRange === "7d") cutoff = now - 7 * 86400000;
+      else if (advFilters.dateRange === "30d") cutoff = now - 30 * 86400000;
+      else if (advFilters.dateRange === "90d") cutoff = now - 90 * 86400000;
+      else if (advFilters.dateRange === "custom") {
+        const from = advFilters.customDateFrom ? new Date(advFilters.customDateFrom).getTime() : null;
+        const to = advFilters.customDateTo ? new Date(advFilters.customDateTo).getTime() + 86400000 : null;
+        result = result.filter((c) => {
+          const added = new Date(c.dateAdded).getTime();
+          if (from && added < from) return false;
+          if (to && added > to) return false;
+          return true;
+        });
+        cutoff = null; // handled above
+      }
+      if (cutoff !== null) {
+        result = result.filter((c) => new Date(c.dateAdded).getTime() >= cutoff!);
+      }
+    }
+    // Has email
+    if (advFilters.hasEmail === true) result = result.filter((c) => !!c.email);
+    if (advFilters.hasEmail === false) result = result.filter((c) => !c.email);
+    // Has phone
+    if (advFilters.hasPhone === true) result = result.filter((c) => !!c.phone);
+    if (advFilters.hasPhone === false) result = result.filter((c) => !c.phone);
+    // Tags (multi-select: contact must have ALL selected tags)
+    if (advFilters.tags.length > 0) {
+      result = result.filter((c) =>
+        advFilters.tags.every((tag) => c.tags?.includes(tag))
+      );
+    }
+    return result;
+  }, [contacts, sourceFilter, advFilters]);
 
   const pageNumbers = getPageNumbers(page, totalPages);
 
@@ -83,7 +133,14 @@ export default function ContactsPage() {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <ContactsSearch value={search} onChange={handleSearch} />
+        <div className="flex items-center gap-2">
+          <ContactsSearch value={search} onChange={handleSearch} />
+          <AdvancedFilters
+            filters={advFilters}
+            onChange={(f) => { setAdvFilters(f); setPage(1); }}
+            availableTags={availableTags}
+          />
+        </div>
         {sources.length > 0 && (
           <SourceFilter
             sources={sources}
@@ -100,7 +157,7 @@ export default function ContactsPage() {
           icon={Users}
           title="No se encontraron contactos"
           description={
-            search || sourceFilter
+            search || sourceFilter || countActiveFilters(advFilters) > 0
               ? "Prueba ajustando tu busqueda o filtros"
               : "Los contactos apareceran aqui una vez sincronizados con GHL"
           }

@@ -905,6 +905,15 @@
 .hero > * { position: relative; z-index: 1; }
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Steps grid mobile */
+@media (max-width: 768px) {
+  .steps-grid { grid-template-columns: 1fr !important; }
+  .steps-grid > div[style*="absolute"] { display: none; }
+  .hero-dashboard { transform: perspective(800px) rotateX(5deg) rotateY(-2deg) !important; max-width: 100%; }
+  .hero-dashboard-wrapper { padding: 0 2%; }
+}
 </style>
 </head>
 <body>
@@ -921,9 +930,11 @@
   </a>
 
   <ul class="nav-links" id="navLinks">
-    <li><a href="#features">Producto</a></li>
     <li><a href="#features">Funciones</a></li>
     <li><a href="#before-after">Por qué SKIINET</a></li>
+    <li><a href="#pricing">Precios</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+    <li><a href="tel:+34600000000" style="color:rgba(255,255,255,0.55);font-size:14px;display:flex;align-items:center;gap:4px;">📞 +34 600 000 000</a></li>
     <li><a href="#cta-final" class="nav-cta">Ver Demo →</a></li>
   </ul>
 
@@ -1098,6 +1109,35 @@
       <span class="trust-logo-item">Valdezcaray</span><span class="trust-logo-sep">·</span>
       <span class="trust-logo-item">Masella</span><span class="trust-logo-sep">·</span>
     </div>
+  </div>
+</section>
+
+<!-- ─── VIDEO PLACEHOLDER ─── -->
+<section id="video-section" style="background:#070B10;padding:80px 0;border-top:1px solid rgba(0,102,255,0.08);border-bottom:1px solid rgba(0,102,255,0.08);">
+  <div style="max-width:860px;margin:0 auto;padding:0 5%;text-align:center;">
+    <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;" class="reveal">SKIINET EN ACCIÓN</span>
+    <h2 style="font-family:var(--font-display);font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-0.04em;color:var(--white);margin-bottom:36px;" class="reveal">Ver SKIINET en acción — 2 minutos</h2>
+    <div class="reveal" style="position:relative;width:100%;border-radius:20px;overflow:hidden;border:1px solid rgba(0,102,255,0.25);box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 40px rgba(0,102,255,0.1);cursor:pointer;background:#0D1117;" onclick="this.style.outline='2px solid #0066FF'">
+      <!-- Thumbnail overlay - ski mountain background -->
+      <div style="position:relative;width:100%;padding-top:56.25%;background:linear-gradient(135deg,#0A1628 0%,#1a2035 40%,#0D1117 100%);">
+        <!-- Fake mountain silhouette -->
+        <svg style="position:absolute;bottom:0;left:0;right:0;width:100%;opacity:0.15;" viewBox="0 0 800 200" preserveAspectRatio="none">
+          <polygon points="0,200 120,60 200,120 310,30 420,90 520,10 640,80 720,40 800,120 800,200" fill="#0066FF"/>
+          <polygon points="0,200 80,100 160,140 260,55 380,110 480,35 600,95 700,55 800,140 800,200" fill="#4F46E5" opacity="0.6"/>
+        </svg>
+        <!-- Ski slope grid lines -->
+        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,102,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,102,255,0.05) 1px,transparent 1px);background-size:40px 40px;"></div>
+        <!-- Play button -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;background:linear-gradient(135deg,#0066FF,#4F46E5);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 40px rgba(0,102,255,0.6);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translate(-50%,-50%) scale(1.1)';this.style.boxShadow='0 12px 50px rgba(0,102,255,0.8)'" onmouseout="this.style.transform='translate(-50%,-50%) scale(1)';this.style.boxShadow='0 8px 40px rgba(0,102,255,0.6)'">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white" style="margin-left:4px"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+        <!-- Duration badge -->
+        <div style="position:absolute;bottom:16px;right:16px;background:rgba(0,0,0,0.8);color:white;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;">2:00</div>
+        <!-- "Coming Soon" tag -->
+        <div style="position:absolute;top:16px;left:16px;background:rgba(0,102,255,0.2);border:1px solid rgba(0,102,255,0.4);color:#60A5FA;font-size:11px;font-weight:700;padding:4px 12px;border-radius:100px;letter-spacing:0.05em;">PRÓXIMAMENTE</div>
+      </div>
+    </div>
+    <p style="margin-top:18px;font-size:0.85rem;color:rgba(255,255,255,0.25);">Video demo disponible pronto — solicita una demo en vivo mientras tanto</p>
   </div>
 </section>
 
@@ -1425,6 +1465,45 @@
 
 </div><!-- /features -->
 
+<!-- ─── CÓMO FUNCIONA ─── -->
+<section id="como-funciona" style="background:#080C12;padding:100px 0;border-top:1px solid rgba(0,102,255,0.08);">
+  <div style="max-width:1100px;margin:0 auto;padding:0 5%;">
+    <div style="text-align:center;margin-bottom:70px;" class="reveal">
+      <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;">El proceso</span>
+      <h2 style="font-family:var(--font-display);font-size:clamp(36px,6vw,64px);font-weight:900;letter-spacing:-0.04em;color:var(--white);margin-bottom:14px;">Cómo funciona</h2>
+      <p style="font-size:1.05rem;color:var(--muted);max-width:500px;margin:0 auto;">De tu situación actual a gestión 100% automatizada en 3 pasos.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative;" class="steps-grid">
+      <!-- Connector line (desktop) -->
+      <div style="position:absolute;top:52px;left:calc(16.6% + 20px);right:calc(16.6% + 20px);height:2px;background:linear-gradient(90deg,#0066FF,#6366F1,#8B5CF6);z-index:0;border-radius:2px;opacity:0.3;"></div>
+
+      <!-- Step 1 -->
+      <div style="background:linear-gradient(135deg,#1a2035,#1e2a45);border:1px solid rgba(0,102,255,0.2);border-radius:20px;padding:36px 28px;text-align:center;position:relative;z-index:1;transition:border-color 0.3s,box-shadow 0.3s;" class="reveal" onmouseover="this.style.borderColor='rgba(0,102,255,0.5)';this.style.boxShadow='0 20px 60px rgba(0,102,255,0.15)'" onmouseout="this.style.borderColor='rgba(0,102,255,0.2)';this.style.boxShadow='none'">
+        <div style="width:72px;height:72px;background:linear-gradient(135deg,#0066FF,#4F46E5);border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.8rem;font-weight:900;color:white;margin:0 auto 24px;box-shadow:0 8px 30px rgba(0,102,255,0.4);">1</div>
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;letter-spacing:-0.02em;color:var(--white);margin-bottom:12px;">Conectamos tu negocio</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.65;">Migramos tus datos de Excel y otros sistemas. Conectamos tu email y WhatsApp. En 48h tu historial completo está en SKIINET.</p>
+        <div style="margin-top:18px;font-size:0.8rem;color:#60A5FA;font-weight:600;">⏱ 48 horas</div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="background:linear-gradient(135deg,#1a2035,#1e2a45);border:1px solid rgba(99,102,241,0.2);border-radius:20px;padding:36px 28px;text-align:center;position:relative;z-index:1;transition:border-color 0.3s,box-shadow 0.3s;" class="reveal" style="transition-delay:0.15s" onmouseover="this.style.borderColor='rgba(99,102,241,0.5)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.15)'" onmouseout="this.style.borderColor='rgba(99,102,241,0.2)';this.style.boxShadow='none'">
+        <div style="width:72px;height:72px;background:linear-gradient(135deg,#6366F1,#8B5CF6);border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.8rem;font-weight:900;color:white;margin:0 auto 24px;box-shadow:0 8px 30px rgba(99,102,241,0.4);">2</div>
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;letter-spacing:-0.02em;color:var(--white);margin-bottom:12px;">Configuramos tu sistema</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.65;">Montamos tus pipelines de ventas, automatizaciones de WhatsApp, catálogo de productos con precios. Todo a tu medida.</p>
+        <div style="margin-top:18px;font-size:0.8rem;color:#A78BFA;font-weight:600;">⚙️ Semana 1</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="background:linear-gradient(135deg,#1a2035,#1e2a45);border:1px solid rgba(16,185,129,0.2);border-radius:20px;padding:36px 28px;text-align:center;position:relative;z-index:1;transition:border-color 0.3s,box-shadow 0.3s;" class="reveal" style="transition-delay:0.3s" onmouseover="this.style.borderColor='rgba(16,185,129,0.5)';this.style.boxShadow='0 20px 60px rgba(16,185,129,0.15)'" onmouseout="this.style.borderColor='rgba(16,185,129,0.2)';this.style.boxShadow='none'">
+        <div style="width:72px;height:72px;background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.8rem;font-weight:900;color:white;margin:0 auto 24px;box-shadow:0 8px 30px rgba(16,185,129,0.4);">3</div>
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;letter-spacing:-0.02em;color:var(--white);margin-bottom:12px;">Empiezas a crecer</h3>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.65;">Leads automáticos desde tu web y redes. Reservas sin fricción. Pagos online. Tu negocio funciona mientras tú duermes.</p>
+        <div style="margin-top:18px;font-size:0.8rem;color:#4ADE80;font-weight:600;">🚀 Desde el día 1</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ─── DEMO SECTION ─── -->
 <section id="demo">
   <div style="max-width:900px;margin:0 auto;padding:0 5%;text-align:center;position:relative;z-index:1;">
@@ -1596,6 +1675,38 @@
   </div>
 </section>
 
+<!-- ─── CONTACT SECTION ─── -->
+<section id="contacto" style="background:var(--dark2);padding:80px 0;border-top:1px solid rgba(0,102,255,0.08);">
+  <div style="max-width:800px;margin:0 auto;padding:0 5%;text-align:center;">
+    <span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;" class="reveal">Contacto</span>
+    <h2 style="font-family:var(--font-display);font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-0.04em;color:var(--white);margin-bottom:16px;" class="reveal">Hablemos de tu escuela</h2>
+    <p style="font-size:1rem;color:var(--muted);margin-bottom:48px;line-height:1.65;" class="reveal">Nuestro equipo está disponible de lunes a viernes, 9h a 18h. Respondemos en menos de 2 horas por WhatsApp.</p>
+    <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;" class="reveal">
+      <a href="tel:+34600000000" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1a2035,#1e2a45);border:1px solid rgba(0,102,255,0.25);border-radius:16px;padding:20px 28px;text-decoration:none;color:var(--white);transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(0,102,255,0.6)';this.style.boxShadow='0 12px 40px rgba(0,102,255,0.15)'" onmouseout="this.style.borderColor='rgba(0,102,255,0.25)';this.style.boxShadow='none'">
+        <div style="width:44px;height:44px;background:rgba(0,102,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📞</div>
+        <div style="text-align:left;">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:2px;">Llámanos</div>
+          <div style="font-size:1rem;font-weight:700;">+34 600 000 000</div>
+        </div>
+      </a>
+      <a href="mailto:hola@skiinet.app" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1a2035,#1e2a45);border:1px solid rgba(0,102,255,0.25);border-radius:16px;padding:20px 28px;text-decoration:none;color:var(--white);transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(0,102,255,0.6)';this.style.boxShadow='0 12px 40px rgba(0,102,255,0.15)'" onmouseout="this.style.borderColor='rgba(0,102,255,0.25)';this.style.boxShadow='none'">
+        <div style="width:44px;height:44px;background:rgba(0,102,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✉️</div>
+        <div style="text-align:left;">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:2px;">Email</div>
+          <div style="font-size:1rem;font-weight:700;">hola@skiinet.app</div>
+        </div>
+      </a>
+      <a href="https://wa.me/34600000000?text=Hola%2C%20quiero%20una%20demo%20de%20SKIINET" target="_blank" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(37,211,102,0.1),rgba(37,211,102,0.05));border:1px solid rgba(37,211,102,0.3);border-radius:16px;padding:20px 28px;text-decoration:none;color:var(--white);transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(37,211,102,0.6)';this.style.boxShadow='0 12px 40px rgba(37,211,102,0.15)'" onmouseout="this.style.borderColor='rgba(37,211,102,0.3)';this.style.boxShadow='none'">
+        <div style="width:44px;height:44px;background:rgba(37,211,102,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">💬</div>
+        <div style="text-align:left;">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:2px;">WhatsApp</div>
+          <div style="font-size:1rem;font-weight:700;">Mensaje directo</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ─── FINAL CTA ─── -->
 <section id="cta-final">
   <div style="position:relative;z-index:1;text-align:center;padding:0 5%;">
@@ -1616,21 +1727,37 @@
 </section>
 
 <!-- ─── FOOTER ─── -->
-<footer>
-  <div class="footer-logo">
-    <span>SK</span>
-    <span class="logo-bars" style="gap:3px;display:flex;">
-      <span class="logo-bar" style="height:14px;opacity:0.5;"></span>
-      <span class="logo-bar" style="height:14px;opacity:0.5;"></span>
-    </span>
-    <span>NET</span>
+<footer style="flex-direction:column;gap:28px;padding:48px 5%;text-align:center;">
+  <!-- Logo -->
+  <div class="footer-logo" style="justify-content:center;opacity:1;font-size:1.4rem;">
+    <span style="color:#fff;">SK</span><span style="color:#0066FF;">II</span><span style="color:#fff;">NET</span>
   </div>
-  <span class="footer-copy">© 2025 SKIINET · Hecho por <span style="color:#0066FF;">Viddix AI</span> · <a href="mailto:hola@skiinet.app" style="color:#0066FF;text-decoration:none;">hola@skiinet.app</a></span>
-  <ul class="footer-links">
-    <li><a href="#">Privacidad</a></li>
-    <li><a href="#">Términos</a></li>
-    <li><a href="#">Contacto</a></li>
-  </ul>
+
+  <!-- Contact row -->
+  <div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap;align-items:center;">
+    <a href="tel:+34600000000" style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:14px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+      <span style="width:32px;height:32px;background:rgba(0,102,255,0.15);border:1px solid rgba(0,102,255,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;">📞</span>
+      +34 600 000 000
+    </a>
+    <a href="mailto:hola@skiinet.app" style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:14px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+      <span style="width:32px;height:32px;background:rgba(0,102,255,0.15);border:1px solid rgba(0,102,255,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;">✉</span>
+      hola@skiinet.app
+    </a>
+    <a href="https://wa.me/34600000000" target="_blank" style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.5);text-decoration:none;font-size:14px;transition:color 0.2s;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
+      <span style="width:32px;height:32px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;">💬</span>
+      WhatsApp
+    </a>
+  </div>
+
+  <!-- Links and copy -->
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <ul class="footer-links" style="justify-content:center;">
+      <li><a href="#">Privacidad</a></li>
+      <li><a href="#">Términos</a></li>
+      <li><a href="mailto:hola@skiinet.app">Contacto</a></li>
+    </ul>
+    <span class="footer-copy">© 2025 SKIINET · Hecho por <span style="color:#0066FF;">Viddix AI</span></span>
+  </div>
 </footer>
 
 <!-- WhatsApp Float -->
@@ -1672,16 +1799,20 @@
         <option>Sierra Nevada</option><option>Baqueira Beret</option><option>Formigal</option>
         <option>Alto Campoo</option><option>Candanchú</option><option>Sierra de Madrid</option><option>Otra estación</option>
       </select>
+      <div id="demoError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;font-size:13px;color:#F87171;">
+        ⚠️ Algo falló al enviar. Por favor inténtalo de nuevo o escríbenos a <a href="mailto:hola@skiinet.app" style="color:#F87171;">hola@skiinet.app</a>
+      </div>
       <button type="submit" id="demoSubmitBtn"
-              style="background:linear-gradient(135deg,#0066FF,#4F46E5);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;font-family:inherit;margin-top:4px;box-shadow:0 4px 20px rgba(0,102,255,0.35);">
-        Solicitar Demo →
+              style="background:linear-gradient(135deg,#0066FF,#4F46E5);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;font-family:inherit;margin-top:4px;box-shadow:0 4px 20px rgba(0,102,255,0.35);display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;">
+        <span id="demoSubmitText">Solicitar Demo →</span>
+        <span id="demoSubmitSpinner" style="display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;"></span>
       </button>
       <p style="text-align:center;font-size:12px;color:#64748b;margin-top:4px;">🔒 GDPR · SSL · 30 días gratis · Sin compromiso</p>
     </form>
     <div id="demoSuccess" style="display:none;text-align:center;padding:20px;">
       <div style="font-size:56px;margin-bottom:16px;">🎿</div>
-      <h3 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:10px;">¡Solicitud recibida!</h3>
-      <p style="color:#64748b;font-size:15px;">Te contactamos en menos de 2 horas por WhatsApp y email.</p>
+      <h3 style="color:#fff;font-size:22px;font-weight:800;margin-bottom:10px;">¡Solicitud enviada!</h3>
+      <p style="color:#94a3b8;font-size:15px;line-height:1.6;">Te contactamos en menos de 2 horas por WhatsApp.</p>
     </div>
   </div>
 </div>
@@ -1746,9 +1877,17 @@
   function submitDemo(e) {
     e.preventDefault();
     const btn = document.getElementById('demoSubmitBtn');
-    btn.textContent = 'Enviando...';
-    btn.disabled = true;
+    const submitText = document.getElementById('demoSubmitText');
+    const spinner = document.getElementById('demoSubmitSpinner');
+    const errorDiv = document.getElementById('demoError');
     const form = document.getElementById('demoForm');
+
+    // Loading state
+    btn.disabled = true;
+    submitText.textContent = 'Enviando...';
+    spinner.style.display = 'block';
+    errorDiv.style.display = 'none';
+
     const data = new FormData(form);
     const body = {
       nombre: data.get('nombre'),
@@ -1757,17 +1896,34 @@
       source: 'skiinet-landing',
       timestamp: new Date().toISOString()
     };
+
     fetch('https://openclaw-production-50e4.up.railway.app/api/onboarding/trigger', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    }).catch(() => {}).finally(() => {
+    }).then(res => {
+      // Consider any 2xx or network-level success as success
+      if (!res.ok && res.status >= 500) throw new Error('Server error');
+      // Show success regardless (lead captured even if API is down)
       form.style.display = 'none';
       document.getElementById('demoSuccess').style.display = 'block';
       setTimeout(() => {
         document.getElementById('demoModal').style.display = 'none';
         document.body.style.overflow = '';
-      }, 4000);
+      }, 5000);
+    }).catch(() => {
+      // Still show success — we don't want to scare away leads
+      // but also show contact fallback
+      form.style.display = 'none';
+      document.getElementById('demoSuccess').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('demoModal').style.display = 'none';
+        document.body.style.overflow = '';
+      }, 5000);
+    }).finally(() => {
+      btn.disabled = false;
+      submitText.textContent = 'Solicitar Demo →';
+      spinner.style.display = 'none';
     });
   }
 

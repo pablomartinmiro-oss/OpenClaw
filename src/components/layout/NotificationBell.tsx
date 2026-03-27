@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect, useMemo } from "react";
-import { Bell, CheckCheck, UserPlus, CalendarCheck, FileText, X, CircleDollarSign } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, CheckCheck, UserPlus, CalendarCheck, FileText, X, CircleDollarSign, RefreshCw, AlertTriangle, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useNotifications,
@@ -16,6 +17,20 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   quote_expiring: <FileText className="h-4 w-4 text-amber-700" />,
   new_opportunity: <UserPlus className="h-4 w-4 text-soft-blue" />,
   payment_received: <CircleDollarSign className="h-4 w-4 text-green-700" />,
+  sync_complete: <RefreshCw className="h-4 w-4 text-green-700" />,
+  sync_error: <AlertTriangle className="h-4 w-4 text-red-500" />,
+  new_message: <MessageSquare className="h-4 w-4 text-blue-600" />,
+};
+
+const TYPE_ROUTE: Record<string, string> = {
+  new_lead: "/contacts",
+  new_opportunity: "/pipeline",
+  reservation_created: "/reservas",
+  quote_expiring: "/presupuestos",
+  payment_received: "/presupuestos",
+  sync_complete: "/settings",
+  sync_error: "/settings",
+  new_message: "/comms",
 };
 
 const TYPE_BORDER: Record<string, string> = {
@@ -72,6 +87,7 @@ function groupNotifications(items: AppNotification[]) {
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { data } = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -94,6 +110,11 @@ export function NotificationBell() {
 
   function handleItemClick(n: AppNotification) {
     if (!n.isRead) markRead.mutate(n.id);
+    const route = (n.data?.route as string | undefined) ?? TYPE_ROUTE[n.type];
+    if (route) {
+      setOpen(false);
+      router.push(route);
+    }
   }
 
   return (
@@ -140,7 +161,7 @@ export function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-sm text-slate-500">
                 <Bell className="h-8 w-8 opacity-25" />
-                <span>Sin notificaciones</span>
+                <span>No hay notificaciones</span>
               </div>
             ) : (
               grouped.map((group) => (
