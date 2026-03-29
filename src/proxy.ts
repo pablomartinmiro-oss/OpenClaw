@@ -24,6 +24,7 @@ const PUBLIC_ROUTES = [
   "/api/cron/quote-reminders",
   "/survey",
   "/api/survey",
+  "/api/agents/run",
 ];
 
 export async function proxy(req: NextRequest) {
