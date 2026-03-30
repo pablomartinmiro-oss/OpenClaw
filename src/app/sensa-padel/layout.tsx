@@ -55,10 +55,10 @@ export default function SensaLayout({ children }: { children: React.ReactNode })
 
         <div className="p-3 border-t border-gray-800">
           <Link
-            href="/"
+            href="/sensa-padel"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
-            ← Back to Viddix
+            ← Inicio Sensa Padel
           </Link>
         </div>
       </div>
