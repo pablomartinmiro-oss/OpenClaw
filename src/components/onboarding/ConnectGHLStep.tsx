@@ -96,6 +96,18 @@ export function ConnectGHLStep({ paramConnected, error }: ConnectGHLStepProps) {
           <span>{ERROR_MESSAGES[error] || `Error: ${error}`}</span>
         </div>
       )}
+      <Button
+        variant="ghost"
+        className="text-slate-400 hover:text-slate-600 text-sm mt-2"
+        onClick={() => {
+          // Mark onboarding as complete without GHL
+          fetch('/api/onboarding/skip-ghl', { method: 'POST' }).catch(() => {});
+          window.location.href = '/';
+        }}
+      >
+        Saltar por ahora → (configurar GHL más tarde)
+      </Button>
+
       <Button onClick={handleConnect} disabled={connecting} size="lg">
         {connecting ? "Redirigiendo a GHL..." : "Conectar GoHighLevel"}
       </Button>
