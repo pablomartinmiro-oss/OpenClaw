@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * POST /api/onboarding/provision
  * Full parallel orchestration — all 4 agents fire simultaneously
