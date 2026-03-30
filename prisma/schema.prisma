@@ -597,3 +597,69 @@ model ContactSubmission {
 
   @@index([email, createdAt])
 }
+
+// ==================== SENSA PADEL ====================
+
+model SensaMember {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  memberType   String   @default("none") // "unlimited", "standard", "none"
+  joinDate     DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions     SensaSession[]
+  lead         SensaLead?
+
+  @@index([memberType])
+  @@index([createdAt])
+}
+
+model SensaRevenue {
+  id                 String   @id @default(cuid())
+  date               DateTime @default(now())
+  courtBookings      Int      @default(0)
+  courtRevenue       Float    @default(0)
+  newMemberships     Int      @default(0)
+  membershipRevenue  Float    @default(0)
+  classesRevenue     Float    @default(0)
+  otherRevenue       Float    @default(0)
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  @@index([date])
+}
+
+model SensaSession {
+  id         String   @id @default(cuid())
+  memberId   String
+  member     SensaMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  court      String?
+  amountPaid Float    @default(0)
+  isFirst    Boolean  @default(false)
+  playedAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([memberId])
+  @@index([playedAt])
+}
+
+model SensaLead {
+  id             String    @id @default(cuid())
+  memberId       String    @unique
+  member         SensaMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  status         String    @default("new") // "new", "hot", "cold", "contacted", "converted"
+  firstVisit     DateTime  @default(now())
+  lastVisit      DateTime  @default(now())
+  visitCount     Int       @default(1)
+  followUpDate   DateTime?
+  notes          String?
+  convertedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([lastVisit])
+}
