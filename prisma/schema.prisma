@@ -663,3 +663,63 @@ model SensaLead {
   @@index([status])
   @@index([lastVisit])
 }
+
+// ==================== CHIEF OF STAFF ====================
+
+model Integration {
+  id           String    @id @default(cuid())
+  userId       String
+  provider     String    // 'gmail' | 'notion' | 'meetgeek'
+  accessToken  String?
+  refreshToken String?
+  tokenExpiry  DateTime?
+  metadata     Json      @default("{}")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+model InboxItem {
+  id             String    @id @default(cuid())
+  userId         String
+  source         String    // 'gmail' | 'transcript' | 'notion' | 'manual'
+  externalId     String?   // gmail message ID etc
+  subject        String?
+  content        String?
+  fromEmail      String?
+  fromName       String?
+  receivedAt     DateTime?
+  processedAt    DateTime?
+  aiSummary      String?
+  requiresAction Boolean   @default(false)
+  actionType     String?   // 'reply' | 'follow-up' | 'task' | 'info'
+  priority       Int       @default(3) // 1=urgent 2=important 3=normal 4=low
+  status         String    @default("pending") // 'pending' | 'done' | 'snoozed' | 'dismissed'
+  snoozedUntil   DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, status])
+  @@index([userId, requiresAction])
+  @@index([externalId])
+}
+
+model ChiefTask {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  description   String?
+  source        String?   // 'gmail' | 'transcript' | 'manual'
+  sourceId      String?   // reference to InboxItem
+  sourceContext String?   // snippet showing where task came from
+  priority      Int       @default(3)
+  status        String    @default("todo") // 'todo' | 'in_progress' | 'done' | 'cancelled'
+  dueDate       DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, priority])
+}

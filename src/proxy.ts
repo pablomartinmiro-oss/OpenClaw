@@ -25,6 +25,11 @@ const PUBLIC_ROUTES = [
   "/survey",
   "/api/survey",
   "/api/agents/run",
+  "/api/integrations/gmail",
+  "/api/integrations/transcript",
+  "/api/brain/briefing",
+  "/api/chief",
+  "/chief-of-staff",
 ];
 
 export async function proxy(req: NextRequest) {
