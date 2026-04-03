@@ -1,5 +1,5 @@
 {
-  "provider": "nodejs",
+  "provider": "node",
   "install": "npm install --legacy-peer-deps",
   "build": "npx prisma generate && npm run build",
   "start": "npm start"
