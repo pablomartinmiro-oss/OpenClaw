@@ -10,6 +10,8 @@ export * from "./spa";
 export * from "./finance";
 export * from "./suppliers";
 export * from "./tpv";
+export * from "./reav";
+export * from "./storefront";
 
 // ==================== HELPER ====================
 /**
