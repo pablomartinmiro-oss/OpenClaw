@@ -67,6 +67,30 @@ function useDelById(basePath: string, keys: string[][]) {
   });
 }
 
+// ==================== DASHBOARD ====================
+export interface FinanceDashboardData {
+  summary: {
+    totalInvoiced: number;
+    totalExpenses: number;
+    netProfit: number;
+    pendingInvoices: number;
+  };
+  invoiceByStatus: Array<{ status: string; total: number; count: number }>;
+  expensesByCategory: Array<{ categoryId: string; categoryName: string; total: number }>;
+  recentTransactions: Array<{
+    id: string; date: string; amount: number; method: string;
+    status: string; reference: string | null;
+    invoice: { id: string; number: string } | null;
+  }>;
+}
+
+export function useFinanceDashboard() {
+  return useQuery<FinanceDashboardData>({
+    queryKey: ["financeDashboard"],
+    queryFn: () => fetchJSON("/api/finance/dashboard"),
+  });
+}
+
 // ==================== INVOICES ====================
 export interface InvoiceLine {
   id: string; invoiceId: string; description: string; quantity: number;

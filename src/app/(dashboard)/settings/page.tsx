@@ -15,7 +15,8 @@ import { SeasonCalendarCard } from "./_components/SeasonCalendarCard";
 import { PriceImportCard } from "./_components/PriceImportCard";
 import { SeedCatalogCard } from "./_components/SeedCatalogCard";
 import { SurveyUrlCard } from "./_components/SurveyUrlCard";
-import { Building2, RefreshCw, Package, Plug, Users } from "lucide-react";
+import { ModulesCard } from "./_components/ModulesCard";
+import { Building2, RefreshCw, Package, Plug, Users, Blocks } from "lucide-react";
 import { toast } from "sonner";
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
@@ -165,6 +166,16 @@ export default function SettingsPage() {
             <SurveyUrlCard slug={tenant?.slug ?? ""} loading={tenantLoading} />
             <GrouponMappingCard />
           </div>
+        </section>
+      </RoleGate>
+
+      <SectionDivider />
+
+      {/* Modulos */}
+      <RoleGate permission="settings:tenant">
+        <section>
+          <SectionHeader icon={Blocks} title="Modulos" />
+          <ModulesCard />
         </section>
       </RoleGate>
 

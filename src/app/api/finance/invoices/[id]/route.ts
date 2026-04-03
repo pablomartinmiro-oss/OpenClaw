@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { validateBody, updateInvoiceSchema } from "@/lib/validation";
+import { createReavFromInvoice } from "@/lib/finance/auto-reav";
 
 export async function GET(
   _request: NextRequest,
@@ -66,6 +67,14 @@ export async function PATCH(
 
     const invoice = await prisma.invoice.update({ where: { id, tenantId }, data: updateData });
     log.info({ invoiceId: id }, "Invoice updated");
+
+    // Auto-create REAV expedient when invoice is sent or paid
+    if (data.status === "sent" || data.status === "paid") {
+      createReavFromInvoice(tenantId, id).catch((err) => {
+        log.error({ err, invoiceId: id }, "Auto-REAV creation failed — non-blocking");
+      });
+    }
+
     return NextResponse.json({ invoice });
   } catch (error) {
     return apiError(error, { publicMessage: "Error al actualizar factura", code: "INVOICE_UPDATE_ERROR", logContext: { tenantId } });

@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, CreditCard, Settings2 } from "lucide-react";
+import { BarChart3, Receipt, CreditCard, Settings2 } from "lucide-react";
+import DashboardTab from "./_components/DashboardTab";
 import InvoicesTab from "./_components/InvoicesTab";
 import ExpensesTab from "./_components/ExpensesTab";
 import ConfigTab from "./_components/ConfigTab";
 
 const TABS = [
+  { key: "dashboard", label: "Resumen", icon: BarChart3 },
   { key: "invoices", label: "Facturas", icon: Receipt },
   { key: "expenses", label: "Gastos", icon: CreditCard },
   { key: "config", label: "Configuración", icon: Settings2 },
 ] as const;
 
 export default function FinancePage() {
-  const [activeTab, setActiveTab] = useState<string>("invoices");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
 
   return (
     <div className="space-y-6">
@@ -37,6 +39,7 @@ export default function FinancePage() {
           );
         })}
       </div>
+      {activeTab === "dashboard" && <DashboardTab />}
       {activeTab === "invoices" && <InvoicesTab />}
       {activeTab === "expenses" && <ExpensesTab />}
       {activeTab === "config" && <ConfigTab />}

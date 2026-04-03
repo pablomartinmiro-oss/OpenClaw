@@ -10,6 +10,7 @@ import {
   validateBody,
   storefrontRestaurantBookingSchema,
 } from "@/lib/validation";
+import { sendBookingConfirmation } from "@/lib/booking/send-confirmation";
 
 type RouteCtx = { params: Promise<{ slug: string }> };
 
@@ -114,6 +115,21 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       { bookingId: booking.id, restaurantId, guestCount },
       "Restaurant booking created from storefront"
     );
+
+    // Fire-and-forget confirmation email
+    if (clientEmail) {
+      sendBookingConfirmation("restaurant", {
+        clientName,
+        clientEmail,
+        restaurant: booking.restaurant?.title ?? "Restaurante",
+        date: date instanceof Date
+          ? date.toLocaleDateString("es-ES")
+          : String(date),
+        time,
+        guests: guestCount,
+        notes: specialRequests,
+      }, tenant.id);
+    }
 
     return NextResponse.json(
       {

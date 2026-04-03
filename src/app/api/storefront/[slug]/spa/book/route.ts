@@ -10,6 +10,7 @@ import {
   validateBody,
   storefrontSpaBookingSchema,
 } from "@/lib/validation";
+import { sendBookingConfirmation } from "@/lib/booking/send-confirmation";
 
 type RouteCtx = { params: Promise<{ slug: string }> };
 
@@ -115,6 +116,19 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       { reservationId: reservation.id, treatmentId },
       "Spa booking created from storefront"
     );
+
+    // Fire-and-forget confirmation email
+    sendBookingConfirmation("spa", {
+      clientName,
+      clientEmail,
+      treatment: treatment.title,
+      date: slot.date instanceof Date
+        ? slot.date.toLocaleDateString("es-ES")
+        : String(slot.date),
+      time: slot.time,
+      duration: `${treatment.duration} min`,
+      price: treatment.price,
+    }, tenant.id);
 
     return NextResponse.json(
       {

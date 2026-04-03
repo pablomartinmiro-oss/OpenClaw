@@ -211,7 +211,7 @@ Warm/premium aesthetic inspired by kinso.ai:
 - **Permanent demo tenant**: `isDemo: true` flag on Tenant, seeded via `npx prisma db seed`
 - **Demo users**: demo@skicenter.com (Owner), natalia@demo.skicenter.com (Sales Rep), manager@demo.skicenter.com (Manager) — all pw: `demo123`
 - **Legacy users**: admin@demo.com / demo1234 (Owner), sales@demo.com / demo1234 (Sales Rep)
-- **Demo data**: 50 contacts, 50 reservations, 12 quotes, 25 pipeline deals, 20 conversations, station capacity
+- **Demo data**: 50 contacts, 50 reservations, 12 quotes, 25 pipeline deals, 20 conversations, station capacity, hotel (3 room types + rates), restaurant (El Mirador + 2 shifts), spa (3 treatments + 2 resources), finance (2 cost centers + 3 expense categories), CMS (3 slideshow + 2 menu items), 5 categories, 3 locations
 - **Demo banner**: persistent coral banner "Modo demostración" with "Crear tu cuenta real →" CTA
 - **Reset demo**: POST `/api/admin/reset-demo` — wipes and re-seeds all demo data (demo tenant only)
 - **Clean tenant**: POST `/api/admin/clean-tenant` — removes reservations/quotes/capacity from current tenant
@@ -220,31 +220,86 @@ Warm/premium aesthetic inspired by kinso.ai:
 - Mock GHL: `ENABLE_MOCK_GHL=true`
 - Seed catalog on live: Settings → "Sembrar Catálogo" or `fetch('/api/admin/seed-products', {method:'POST'})`
 
+## API Route Map (All Modules)
+
+| Route prefix | Module | Methods | Description |
+|--------------|--------|---------|-------------|
+| `/api/catalog/categories` | catalog | GET, POST, PATCH, DELETE | Product categories CRUD |
+| `/api/catalog/locations` | catalog | GET, POST, PATCH, DELETE | Station/location CRUD |
+| `/api/catalog/variants` | catalog | GET, POST, PATCH, DELETE | Experience variants |
+| `/api/catalog/timeslots` | catalog | GET, POST, PATCH, DELETE | Product time slots |
+| `/api/booking/activities` | booking | GET, POST, PATCH, DELETE | Activity bookings |
+| `/api/booking/monitors` | booking | GET, POST, DELETE | Booking monitors (staff) |
+| `/api/booking/daily-orders` | booking | GET, POST, PATCH, DELETE | Daily operation orders |
+| `/api/booking/clients` | booking | GET, POST, PATCH, DELETE | Client registry |
+| `/api/hotel/room-types` | hotel | GET, POST, PATCH, DELETE | Room type CRUD |
+| `/api/hotel/seasons` | hotel | GET, POST, PATCH, DELETE | Rate season periods |
+| `/api/hotel/rates` | hotel | GET, POST, PATCH, DELETE | Room rates (type x season x day) |
+| `/api/hotel/blocks` | hotel | GET, POST, PATCH, DELETE | Room availability blocks |
+| `/api/hotel/availability` | hotel | GET | Room availability query |
+| `/api/spa/categories` | spa | GET, POST, PATCH, DELETE | Spa treatment categories |
+| `/api/spa/treatments` | spa | GET, POST, PATCH, DELETE | Spa treatment CRUD |
+| `/api/spa/resources` | spa | GET, POST, PATCH, DELETE | Cabins + therapists |
+| `/api/spa/slots` | spa | GET, POST, PATCH, DELETE | Spa slot availability |
+| `/api/spa/schedule-templates` | spa | GET, POST, PATCH, DELETE | Weekly schedule templates |
+| `/api/restaurant/venues` | restaurant | GET, POST, PATCH, DELETE | Restaurant CRUD |
+| `/api/restaurant/shifts` | restaurant | GET, POST, PATCH, DELETE | Shift CRUD (almuerzo/cena) |
+| `/api/restaurant/closures` | restaurant | GET, POST, DELETE | Closure dates |
+| `/api/restaurant/bookings` | restaurant | GET, POST, PATCH, DELETE | Table bookings |
+| `/api/restaurant/staff` | restaurant | GET, POST, DELETE | Staff assignments |
+| `/api/finance/invoices` | finance | GET, POST, PATCH, DELETE | Invoice CRUD + PDF |
+| `/api/finance/transactions` | finance | GET, POST, PATCH, DELETE | Transaction ledger |
+| `/api/finance/cost-centers` | finance | GET, POST, PATCH, DELETE | Cost center CRUD |
+| `/api/finance/expense-categories` | finance | GET, POST, PATCH, DELETE | Expense categories |
+| `/api/finance/expenses` | finance | GET, POST, PATCH, DELETE | Expense CRUD |
+| `/api/finance/recurring-expenses` | finance | GET, POST, PATCH, DELETE | Recurring expenses |
+| `/api/suppliers/*` | suppliers | GET, POST, PATCH, DELETE | Suppliers + settlements + lines + docs |
+| `/api/reav/expedients/*` | reav | GET, POST, PATCH, DELETE | REAV expedients + costs + docs |
+| `/api/tpv/registers` | tpv | GET, POST, PATCH, DELETE | Cash register CRUD |
+| `/api/tpv/sessions` | tpv | GET, POST, PATCH | Cash sessions + movements |
+| `/api/tpv/sales` | tpv | GET, POST, DELETE | TPV sale records |
+| `/api/storefront/discount-codes` | storefront | GET, POST, PATCH, DELETE | Discount codes + apply |
+| `/api/storefront/vouchers` | storefront | GET, POST, PATCH, DELETE | Compensation vouchers |
+| `/api/storefront/[slug]/*` | storefront | GET, POST | Public storefront (hotel/spa/restaurant/packs) |
+| `/api/cms/settings` | cms | GET, PATCH | Site settings |
+| `/api/cms/slideshow` | cms | GET, POST, PATCH, DELETE | Slideshow items |
+| `/api/cms/menu-items` | cms | GET, POST, PATCH, DELETE | Navigation menu |
+| `/api/cms/pages` | cms | GET, POST, PATCH, DELETE | Static pages + blocks |
+| `/api/ticketing/platforms` | ticketing | GET, POST, PATCH, DELETE | External platforms + products |
+| `/api/ticketing/redemptions` | ticketing | GET, POST, PATCH, DELETE | Coupon redemptions |
+| `/api/ticketing/email-config` | ticketing | GET, POST, PATCH, DELETE | Coupon email configs |
+| `/api/reviews` | reviews | GET, POST, PATCH, DELETE | Customer reviews |
+| `/api/packs` | packs | GET, POST, PATCH, DELETE | Lego packs + lines |
+
 ## File Structure (Key Directories)
 
 ```
 src/
 ├── app/
 │   ├── (auth)/          — login, register, onboarding
-│   ├── (dashboard)/     — all main pages (/, contacts, comms, pipeline, reservas, presupuestos, catalogo, settings)
-│   └── api/             — 32+ route files (auth, crm, admin, products, quotes, reservations, pricing, settings, voucher, health)
+│   ├── (dashboard)/     — all main pages (/, contacts, comms, pipeline, reservas, presupuestos, catalogo, settings, spa, hotel, restaurant, finance)
+│   ├── (storefront)/    — public tenant storefront pages
+│   └── api/             — 120+ route files across 16 modules
 ├── components/
 │   ├── layout/          — Sidebar, Topbar, MobileNav
 │   ├── shared/          — RoleGate, EmptyState, ErrorBoundary, DemoBanner, GHLEmptyState
 │   └── ui/              — shadcn/ui components
-├── hooks/               — React Query hooks (useGHL, useReservations, useQuotes, useProducts, usePricing, useSettings, useVoucher, useSeasonCalendar, usePermissions)
+├── hooks/               — React Query hooks (useGHL, useReservations, useQuotes, useProducts, usePricing, useSettings, useVoucher, useSeasonCalendar, usePermissions, useModules, useSpa)
 ├── lib/
-│   ├── auth/            — NextAuth config, permissions
+│   ├── auth/            — NextAuth config, permissions, guard.ts (requireTenant)
 │   ├── cache/           — Redis client, keys, TTLs
 │   ├── constants/       — product-catalog.ts (93 products), skicenter.ts (age brackets), demo-seed-data.ts (curated demo data)
 │   ├── data/            — getDataMode.ts
 │   ├── ghl/             — GHLClient (live), MockGHLClient, sync service
+│   ├── modules/         — registry.ts, guard.ts (requireModule), types.ts
 │   ├── pricing/         — types.ts, client.ts (pure), calculator.ts (server)
-│   └── quotes/          — auto-package.ts (season-aware quote builder)
+│   ├── quotes/          — auto-package.ts (season-aware quote builder)
+│   ├── storage/         — s3.ts (S3/R2 file upload)
+│   └── validation/      — index.ts + 15 module schema files (core, catalog, booking, hotel, spa, restaurant, finance, suppliers, tpv, reav, storefront, cms, packs, reviews, ticketing)
 ├── generated/prisma/    — Prisma generated client (do not edit)
 prisma/
-├── schema.prisma        — 20+ models
-├── seed.ts              — Demo tenant + data seeder (imports buildFullCatalog + demo-seed-data)
+├── schema.prisma        — 79 models across 16 modules
+├── seed.ts              — Demo tenant + data seeder (includes seedNewModules for hotel/spa/restaurant/finance/cms)
 └── migrations/          — 5 migrations
 ```
 

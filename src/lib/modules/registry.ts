@@ -59,6 +59,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
       { label: "Presupuestos", href: "/presupuestos", icon: "FileText", permission: null, roles: ["Owner / Manager"] },
       { label: "Reservas", href: "/reservas", icon: "CalendarCheck", permission: "reservations:view" },
       { label: "Operaciones", href: "/operations", icon: "ClipboardList", permission: null, roles: ["Owner / Manager"] },
+      { label: "Clientes", href: "/clients", icon: "UserCheck", permission: null },
     ],
     permissions: ["reservations:view", "reservations:create", "reservations:edit"],
   },

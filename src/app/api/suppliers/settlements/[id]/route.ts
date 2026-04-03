@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { validateBody, updateSettlementSchema } from "@/lib/validation";
+import { sendEmail } from "@/lib/email/client";
+import { buildSettlementNotificationHTML } from "@/lib/email/module-templates";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -119,6 +121,50 @@ export async function PATCH(
     });
 
     log.info({ settlementId: id }, "Settlement updated");
+
+    // Send email to supplier when status changes to "sent"
+    if (data.status === "sent") {
+      (async () => {
+        try {
+          const full = await prisma.supplierSettlement.findFirst({
+            where: { id, tenantId },
+            include: {
+              supplier: { select: { fiscalName: true, email: true } },
+            },
+          });
+          if (!full?.supplier?.email) {
+            log.info({ settlementId: id }, "Supplier has no email — skipping notification");
+            return;
+          }
+          const tenantRow = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            select: { name: true },
+          });
+          const startStr = new Date(full.startDate).toLocaleDateString("es-ES");
+          const endStr = new Date(full.endDate).toLocaleDateString("es-ES");
+          const html = buildSettlementNotificationHTML({
+            tenant: { name: tenantRow?.name ?? "Empresa" },
+            supplierName: full.supplier.fiscalName,
+            settlementNumber: full.number,
+            period: `${startStr} — ${endStr}`,
+            grossAmount: full.grossAmount,
+            commissionAmount: full.commissionAmount,
+            netAmount: full.netAmount,
+          });
+          await sendEmail({
+            tenantId,
+            contactId: null,
+            subject: `Liquidacion ${full.number} — ${tenantRow?.name ?? ""}`,
+            html,
+            to: full.supplier.email,
+          });
+          log.info({ settlementId: id, to: full.supplier.email }, "Settlement notification sent");
+        } catch (emailErr) {
+          log.error({ err: emailErr, settlementId: id }, "Settlement email failed — non-blocking");
+        }
+      })();
+    }
+
     return NextResponse.json({ settlement });
   } catch (error) {
     return apiError(error, {

@@ -310,6 +310,195 @@ async function seedDemoData(tenantId: string) {
   console.log("Seeded station capacity");
 }
 
+async function seedNewModules(tenantId: string) {
+  // ==================== CATEGORIES ====================
+  const catSlugs = ["esqui", "aventura", "bienestar", "gastronomia", "alojamiento"];
+  const catNames = ["Esquí", "Aventura", "Bienestar", "Gastronomía", "Alojamiento"];
+  for (let i = 0; i < catSlugs.length; i++) {
+    await prisma.category.upsert({
+      where: { tenantId_slug: { tenantId, slug: catSlugs[i] } },
+      update: {},
+      create: { tenantId, name: catNames[i], slug: catSlugs[i], sortOrder: i },
+    });
+  }
+  console.log("Seeded 5 categories");
+
+  // ==================== LOCATIONS ====================
+  const locData = [
+    { slug: "baqueira-beret", name: "Baqueira Beret", lat: 42.6975, lon: 0.9431 },
+    { slug: "sierra-nevada", name: "Sierra Nevada", lat: 37.0956, lon: -3.3963 },
+    { slug: "la-pinilla", name: "La Pinilla", lat: 41.2342, lon: -3.4906 },
+  ];
+  for (const loc of locData) {
+    await prisma.location.upsert({
+      where: { tenantId_slug: { tenantId, slug: loc.slug } },
+      update: {},
+      create: { tenantId, name: loc.name, slug: loc.slug, latitude: loc.lat, longitude: loc.lon },
+    });
+  }
+  console.log("Seeded 3 locations");
+
+  // ==================== HOTEL ====================
+  const roomTypes = [
+    { slug: "doble", title: "Habitación Doble", capacity: 2, basePrice: 120 },
+    { slug: "suite-junior", title: "Suite Junior", capacity: 2, basePrice: 180 },
+    { slug: "suite-familiar", title: "Suite Familiar", capacity: 4, basePrice: 250 },
+  ];
+  const rtIds: string[] = [];
+  for (const rt of roomTypes) {
+    const room = await prisma.roomType.upsert({
+      where: { tenantId_slug: { tenantId, slug: rt.slug } },
+      update: {},
+      create: { tenantId, title: rt.title, slug: rt.slug, capacity: rt.capacity, basePrice: rt.basePrice, images: JSON.parse("[]") },
+    });
+    rtIds.push(room.id);
+  }
+
+  const seasons = [
+    { name: "Temporada Alta", ranges: [["2026-12-20", "2027-01-06"], ["2027-02-15", "2027-02-28"]] },
+    { name: "Temporada Media", ranges: [["2027-01-07", "2027-02-14"], ["2027-03-01", "2027-04-15"]] },
+  ];
+  const seasonIds: string[] = [];
+  for (const s of seasons) {
+    // Use first range start as unique identifier
+    const season = await prisma.roomRateSeason.create({
+      data: { tenantId, name: s.name, startDate: new Date(s.ranges[0][0]), endDate: new Date(s.ranges[0][1]) },
+    });
+    seasonIds.push(season.id);
+  }
+
+  // Rates: room type x season x 7 days
+  const multipliers = [1.0, 1.5]; // media, alta
+  for (let ri = 0; ri < rtIds.length; ri++) {
+    for (let si = 0; si < seasonIds.length; si++) {
+      for (let dow = 0; dow < 7; dow++) {
+        const base = roomTypes[ri].basePrice * multipliers[si];
+        const weekendBump = dow === 5 || dow === 6 ? 20 : 0;
+        await prisma.roomRate.upsert({
+          where: { tenantId_roomTypeId_seasonId_dayOfWeek: { tenantId, roomTypeId: rtIds[ri], seasonId: seasonIds[si], dayOfWeek: dow } },
+          update: {},
+          create: { tenantId, roomTypeId: rtIds[ri], seasonId: seasonIds[si], dayOfWeek: dow, price: base + weekendBump },
+        });
+      }
+    }
+  }
+  console.log("Seeded hotel: 3 room types, 2 seasons, 42 rates");
+
+  // ==================== RESTAURANT ====================
+  const restaurant = await prisma.restaurant.upsert({
+    where: { tenantId_slug: { tenantId, slug: "el-mirador" } },
+    update: {},
+    create: { tenantId, title: "El Mirador", slug: "el-mirador", capacity: 60, operatingDays: JSON.parse("[1,2,3,4,5,6,0]") },
+  });
+  const shifts = [
+    { name: "Almuerzo", startTime: "13:00", endTime: "15:30", maxCapacity: 60, duration: 90 },
+    { name: "Cena", startTime: "20:00", endTime: "23:00", maxCapacity: 50, duration: 120 },
+  ];
+  for (const sh of shifts) {
+    // Delete existing to avoid duplicates, then create
+    await prisma.restaurantShift.deleteMany({ where: { tenantId, restaurantId: restaurant.id, name: sh.name } });
+    await prisma.restaurantShift.create({
+      data: { tenantId, restaurantId: restaurant.id, ...sh },
+    });
+  }
+  console.log("Seeded restaurant: El Mirador + 2 shifts");
+
+  // ==================== SPA ====================
+  const spaCats = [
+    { slug: "masajes", name: "Masajes" },
+    { slug: "faciales", name: "Faciales" },
+  ];
+  const spaCatIds: Record<string, string> = {};
+  for (let i = 0; i < spaCats.length; i++) {
+    const cat = await prisma.spaCategory.upsert({
+      where: { tenantId_slug: { tenantId, slug: spaCats[i].slug } },
+      update: {},
+      create: { tenantId, name: spaCats[i].name, slug: spaCats[i].slug, sortOrder: i },
+    });
+    spaCatIds[spaCats[i].slug] = cat.id;
+  }
+  const treatments = [
+    { slug: "masaje-relajante", title: "Masaje Relajante", catSlug: "masajes", duration: 60, price: 80 },
+    { slug: "masaje-deportivo", title: "Masaje Deportivo", catSlug: "masajes", duration: 45, price: 70 },
+    { slug: "facial-hidratante", title: "Facial Hidratante", catSlug: "faciales", duration: 30, price: 55 },
+  ];
+  for (const t of treatments) {
+    await prisma.spaTreatment.upsert({
+      where: { tenantId_slug: { tenantId, slug: t.slug } },
+      update: {},
+      create: { tenantId, categoryId: spaCatIds[t.catSlug], title: t.title, slug: t.slug, duration: t.duration, price: t.price, images: JSON.parse("[]") },
+    });
+  }
+  const spaResources = [
+    { type: "cabin", name: "Cabina 1" },
+    { type: "therapist", name: "María López" },
+  ];
+  for (const r of spaResources) {
+    const existing = await prisma.spaResource.findFirst({ where: { tenantId, name: r.name } });
+    if (!existing) {
+      await prisma.spaResource.create({ data: { tenantId, type: r.type, name: r.name } });
+    }
+  }
+  console.log("Seeded spa: 2 categories, 3 treatments, 2 resources");
+
+  // ==================== FINANCE ====================
+  const costCenters = [
+    { code: "OP", name: "Operaciones" },
+    { code: "ADM", name: "Administración" },
+  ];
+  for (const cc of costCenters) {
+    await prisma.costCenter.upsert({
+      where: { tenantId_code: { tenantId, code: cc.code } },
+      update: {},
+      create: { tenantId, name: cc.name, code: cc.code },
+    });
+  }
+  const expCategories = [
+    { code: "PER", name: "Personal" },
+    { code: "SUM", name: "Suministros" },
+    { code: "MKT", name: "Marketing" },
+  ];
+  for (const ec of expCategories) {
+    await prisma.expenseCategory.upsert({
+      where: { tenantId_code: { tenantId, code: ec.code } },
+      update: {},
+      create: { tenantId, name: ec.name, code: ec.code },
+    });
+  }
+  console.log("Seeded finance: 2 cost centers, 3 expense categories");
+
+  // ==================== CMS ====================
+  await prisma.slideshowItem.deleteMany({ where: { tenantId } });
+  const slideshow = [
+    { imageUrl: "https://placehold.co/1200x400/E87B5A/white?text=Bienvenido+a+Skicenter", caption: "Bienvenido a Skicenter", sortOrder: 0 },
+    { imageUrl: "https://placehold.co/1200x400/5B8C6D/white?text=Esquí+y+Aventura", caption: "Esquí y Aventura", sortOrder: 1 },
+    { imageUrl: "https://placehold.co/1200x400/D4A853/white?text=Spa+y+Bienestar", caption: "Spa y Bienestar", sortOrder: 2 },
+  ];
+  for (const s of slideshow) {
+    await prisma.slideshowItem.create({ data: { tenantId, ...s } });
+  }
+  await prisma.cmsMenuItem.deleteMany({ where: { tenantId } });
+  const menuItems = [
+    { label: "Inicio", url: "/", position: "header", sortOrder: 0 },
+    { label: "Experiencias", url: "/experiencias", position: "header", sortOrder: 1 },
+  ];
+  for (const mi of menuItems) {
+    await prisma.cmsMenuItem.create({ data: { tenantId, ...mi } });
+  }
+  console.log("Seeded CMS: 3 slideshow items, 2 menu items");
+
+  // Enable new modules
+  const newModules = ["catalog", "booking", "hotel", "spa", "restaurant", "finance", "cms"];
+  for (const mod of newModules) {
+    await prisma.moduleConfig.upsert({
+      where: { tenantId_module: { tenantId, module: mod } },
+      update: {},
+      create: { tenantId, module: mod, isEnabled: true },
+    });
+  }
+  console.log("Enabled new modules for demo tenant");
+}
+
 async function main() {
   // ==================== DEMO TENANT ====================
   const demoTenant = await prisma.tenant.upsert({
@@ -393,6 +582,8 @@ async function main() {
   console.log(`Seeded ${calendarCount} season calendar entries for demo tenant`);
 
   await seedDemoData(demoTenant.id);
+
+  await seedNewModules(demoTenant.id);
 
   console.log("Demo tenant seed complete");
 }

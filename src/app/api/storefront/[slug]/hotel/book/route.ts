@@ -10,6 +10,7 @@ import {
   validateBody,
   storefrontHotelBookingSchema,
 } from "@/lib/validation";
+import { sendBookingConfirmation } from "@/lib/booking/send-confirmation";
 
 type RouteCtx = { params: Promise<{ slug: string }> };
 
@@ -103,6 +104,18 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       { reservationId: result.id, nights: availability.nights },
       "Hotel booking created from storefront"
     );
+
+    // Fire-and-forget confirmation email
+    sendBookingConfirmation("hotel", {
+      clientName,
+      clientEmail,
+      roomType: "Habitacion",
+      checkIn: checkIn.toLocaleDateString("es-ES"),
+      checkOut: checkOut.toLocaleDateString("es-ES"),
+      nights: availability.nights,
+      guests,
+      totalPrice: availability.totalPrice,
+    }, tenant.id);
 
     return NextResponse.json(
       {
