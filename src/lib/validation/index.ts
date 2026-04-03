@@ -6,6 +6,7 @@ export * from "./catalog";
 export * from "./booking";
 export * from "./hotel";
 export * from "./restaurant";
+export * from "./spa";
 
 // ==================== HELPER ====================
 /**
