@@ -1,0 +1,243 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+function fetchJSON<T>(url: string): Promise<T> {
+  return fetch(url).then((res) => {
+    if (!res.ok) throw new Error(`${res.status}`);
+    return res.json();
+  });
+}
+
+function buildUrl(base: string, params: Record<string, string | undefined>) {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) sp.set(k, v);
+  }
+  const qs = sp.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
+function useMut<T>(url: string, method: string, keys: string[][]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: T) => {
+      const res = await fetch(url, {
+        method,
+        ...(method !== "DELETE" && {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => keys.forEach((k) => qc.invalidateQueries({ queryKey: k })),
+  });
+}
+
+function useMutWithId<T>(basePath: string, method: string, keys: string[][]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: T & { id: string }) => {
+      const { id, ...data } = input as Record<string, unknown> & { id: string };
+      const res = await fetch(`${basePath}/${id}`, {
+        method,
+        ...(method !== "DELETE" && {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => keys.forEach((k) => qc.invalidateQueries({ queryKey: k })),
+  });
+}
+
+function useDelById(basePath: string, keys: string[][]) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${basePath}/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => keys.forEach((k) => qc.invalidateQueries({ queryKey: k })),
+  });
+}
+
+// ==================== RESTAURANTS ====================
+export interface Restaurant {
+  id: string;
+  name: string;
+  slug: string;
+  capacity: number;
+  depositPerPerson: number;
+  operatingDays: number[];
+  active: boolean;
+  description: string | null;
+  createdAt: string;
+  _count?: { shifts: number; closures: number; bookings: number };
+}
+
+export function useRestaurants(active?: boolean) {
+  const url = buildUrl("/api/restaurant", {
+    active: active !== undefined ? String(active) : undefined,
+  });
+  return useQuery<{ restaurants: Restaurant[] }>({
+    queryKey: ["restaurants", active],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+export function useRestaurant(id: string) {
+  return useQuery<{ restaurant: Restaurant }>({
+    queryKey: ["restaurant", id],
+    queryFn: () => fetchJSON(`/api/restaurant/${id}`),
+    enabled: !!id,
+  });
+}
+
+type CreateRestaurantInput = {
+  name: string; slug?: string; capacity: number; depositPerPerson: number;
+  operatingDays: number[]; description?: string | null; active?: boolean;
+};
+type UpdateRestaurantInput = {
+  id: string; name?: string; slug?: string; capacity?: number;
+  depositPerPerson?: number; operatingDays?: number[];
+  description?: string | null; active?: boolean;
+};
+
+const restKeys = [["restaurants"]];
+export const useCreateRestaurant = () => useMut<CreateRestaurantInput>("/api/restaurant", "POST", restKeys);
+export const useUpdateRestaurant = () => useMutWithId<UpdateRestaurantInput>("/api/restaurant", "PATCH", restKeys);
+export const useDeleteRestaurant = () => useDelById("/api/restaurant", restKeys);
+
+// ==================== SHIFTS ====================
+export interface Shift {
+  id: string;
+  restaurantId: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  maxCapacity: number;
+  slotDuration: number;
+  restaurant?: { name: string };
+}
+
+export function useShifts(restaurantId?: string) {
+  const url = buildUrl("/api/restaurant/shifts", { restaurantId });
+  return useQuery<{ shifts: Shift[] }>({
+    queryKey: ["restaurantShifts", restaurantId],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateShiftInput = {
+  restaurantId: string; name: string; startTime: string;
+  endTime: string; maxCapacity: number; slotDuration: number;
+};
+type UpdateShiftInput = {
+  id: string; name?: string; startTime?: string; endTime?: string;
+  maxCapacity?: number; slotDuration?: number;
+};
+
+const shiftKeys = [["restaurantShifts"]];
+export const useCreateShift = () => useMut<CreateShiftInput>("/api/restaurant/shifts", "POST", shiftKeys);
+export const useUpdateShift = () => useMutWithId<UpdateShiftInput>("/api/restaurant/shifts", "PATCH", shiftKeys);
+export const useDeleteShift = () => useDelById("/api/restaurant/shifts", shiftKeys);
+
+// ==================== CLOSURES ====================
+export interface Closure {
+  id: string;
+  restaurantId: string;
+  date: string;
+  reason: string;
+  restaurant?: { name: string };
+}
+
+export function useClosures(restaurantId?: string, from?: string, to?: string) {
+  const url = buildUrl("/api/restaurant/closures", { restaurantId, from, to });
+  return useQuery<{ closures: Closure[] }>({
+    queryKey: ["restaurantClosures", restaurantId, from, to],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateClosureInput = { restaurantId: string; date: string; reason: string };
+const closureKeys = [["restaurantClosures"]];
+export const useCreateClosure = () => useMut<CreateClosureInput>("/api/restaurant/closures", "POST", closureKeys);
+export const useDeleteClosure = () => useDelById("/api/restaurant/closures", closureKeys);
+
+// ==================== BOOKINGS ====================
+export interface RestaurantBooking {
+  id: string;
+  restaurantId: string;
+  date: string;
+  time: string;
+  guestCount: number;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  status: "confirmed" | "cancelled" | "no_show";
+  depositStatus: "pending" | "paid";
+  depositAmount: number;
+  specialRequests: string | null;
+  notes: string | null;
+  restaurant?: { name: string };
+  createdAt: string;
+}
+
+export function useRestaurantBookings(
+  restaurantId?: string, date?: string, status?: string
+) {
+  const url = buildUrl("/api/restaurant/bookings", { restaurantId, date, status });
+  return useQuery<{ bookings: RestaurantBooking[] }>({
+    queryKey: ["restaurantBookings", restaurantId, date, status],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateBookingInput = {
+  restaurantId: string; date: string; time: string; guestCount: number;
+  clientName: string; clientEmail?: string | null; clientPhone?: string | null;
+  specialRequests?: string | null; notes?: string | null;
+};
+type UpdateBookingInput = {
+  id: string; status?: string; depositStatus?: string;
+  guestCount?: number; time?: string; specialRequests?: string | null;
+  notes?: string | null;
+};
+
+const bookingKeys = [["restaurantBookings"]];
+export const useCreateRestaurantBooking = () =>
+  useMut<CreateBookingInput>("/api/restaurant/bookings", "POST", bookingKeys);
+export const useUpdateRestaurantBooking = () =>
+  useMutWithId<UpdateBookingInput>("/api/restaurant/bookings", "PATCH", bookingKeys);
+export const useDeleteRestaurantBooking = () =>
+  useDelById("/api/restaurant/bookings", bookingKeys);
+
+// ==================== STAFF ====================
+export interface RestaurantStaff {
+  id: string;
+  restaurantId: string;
+  userId: string;
+  role: "staff" | "manager" | "chef";
+  user?: { name: string; email: string };
+  restaurant?: { name: string };
+  createdAt: string;
+}
+
+export function useRestaurantStaff(restaurantId?: string) {
+  const url = buildUrl("/api/restaurant/staff", { restaurantId });
+  return useQuery<{ staff: RestaurantStaff[] }>({
+    queryKey: ["restaurantStaff", restaurantId],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type AssignStaffInput = { restaurantId: string; userId: string; role: string };
+const staffKeys = [["restaurantStaff"]];
+export const useAssignStaff = () => useMut<AssignStaffInput>("/api/restaurant/staff", "POST", staffKeys);
+export const useUnassignStaff = () => useDelById("/api/restaurant/staff", staffKeys);

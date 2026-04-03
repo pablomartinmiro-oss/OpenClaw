@@ -5,6 +5,7 @@ export * from "./core";
 export * from "./catalog";
 export * from "./booking";
 export * from "./hotel";
+export * from "./restaurant";
 
 // ==================== HELPER ====================
 /**
