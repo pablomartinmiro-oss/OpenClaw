@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { StorefrontShell } from "./_components/StorefrontShell";
 
 export default async function StorefrontLayout({
   children,
@@ -10,7 +11,6 @@ export default async function StorefrontLayout({
 }) {
   const { slug } = await params;
 
-  // Look up tenant by slug
   const tenant = await prisma.tenant.findUnique({
     where: { slug },
     select: { id: true, name: true, slug: true },
@@ -21,16 +21,8 @@ export default async function StorefrontLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-white px-6 py-4">
-        <h1 className="text-lg font-semibold text-foreground">{tenant.name}</h1>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        {children}
-      </main>
-      <footer className="border-t border-border bg-white px-6 py-4 text-center text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} {tenant.name}
-      </footer>
-    </div>
+    <StorefrontShell tenantName={tenant.name} slug={tenant.slug}>
+      {children}
+    </StorefrontShell>
   );
 }

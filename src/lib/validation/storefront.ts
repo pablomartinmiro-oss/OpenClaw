@@ -40,3 +40,25 @@ export const updateCompensationVoucherSchema = z.object({
   expirationDate: z.coerce.date().optional().nullable(),
   linkedDiscountCodeId: z.string().optional().nullable(),
 });
+
+// ==================== STOREFRONT CART ====================
+export const addToCartSchema = z.object({
+  cartId: z.string().optional(),
+  productId: z.string().min(1),
+  productName: z.string().min(1).max(200),
+  quantity: z.number().int().min(1).max(50).default(1),
+  unitPrice: z.coerce.number().min(0),
+  variant: z.string().max(200).optional(),
+  date: z.string().optional(),
+});
+
+export const updateCartItemSchema = z.object({
+  quantity: z.number().int().min(1).max(50),
+});
+
+export const checkoutSchema = z.object({
+  cartId: z.string().min(1),
+  clientName: z.string().min(1).max(200),
+  clientEmail: z.string().email(),
+  clientPhone: z.string().max(30).optional(),
+});
