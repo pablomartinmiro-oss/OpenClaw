@@ -62,3 +62,34 @@ export const checkoutSchema = z.object({
   clientEmail: z.string().email(),
   clientPhone: z.string().max(30).optional(),
 });
+
+// ==================== STOREFRONT BOOKING SCHEMAS ====================
+
+export const storefrontHotelBookingSchema = z.object({
+  roomTypeId: z.string().min(1),
+  checkIn: z.coerce.date(),
+  checkOut: z.coerce.date(),
+  guests: z.number().int().min(1).max(20),
+  clientName: z.string().min(1).max(200),
+  clientEmail: z.string().email().max(255),
+  clientPhone: z.string().min(1).max(30),
+});
+
+export const storefrontSpaBookingSchema = z.object({
+  treatmentId: z.string().min(1),
+  date: z.coerce.date(),
+  time: z.string().min(1),
+  clientName: z.string().min(1).max(200),
+  clientEmail: z.string().email().max(255),
+  clientPhone: z.string().min(1).max(30),
+});
+
+export const storefrontRestaurantBookingSchema = z.object({
+  restaurantId: z.string().min(1),
+  date: z.coerce.date(),
+  time: z.string().min(1),
+  guestCount: z.number().int().min(1).max(100),
+  clientName: z.string().min(1).max(200),
+  clientEmail: z.string().email().max(255),
+  specialRequests: z.string().max(2000).optional().nullable(),
+});
