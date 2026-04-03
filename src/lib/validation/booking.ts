@@ -54,3 +54,43 @@ export const seasonCalendarSchema = z.object({
   endDate: z.coerce.date(),
   label: z.string().max(100).optional().nullable(),
 });
+
+// ==================== ACTIVITY BOOKINGS ====================
+export const createActivityBookingSchema = z.object({
+  reservationId: z.string().min(1),
+  activityDate: z.coerce.date(),
+  status: z.enum(["scheduled", "pending", "confirmed", "cancelled"]).default("scheduled"),
+  operationalNotes: z.string().max(2000).optional().nullable(),
+});
+export const updateActivityBookingSchema = z.object({
+  status: z.enum(["scheduled", "pending", "confirmed", "cancelled"]).optional(),
+  operationalNotes: z.string().max(2000).optional().nullable(),
+  arrivedClient: z.boolean().optional(),
+});
+
+// ==================== BOOKING MONITORS ====================
+export const assignMonitorSchema = z.object({
+  bookingId: z.string().min(1),
+  userId: z.string().min(1),
+});
+
+// ==================== DAILY ORDERS ====================
+export const createDailyOrderSchema = z.object({
+  date: z.coerce.date(),
+  notes: z.string().max(5000).optional().nullable(),
+});
+export const updateDailyOrderSchema = z.object({
+  notes: z.string().max(5000).optional().nullable(),
+});
+
+// ==================== CLIENTS ====================
+export const createClientSchema = z.object({
+  name: z.string().min(1).max(200),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().max(30).optional().nullable(),
+  birthDate: z.coerce.date().optional().nullable(),
+  address: z.string().max(500).optional().nullable(),
+  notes: z.string().max(5000).optional().nullable(),
+  conversionSource: z.string().max(100).optional().nullable(),
+});
+export const updateClientSchema = createClientSchema.partial();
