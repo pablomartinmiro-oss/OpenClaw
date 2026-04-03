@@ -1,18 +1,17 @@
-# CLAUDE.md — GHL Dashboard
+# CLAUDE.md — OpenClaw Hospitality Platform
 
 ## Identity
 
-You are an autonomous senior full-stack engineer building a multi-tenant Skicenter ski travel agency dashboard on GoHighLevel (GHL). Ship production-grade code. Execute, verify, prove it works.
+You are an autonomous senior full-stack engineer building a multi-tenant hospitality platform (ski resorts, hotels, spas, restaurants) with modular architecture. Ship production-grade code. Execute, verify, prove it works.
 
 ## Project
 
-- **Stack:** Next.js 16 (App Router), TypeScript (strict), Tailwind v4 + shadcn/ui, Prisma v7 + Postgres, Redis, GHL API v2, Claude API
+- **Stack:** Next.js 16 (App Router), TypeScript (strict), Tailwind v4 + shadcn/ui, Prisma v7 + Postgres, Redis, GHL API v2, Claude API, S3/R2
 - **Deploy:** Railway (Docker + Postgres + Redis)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Last pushed:** commit 67d1601 (2026-03-17) — GHL connected + Nexor import
-- **Last deployed:** commit fc2e8d0 (2026-03-16) — Railway auto-deploys from main
-- **Phases completed:** A through T (20 phases) + GHL OAuth + Nexor import (4,092 opportunities)
+- **Prisma models:** 79 models across 16 modules
+- **Phases completed:** A through X (CRM dashboard) + Platform Expansion Phase 1 (module architecture)
 
 ## Key Docs
 
@@ -38,6 +37,84 @@ You are an autonomous senior full-stack engineer building a multi-tenant Skicent
 | `GHL_WEBHOOK_SECRET` | HMAC-SHA256 webhook verification secret |
 | `ENABLE_MOCK_GHL` | Set `true` for fake GHL data in dev |
 | `ANTHROPIC_API_KEY` | Claude API key (voucher image reader — uses `process.env` not `env.X`) |
+| `S3_BUCKET` | S3/R2 bucket name (optional — file uploads disabled without it) |
+| `S3_REGION` | S3 region (default: `auto` for R2) |
+| `S3_ENDPOINT` | S3/R2 endpoint URL |
+| `S3_ACCESS_KEY_ID` | S3 access key |
+| `S3_SECRET_ACCESS_KEY` | S3 secret key |
+
+## Module System (16 Modules)
+
+The platform is organized into **16 toggleable modules**. Each tenant can enable/disable modules via Settings.
+
+| Module | Slug | Section | Dependencies | Models |
+|--------|------|---------|--------------|--------|
+| Principal | `core` | Principal | — (always on) | Tenant, User, Role, ModuleConfig |
+| CRM | `crm` | Ventas | — | CachedContact, CachedConversation, CachedOpportunity, CachedPipeline |
+| Catálogo | `catalog` | Ventas | — | Product, Category, Location, ExperienceVariant, ProductTimeSlot |
+| Reservas | `booking` | Ventas | catalog | Quote, QuoteItem, Reservation, ActivityBooking, BookingMonitor, DailyOrder |
+| Hotel | `hotel` | Operaciones | booking | RoomType, RoomRateSeason, RoomRate, RoomBlock |
+| Spa | `spa` | Operaciones | booking | SpaCategory, SpaTreatment, SpaResource, SpaSlot, SpaScheduleTemplate |
+| Restaurante | `restaurant` | Operaciones | — | Restaurant, RestaurantShift, RestaurantClosure, RestaurantBooking, RestaurantStaff |
+| Finanzas | `finance` | Gestión | — | Invoice, InvoiceLine, Transaction, CostCenter, ExpenseCategory, Expense, ExpenseFile, RecurringExpense |
+| Proveedores | `suppliers` | Gestión | finance | Supplier, SupplierSettlement, SettlementLine, SettlementDocument, SettlementStatusLog |
+| REAV | `reav` | Gestión | finance, suppliers | ReavExpedient, ReavCost, ReavDocument |
+| TPV | `tpv` | Gestión | finance | CashRegister, CashSession, CashMovement, TpvSale, TpvSaleItem |
+| Tienda Online | `storefront` | Online | catalog | DiscountCode, DiscountCodeUse, CompensationVoucher |
+| Contenidos | `cms` | Online | — | SiteSetting, SlideshowItem, CmsMenuItem, StaticPage, PageBlock |
+| Ticketing | `ticketing` | Ventas | booking | ExternalPlatform, PlatformProduct, CouponRedemption, CouponEmailConfig |
+| Reseñas | `reviews` | Online | — | Review |
+| Packs | `packs` | Ventas | catalog, booking | LegoPack, LegoPackLine |
+
+### Module Architecture Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/modules/registry.ts` | Module definitions (slug, name, icon, dependencies, navItems, permissions) |
+| `src/lib/modules/guard.ts` | `requireModule(tenantId, slug)` — API route guard (Redis-cached, returns 403 if disabled) |
+| `src/lib/modules/types.ts` | TypeScript interfaces (ModuleDefinition, ModuleState, NavItemDef) |
+| `src/hooks/useModules.ts` | React hook: `useModules()` → `{ isEnabled(slug), toggleModule, modules }` |
+| `src/app/api/settings/modules/route.ts` | GET (list modules) + PATCH (toggle with dependency validation) |
+
+### Module Guard Pattern
+
+```typescript
+// In any API route for a non-core module:
+const [session, authError] = await requireTenant();
+if (authError) return authError;
+const modError = await requireModule(session.tenantId, "hotel");
+if (modError) return modError;
+```
+
+### Dynamic Sidebar
+
+Sidebar nav items are built from `MODULE_REGISTRY` filtered by `useModules().isEnabled()`. Items are grouped by section (Principal, Ventas, Operaciones, Gestión, Online).
+
+## File Storage (S3/R2)
+
+- **Service:** `src/lib/storage/s3.ts` — `uploadFile()`, `deleteFile()`, `getSignedUrl()`
+- **API:** `POST /api/upload` — multipart form data, validates type + size
+- **Key format:** `{tenantId}/{module}/{entityId}/{uuid}-{filename}`
+- **Limits:** Images 10MB (jpeg/png/webp/gif), Docs 25MB (pdf/xlsx)
+- **Compatible:** AWS S3, Cloudflare R2, MinIO
+
+## Validation (Split by Module)
+
+Schemas are organized in `src/lib/validation/`:
+- `index.ts` — re-exports all + `validateBody()` helper
+- `core.ts` — registerSchema, updateTenantSchema, inviteTeamMemberSchema, contactFormSchema
+- `catalog.ts` — createProductSchema, updateProductSchema, bulkImportProductSchema
+- `booking.ts` — createQuoteSchema, quoteItemSchema, createReservationSchema, seasonCalendarSchema
+- `hotel.ts`, `spa.ts`, `restaurant.ts`, `finance.ts`, `suppliers.ts`, `tpv.ts`, `storefront.ts`, `cms.ts` — stub files for future schemas
+
+All existing imports of `@/lib/validation` still work via re-exports.
+
+## Public Storefront
+
+- **Route:** `(storefront)/s/[slug]/*` — tenant-scoped public pages
+- **Layout:** Minimal header + footer with tenant name, no sidebar/auth
+- **Middleware:** `/s/*`, `/api/storefront/*`, `/api/reviews/public/*` are public routes
+- **Future:** Cart in Redis, checkout creates Quote + Redsys payment
 
 ## Auth System
 

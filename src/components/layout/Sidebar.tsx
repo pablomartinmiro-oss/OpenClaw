@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,83 +15,65 @@ import {
   Package,
   CalendarCheck,
   Mountain,
+  Building2,
+  Sparkles,
+  UtensilsCrossed,
+  Receipt,
+  Truck,
+  Scale,
+  CreditCard,
+  ShoppingCart,
+  PanelsTopLeft,
+  Ticket,
+  Star,
+  Boxes,
+  ClipboardList,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useModules } from "@/hooks/useModules";
 import { useQuoteDraftCount } from "@/hooks/useQuotes";
 import { Badge } from "@/components/ui/badge";
+import { MODULE_REGISTRY, SECTION_ORDER } from "@/lib/modules/registry";
 import type { PermissionKey } from "@/types/auth";
 
-interface NavItem {
+/** Map icon name strings from the registry to actual Lucide components */
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Settings,
+  Users,
+  Kanban,
+  MessageSquare,
+  Package,
+  FileText,
+  CalendarCheck,
+  ClipboardList,
+  Building2,
+  Sparkles,
+  UtensilsCrossed,
+  Receipt,
+  Truck,
+  Scale,
+  CreditCard,
+  ShoppingCart,
+  PanelsTopLeft,
+  Ticket,
+  Star,
+  Boxes,
+};
+
+interface ResolvedNavItem {
   label: string;
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   permission: PermissionKey | null;
-  /** Roles allowed to see this item. Empty = all roles */
   roles?: string[];
-  badge?: number;
-  shortcut?: string;
+  badge?: string;
+  section: string;
+  sectionLabel: string;
+  sectionOrder: number;
 }
-
-// Role-based visibility:
-// Owner/Manager: everything
-// Sales Rep: Dashboard, Reservas, Comunicaciones, Catálogo
-// VA/Admin + Marketing: permission-based filtering handles it
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/",
-    icon: LayoutDashboard,
-    permission: null,
-    shortcut: "G H",
-  },
-  {
-    label: "Presupuestos",
-    href: "/presupuestos",
-    icon: FileText,
-    permission: null,
-    roles: ["Owner / Manager"],
-  },
-  {
-    label: "Reservas",
-    href: "/reservas",
-    icon: CalendarCheck,
-    permission: null,
-  },
-  {
-    label: "Catálogo",
-    href: "/catalogo",
-    icon: Package,
-    permission: null,
-  },
-  {
-    label: "Comunicaciones",
-    href: "/comms",
-    icon: MessageSquare,
-    permission: "comms:view",
-  },
-  {
-    label: "Contactos",
-    href: "/contacts",
-    icon: Users,
-    permission: "contacts:view",
-    roles: ["Owner / Manager"],
-  },
-  {
-    label: "Pipeline",
-    href: "/pipeline",
-    icon: Kanban,
-    permission: "pipelines:view",
-    roles: ["Owner / Manager"],
-  },
-  {
-    label: "Ajustes",
-    href: "/settings",
-    icon: Settings,
-    permission: "settings:team",
-    roles: ["Owner / Manager"],
-  },
-];
 
 interface SidebarProps {
   unreadCount?: number;
@@ -102,17 +84,60 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { can, roleName } = usePermissions();
+  const { isEnabled } = useModules();
   const { data: draftCount = 0 } = useQuoteDraftCount();
 
-  const visibleItems = NAV_ITEMS.filter((item) => {
-    // Permission check
+  /** Build nav items from enabled modules */
+  const resolvedItems = useMemo(() => {
+    const items: ResolvedNavItem[] = [];
+
+    for (const mod of Object.values(MODULE_REGISTRY)) {
+      if (!isEnabled(mod.slug)) continue;
+
+      const sectionMeta = SECTION_ORDER[mod.section] ?? { label: mod.section, order: 99 };
+
+      for (const nav of mod.navItems) {
+        const Icon = ICON_MAP[nav.icon];
+        if (!Icon) continue;
+
+        items.push({
+          label: nav.label,
+          href: nav.href,
+          icon: Icon,
+          permission: (nav.permission ?? null) as PermissionKey | null,
+          roles: nav.roles,
+          badge: nav.badge,
+          section: mod.section,
+          sectionLabel: sectionMeta.label,
+          sectionOrder: sectionMeta.order,
+        });
+      }
+    }
+
+    // Sort by section order (items within a section keep registry order)
+    items.sort((a, b) => a.sectionOrder - b.sectionOrder);
+    return items;
+  }, [isEnabled]);
+
+  /** Filter by permission and role */
+  const visibleItems = resolvedItems.filter((item) => {
     if (item.permission !== null && !can(item.permission)) return false;
-    // Role check: if roles defined, user's role must be in the list
     if (item.roles && item.roles.length > 0 && !item.roles.includes(roleName)) {
       return false;
     }
     return true;
   });
+
+  /** Get badge count for a nav item */
+  function getBadgeCount(item: ResolvedNavItem): number {
+    if (item.badge === "unreadMessages") return unreadCount;
+    if (item.badge === "todayReservations") return todayReservations;
+    if (item.badge === "draftQuotes") return draftCount;
+    return 0;
+  }
+
+  /** Track which section labels have been rendered */
+  let lastSection = "";
 
   return (
     <aside
@@ -155,53 +180,68 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {visibleItems.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"
               : pathname.startsWith(item.href);
           const Icon = item.icon;
-          const badgeCount =
-            item.href === "/comms" ? unreadCount :
-            item.href === "/reservas" ? todayReservations :
-            item.href === "/presupuestos" ? draftCount : 0;
+          const badgeCount = getBadgeCount(item);
           const showBadge = badgeCount > 0;
 
+          // Section header
+          let sectionHeader: React.ReactNode = null;
+          if (item.sectionLabel && item.section !== lastSection && !collapsed) {
+            lastSection = item.section;
+            sectionHeader = (
+              <div
+                key={`section-${item.section}`}
+                className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500"
+              >
+                {item.sectionLabel}
+              </div>
+            );
+          } else if (item.section !== lastSection) {
+            lastSection = item.section;
+          }
+
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                isActive
-                  ? "bg-[#162032] text-white font-medium"
-                  : "text-slate-400 hover:bg-[#162032] hover:text-slate-200 hover:translate-x-0.5",
-                collapsed && "justify-center px-2"
-              )}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon className={cn(
-                "h-5 w-5 shrink-0 transition-colors duration-150",
-                isActive ? "text-blue-400" : "text-slate-500"
-              )} />
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {showBadge && (
-                    <Badge
-                      variant={item.href === "/comms" || item.href === "/presupuestos" ? "destructive" : "secondary"}
-                      className="h-5 min-w-5 justify-center rounded-full px-1 text-xs"
-                    >
-                      {badgeCount > 99 ? "99+" : badgeCount}
-                    </Badge>
-                  )}
-                </>
-              )}
-              {collapsed && showBadge && (
-                <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-destructive" />
-              )}
-            </Link>
+            <div key={item.href}>
+              {sectionHeader}
+              <Link
+                href={item.href}
+                className={cn(
+                  "group relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                  isActive
+                    ? "bg-[#162032] text-white font-medium"
+                    : "text-slate-400 hover:bg-[#162032] hover:text-slate-200 hover:translate-x-0.5",
+                  collapsed && "justify-center px-2"
+                )}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon className={cn(
+                  "h-5 w-5 shrink-0 transition-colors duration-150",
+                  isActive ? "text-blue-400" : "text-slate-500"
+                )} />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1">{item.label}</span>
+                    {showBadge && (
+                      <Badge
+                        variant={item.href === "/comms" || item.href === "/presupuestos" ? "destructive" : "secondary"}
+                        className="h-5 min-w-5 justify-center rounded-full px-1 text-xs"
+                      >
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </Badge>
+                    )}
+                  </>
+                )}
+                {collapsed && showBadge && (
+                  <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-destructive" />
+                )}
+              </Link>
+            </div>
           );
         })}
       </nav>

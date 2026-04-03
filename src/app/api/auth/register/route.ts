@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { rateLimit, getClientIP } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-response";
 import { validateBody, registerSchema } from "@/lib/validation";
+import { ALL_MODULE_SLUGS } from "@/lib/modules/registry";
 
 const DEFAULT_OWNER_PERMISSIONS = [
   "comms:view", "comms:send", "comms:assign",
@@ -149,9 +150,9 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Enable default modules
+      // Enable all modules by default for new tenants
       await tx.moduleConfig.createMany({
-        data: ["comms", "pipelines", "analytics", "contacts"].map((mod) => ({
+        data: ALL_MODULE_SLUGS.map((mod) => ({
           tenantId: tenant.id,
           module: mod,
           isEnabled: true,
