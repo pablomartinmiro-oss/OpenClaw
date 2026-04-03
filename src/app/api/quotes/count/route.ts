@@ -1,13 +1,23 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
+import { apiError } from "@/lib/api-response";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
-  const borrador = await prisma.quote.count({ where: { tenantId, status: "borrador" } });
-  return NextResponse.json({ borrador });
+  const { tenantId } = session;
+
+  try {
+    const borrador = await prisma.quote.count({ where: { tenantId, status: "borrador" } });
+    return NextResponse.json({ borrador });
+  } catch (error) {
+    return apiError(error, {
+      publicMessage: "Failed to count quotes",
+      code: "QUOTE_COUNT_ERROR",
+      logContext: { tenantId },
+    });
+  }
 }

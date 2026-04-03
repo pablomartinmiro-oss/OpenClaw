@@ -1,20 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId, permissions } = session.user;
-
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/season-calendar/${id}` });
 
@@ -41,11 +39,11 @@ export async function PATCH(
     log.info({ entryId: id }, "Season calendar entry updated");
     return NextResponse.json({ entry });
   } catch (error) {
-    log.error({ error }, "Failed to update season calendar entry");
-    return NextResponse.json(
-      { error: "Failed to update season calendar entry" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al actualizar entrada de calendario",
+      code: "SEASON_CALENDAR_UPDATE_FAILED",
+      logContext: { tenantId },
+    });
   }
 }
 
@@ -53,13 +51,10 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId, permissions } = session.user;
-
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/season-calendar/${id}` });
 
@@ -76,10 +71,10 @@ export async function DELETE(
     log.info({ entryId: id }, "Season calendar entry deleted");
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error({ error }, "Failed to delete season calendar entry");
-    return NextResponse.json(
-      { error: "Failed to delete season calendar entry" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al eliminar entrada de calendario",
+      code: "SEASON_CALENDAR_DELETE_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

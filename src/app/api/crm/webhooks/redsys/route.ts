@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { verifyRedsysSignature } from "@/lib/redsys/client";
@@ -172,10 +173,6 @@ export async function POST(request: NextRequest) {
     // Redsys expects 200 OK
     return NextResponse.json({ status: "ok" });
   } catch (error) {
-    log.error({ error }, "Error processing Redsys webhook");
-    return NextResponse.json(
-      { error: "Internal error" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Internal error", code: "REDSYS_WEBHOOK_ERROR" });
   }
 }

@@ -1,16 +1,21 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody } from "@/lib/validation";
+import { z } from "zod";
+
+const patchTenantSchema = z.object({
+  onboardingDismissed: z.boolean().optional(),
+});
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/tenant" });
 
   try {
@@ -73,31 +78,31 @@ export async function GET() {
     log.info("Tenant settings fetched");
     return NextResponse.json({ tenant, syncStatus });
   } catch (error) {
-    log.error({ error }, "Failed to fetch tenant settings");
-    return NextResponse.json(
-      { error: "Failed to fetch settings", code: "SETTINGS_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to fetch settings",
+      code: "SETTINGS_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/tenant" });
 
   try {
     const body = await request.json();
-    const { onboardingDismissed } = body as { onboardingDismissed?: boolean };
+    const validated = validateBody(body, patchTenantSchema);
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
+    const data = validated.data;
 
     const updated = await prisma.tenant.update({
       where: { id: tenantId },
       data: {
-        ...(onboardingDismissed !== undefined ? { onboardingDismissed } : {}),
+        ...(data.onboardingDismissed !== undefined ? { onboardingDismissed: data.onboardingDismissed } : {}),
       },
       select: { id: true, onboardingDismissed: true },
     });
@@ -105,7 +110,10 @@ export async function PATCH(request: NextRequest) {
     log.info("Tenant settings updated");
     return NextResponse.json({ tenant: updated });
   } catch (error) {
-    log.error({ error }, "Failed to update tenant settings");
-    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to update settings",
+      code: "SETTINGS_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

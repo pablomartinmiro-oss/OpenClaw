@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
 import { sendEmail } from "@/lib/email/client";
 import { buildQuoteEmailHTML } from "@/lib/email/templates";
@@ -16,12 +17,10 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${id}/send` });
 
@@ -174,10 +173,10 @@ export async function POST(
       redsysOrderId: redsysPaymentUrl ? orderId : null,
     });
   } catch (error) {
-    log.error({ error, quoteId: id }, "Failed to send quote");
-    return NextResponse.json(
-      { error: "Error al enviar el presupuesto" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al enviar el presupuesto",
+      code: "QUOTE_SEND_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }

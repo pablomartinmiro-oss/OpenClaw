@@ -1,19 +1,19 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody, quoteItemSchema } from "@/lib/validation";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id: quoteId } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${quoteId}/items` });
 
@@ -26,26 +26,32 @@ export async function POST(
     }
 
     const body = await request.json();
-    const unitPrice = parseFloat(body.unitPrice);
-    const quantity = parseInt(body.quantity) || 1;
+    const validated = validateBody(body, quoteItemSchema);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const data = validated.data;
+
+    const unitPrice = data.unitPrice;
+    const quantity = data.quantity;
     const discount = parseFloat(body.discount) || 0;
     const totalPrice = unitPrice * quantity * (1 - discount / 100);
 
     const item = await prisma.quoteItem.create({
       data: {
         quoteId,
-        productId: body.productId || null,
+        productId: data.productId || null,
         name: body.name,
-        description: body.description || null,
+        description: data.description || null,
         category: body.category || null,
         quantity,
         unitPrice,
         discount,
         totalPrice,
-        startDate: body.startDate ? new Date(body.startDate) : null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: body.endDate ? new Date(body.endDate) : null,
-        numDays: body.numDays ? parseInt(body.numDays) : null,
-        numPersons: body.numPersons ? parseInt(body.numPersons) : null,
+        numDays: data.numDays ?? null,
+        numPersons: data.numPersons ?? null,
         modalidad: body.modalidad || null,
         nivel: body.nivel || null,
         sector: body.sector || null,
@@ -71,11 +77,11 @@ export async function POST(
     log.info({ quoteId, itemId: item.id }, "Quote item added");
     return NextResponse.json({ item, totalAmount }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to add quote item");
-    return NextResponse.json(
-      { error: "Failed to add item", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to add item",
+      code: "QUOTE_ITEM_ADD_ERROR",
+      logContext: { tenantId, quoteId },
+    });
   }
 }
 
@@ -83,12 +89,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id: quoteId } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${quoteId}/items` });
 
@@ -158,10 +162,10 @@ export async function PUT(
     log.info({ quoteId, itemCount: items.length }, "Quote items replaced");
     return NextResponse.json({ items, totalAmount });
   } catch (error) {
-    log.error({ error }, "Failed to update quote items");
-    return NextResponse.json(
-      { error: "Failed to update items", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to update items",
+      code: "QUOTE_ITEMS_UPDATE_ERROR",
+      logContext: { tenantId, quoteId },
+    });
   }
 }

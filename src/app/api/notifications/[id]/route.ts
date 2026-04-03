@@ -1,22 +1,31 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
+import { apiError } from "@/lib/api-response";
 
 export async function PATCH(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const userId = session.user.id;
+  const { userId, tenantId } = session;
 
-  await prisma.notification.updateMany({
-    where: { id, userId },
-    data: { isRead: true },
-  });
+  try {
+    await prisma.notification.updateMany({
+      where: { id, userId },
+      data: { isRead: true },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return apiError(error, {
+      publicMessage: "Error al actualizar notificación",
+      code: "NOTIFICATION_UPDATE_FAILED",
+      logContext: { tenantId },
+    });
+  }
 }

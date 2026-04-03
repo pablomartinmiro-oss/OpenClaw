@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { incrementalSync, fullSync, processSyncQueue } from "@/lib/ghl/sync";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/cron/sync" });
 
@@ -14,6 +16,9 @@ const log = logger.child({ route: "/api/cron/sync" });
  * - Triggers full sync if cache is stale (>10% mismatch)
  */
 export async function GET(req: Request) {
+  const rl = await rateLimit(getClientIP(req), "cron");
+  if (rl) return rl;
+
   // Verify cron secret if configured
   const secret = process.env.CRON_SECRET;
   if (secret) {
@@ -77,8 +82,6 @@ export async function GET(req: Request) {
       results,
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    log.error({ error: msg }, "Cron sync failed");
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError(error, { publicMessage: "Cron sync failed", code: "CRON_SYNC_FAILED" });
   }
 }

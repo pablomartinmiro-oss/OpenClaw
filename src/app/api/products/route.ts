@@ -1,22 +1,26 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody, createProductSchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const log = logger.child({ path: "/api/products" });
+  const { tenantId } = session;
+  const log = logger.child({ tenantId, path: "/api/products" });
   const { searchParams } = request.nextUrl;
   const category = searchParams.get("category");
   const station = searchParams.get("station");
 
   try {
-    const where: Record<string, unknown> = {};
+    // Products are tenant-scoped OR global (tenantId=null for shared catalog)
+    const where: Record<string, unknown> = {
+      OR: [{ tenantId }, { tenantId: null }],
+    };
     if (category) where.category = category;
     if (station) where.station = station;
 
@@ -28,48 +32,44 @@ export async function GET(request: NextRequest) {
     log.info({ count: products.length }, "Products fetched");
     return NextResponse.json({ products });
   } catch (error) {
-    log.error({ error }, "Failed to fetch products");
-    return NextResponse.json(
-      { error: "Failed to fetch products", code: "PRODUCTS_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch products", code: "PRODUCTS_ERROR", logContext: { tenantId } });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const log = logger.child({ path: "/api/products" });
+  const { tenantId } = session;
+  const log = logger.child({ tenantId, path: "/api/products" });
 
   try {
     const body = await request.json();
+    const validated = validateBody(body, createProductSchema);
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
+    const data = validated.data;
+
     const product = await prisma.product.create({
       data: {
-        category: body.category,
-        name: body.name,
-        station: body.station || "all",
-        description: body.description || null,
-        personType: body.personType || null,
-        tier: body.tier || null,
-        includesHelmet: body.includesHelmet ?? false,
-        price: parseFloat(body.price) || 0,
-        priceType: body.priceType,
-        pricingMatrix: body.pricingMatrix ? JSON.parse(JSON.stringify(body.pricingMatrix)) : null,
-        sortOrder: body.sortOrder ?? 0,
-        isActive: body.isActive ?? true,
+        tenantId,
+        category: data.category,
+        name: data.name,
+        station: data.station || "all",
+        description: data.description || null,
+        personType: data.personType || null,
+        tier: data.tier || null,
+        includesHelmet: data.includesHelmet ?? false,
+        price: data.price,
+        priceType: data.priceType,
+        pricingMatrix: data.pricingMatrix ? JSON.parse(JSON.stringify(data.pricingMatrix)) : null,
+        sortOrder: data.sortOrder ?? 0,
+        isActive: data.isActive ?? true,
       },
     });
 
     log.info({ productId: product.id }, "Product created");
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create product");
-    return NextResponse.json(
-      { error: "Failed to create product", code: "PRODUCTS_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to create product", code: "PRODUCTS_ERROR", logContext: { tenantId } });
   }
 }

@@ -1,20 +1,19 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: `/api/reservations/duplicate/${id}` });
 
   try {
@@ -49,14 +48,17 @@ export async function POST(
         notes: source.notes,
         internalNotes: source.internalNotes,
         quoteId: source.quoteId,
-        createdBy: session.user.id,
+        createdBy: session.userId,
       },
     });
 
     log.info({ sourceId: id, duplicateId: duplicate.id }, "Reservation duplicated");
     return NextResponse.json({ reservation: duplicate }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to duplicate reservation");
-    return NextResponse.json({ error: "Failed to duplicate" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to duplicate reservation",
+      code: "RESERVATION_DUPLICATE_ERROR",
+      logContext: { tenantId, sourceId: id },
+    });
   }
 }

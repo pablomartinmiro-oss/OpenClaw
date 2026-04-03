@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { getGHLClient } from "@/lib/ghl/api";
 import { prisma } from "@/lib/db";
 import { getDataMode } from "@/lib/data/getDataMode";
@@ -10,12 +11,10 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const body = await req.json();
   const log = logger.child({ tenantId, opportunityId: id });
@@ -43,15 +42,10 @@ export async function PUT(
     log.info("Opportunity updated in GHL + cache");
     return NextResponse.json(updated);
   } catch (error) {
-    log.error({ error }, "Failed to update opportunity");
-
     await prisma.syncQueue.create({
       data: { tenantId, action: "updateOpportunity", resourceId: id, payload: body },
     });
 
-    return NextResponse.json(
-      { error: "Error al actualizar oportunidad", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Error al actualizar oportunidad", code: "CRM_OPPORTUNITY_UPDATE", logContext: { tenantId, opportunityId: id } });
   }
 }

@@ -7,6 +7,8 @@ import {
   processPreTripReminders,
   flagAtRiskQuotes,
 } from "@/lib/quotes/follow-up";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/cron/quote-reminders" });
 
@@ -21,6 +23,9 @@ const log = logger.child({ route: "/api/cron/quote-reminders" });
  * 4. At-risk flagging: 5+ days sent without payment → team notification
  */
 export async function GET(req: Request) {
+  const rl = await rateLimit(getClientIP(req), "cron");
+  if (rl) return rl;
+
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const auth = req.headers.get("authorization");
@@ -61,10 +66,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json(summary);
   } catch (error) {
-    log.error({ error }, "[CRON] Quote follow-up failed");
-    return NextResponse.json(
-      { error: "Cron job failed" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Cron job failed", code: "CRON_REMINDERS_FAILED" });
   }
 }

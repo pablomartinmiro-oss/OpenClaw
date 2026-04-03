@@ -1,15 +1,14 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
+import { apiError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { searchParams } = request.nextUrl;
   const station = searchParams.get("station");
   const date = searchParams.get("date");
@@ -37,9 +36,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ station, date, capacity: result });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch capacity", detail: error instanceof Error ? error.message : "" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to fetch capacity",
+      code: "CAPACITY_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

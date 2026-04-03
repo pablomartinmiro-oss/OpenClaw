@@ -1,20 +1,19 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ quoteId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { quoteId } = await params;
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: `/api/reservations/from-quote/${quoteId}` });
 
   try {
@@ -53,14 +52,17 @@ export async function POST(
         discount: 0,
         status: "pendiente",
         notes: quote.clientNotes,
-        createdBy: session.user.id,
+        createdBy: session.userId,
       },
     });
 
     log.info({ quoteId, reservationId: reservation.id }, "Reservation created from quote");
     return NextResponse.json({ reservation }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create reservation from quote");
-    return NextResponse.json({ error: "Failed to create from quote" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to create reservation from quote",
+      code: "RESERVATION_FROM_QUOTE_ERROR",
+      logContext: { tenantId, quoteId },
+    });
   }
 }

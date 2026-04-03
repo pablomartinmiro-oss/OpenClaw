@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { decrypt } from "@/lib/encryption";
 import { logger } from "@/lib/logger";
@@ -13,12 +14,10 @@ const log = logger.child({ path: "/api/admin/ghl/test" });
  * Tests every link in the chain: DB → decrypt → GHL API.
  */
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const diagnostics: Record<string, unknown> = {
     tenantId,
     timestamp: new Date().toISOString(),
@@ -119,8 +118,8 @@ export async function GET() {
       if (locationRes.status === 401) {
         diagnostics.tokenStatus = "EXPIRED — needs refresh";
       }
-    } catch (apiError) {
-      const msg = apiError instanceof Error ? apiError.message : String(apiError);
+    } catch (ghlError) {
+      const msg = ghlError instanceof Error ? ghlError.message : String(ghlError);
       diagnostics.step4_ghl_location = {
         error: msg,
         isTimeout: msg.includes("timeout"),
@@ -153,8 +152,8 @@ export async function GET() {
           ? JSON.stringify(contactsRes.data).substring(0, 500)
           : undefined,
       };
-    } catch (apiError) {
-      const msg = apiError instanceof Error ? apiError.message : String(apiError);
+    } catch (ghlError) {
+      const msg = ghlError instanceof Error ? ghlError.message : String(ghlError);
       diagnostics.step5_ghl_contacts = { error: msg };
     }
 
@@ -182,8 +181,8 @@ export async function GET() {
           ? JSON.stringify(pipelinesRes.data).substring(0, 500)
           : undefined,
       };
-    } catch (apiError) {
-      const msg = apiError instanceof Error ? apiError.message : String(apiError);
+    } catch (ghlError) {
+      const msg = ghlError instanceof Error ? ghlError.message : String(ghlError);
       diagnostics.step6_ghl_pipelines = { error: msg };
     }
 
@@ -247,10 +246,10 @@ export async function GET() {
     log.info(diagnostics, "GHL test complete");
     return NextResponse.json(diagnostics);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    const stack = error instanceof Error ? error.stack : undefined;
-    diagnostics.fatalError = { message: msg, stack };
-    log.error(diagnostics, "GHL test fatal error");
-    return NextResponse.json(diagnostics, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to run GHL diagnostics",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/crm/conversations" });
   const url = new URL(req.url);
   const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
@@ -51,10 +50,6 @@ export async function GET(req: NextRequest) {
       meta: { page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch conversations");
-    return NextResponse.json(
-      { error: "Failed to fetch conversations", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch conversations", code: "CRM_CONVERSATIONS_FETCH", logContext: { tenantId } });
   }
 }

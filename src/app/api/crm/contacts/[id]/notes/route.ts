@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { getGHLClient } from "@/lib/ghl/api";
 import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
@@ -9,12 +10,10 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
 
   try {
@@ -27,11 +26,7 @@ export async function GET(
     const notes = await ghl.getContactNotes(id);
     return NextResponse.json({ notes });
   } catch (error) {
-    logger.error({ tenantId, contactId: id, error }, "Failed to fetch notes");
-    return NextResponse.json(
-      { error: "Failed to fetch notes", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch notes", code: "CRM_NOTES_FETCH", logContext: { tenantId, contactId: id } });
   }
 }
 
@@ -39,12 +34,10 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const body = await req.json();
 
@@ -58,10 +51,6 @@ export async function POST(
     const note = await ghl.addContactNote(id, body.body);
     return NextResponse.json(note);
   } catch (error) {
-    logger.error({ tenantId, contactId: id, error }, "Failed to add note");
-    return NextResponse.json(
-      { error: "Failed to add note", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to add note", code: "CRM_NOTE_CREATE", logContext: { tenantId, contactId: id } });
   }
 }

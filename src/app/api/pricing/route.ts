@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { calculatePrice } from "@/lib/pricing/calculator";
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/pricing" });
 
   try {
@@ -34,10 +33,10 @@ export async function POST(request: NextRequest) {
     log.info({ station, season: result.season, total: result.total }, "Price calculated");
     return NextResponse.json(result);
   } catch (error) {
-    log.error({ error }, "Failed to calculate price");
-    return NextResponse.json(
-      { error: "Failed to calculate price" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al calcular precio",
+      code: "PRICING_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

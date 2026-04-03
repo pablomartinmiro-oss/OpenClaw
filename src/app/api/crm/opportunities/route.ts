@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const url = new URL(req.url);
   const pipelineId = url.searchParams.get("pipelineId") ?? "";
   const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
@@ -47,10 +46,6 @@ export async function GET(req: Request) {
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch opportunities");
-    return NextResponse.json(
-      { error: "Failed to fetch opportunities", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch opportunities", code: "CRM_OPPORTUNITIES_FETCH", logContext: { tenantId } });
   }
 }

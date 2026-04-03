@@ -1,11 +1,32 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/agency/clients" });
 
-export async function GET() {
+/**
+ * Agency-level route — restricted to:
+ * 1. Requests with valid AGENCY_SECRET header, OR
+ * 2. Authenticated users with "owner" role
+ */
+function verifyAgencyAccess(req: NextRequest, roleName?: string): boolean {
+  const secret = process.env.AGENCY_SECRET;
+  if (secret) {
+    const headerSecret = req.headers.get("x-agency-secret");
+    if (headerSecret === secret) return true;
+  }
+  return roleName === "owner";
+}
+
+export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!verifyAgencyAccess(req, session?.user?.roleName)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const tenants = await prisma.tenant.findMany({
       orderBy: { createdAt: "desc" },
@@ -45,12 +66,19 @@ export async function GET() {
 
     return NextResponse.json({ clients: clientsWithStats });
   } catch (err) {
-    log.error({ err }, "Failed to fetch agency clients");
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return apiError(err, {
+      publicMessage: "Error al cargar clientes de agencia",
+      code: "AGENCY_CLIENTS_FETCH_FAILED",
+    });
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!verifyAgencyAccess(req, session?.user?.roleName)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const body = await req.json();
     const { name, slug, ghlLocationId, plan } = body;
@@ -73,7 +101,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ client: tenant });
   } catch (err) {
-    log.error({ err }, "Failed to create client");
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return apiError(err, {
+      publicMessage: "Error al crear cliente",
+      code: "AGENCY_CLIENT_CREATE_FAILED",
+    });
   }
 }

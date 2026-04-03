@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/reservations/voucher-stats" });
 
   try {
@@ -103,7 +102,10 @@ export async function GET() {
       expiring,
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch voucher stats");
-    return NextResponse.json({ error: "Failed to fetch voucher stats" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to fetch voucher stats",
+      code: "VOUCHER_STATS_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

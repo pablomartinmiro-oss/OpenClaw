@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/tasks" });
   const { searchParams } = request.nextUrl;
   const status = searchParams.get("status");
@@ -32,18 +31,19 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ tasks });
   } catch (error) {
-    log.error({ error }, "Failed to fetch tasks");
-    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Error al cargar tareas",
+      code: "TASKS_FETCH_FAILED",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId, userId } = session;
   const log = logger.child({ tenantId, path: "/api/tasks" });
 
   try {
@@ -64,14 +64,17 @@ export async function PATCH(request: NextRequest) {
       data: {
         status: newStatus,
         completedAt: newStatus === "completed" ? new Date() : null,
-        completedBy: newStatus === "completed" ? session.user.id : null,
+        completedBy: newStatus === "completed" ? userId : null,
       },
     });
 
     log.info({ taskId, newStatus }, "Task updated");
     return NextResponse.json({ task: updated });
   } catch (error) {
-    log.error({ error }, "Failed to update task");
-    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Error al actualizar tarea",
+      code: "TASK_UPDATE_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

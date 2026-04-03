@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-response";
+import { validateBody, registerSchema } from "@/lib/validation";
 
 const DEFAULT_OWNER_PERMISSIONS = [
   "comms:view", "comms:send", "comms:assign",
@@ -31,24 +34,19 @@ function generateSlug(name: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const rl = await rateLimit(getClientIP(request), "register");
+  if (rl) return rl;
+
   const log = logger.child({ path: "/api/auth/register" });
 
   try {
     const body = await request.json();
-    const { name, email, password, companyName, inviteToken } = body as {
-      name: string;
-      email: string;
-      password: string;
-      companyName?: string;
-      inviteToken?: string;
-    };
+    const validated = validateBody(body, registerSchema);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Nombre, email y contraseña son obligatorios" }, { status: 400 });
-    }
-    if (password.length < 8) {
-      return NextResponse.json({ error: "La contraseña debe tener al menos 8 caracteres" }, { status: 400 });
-    }
+    const { name, email, password, companyName, inviteToken } = validated.data;
 
     const passwordHash = await hash(password, 12);
 
@@ -166,7 +164,6 @@ export async function POST(request: NextRequest) {
     log.info({ email, tenantId: result.tenant.id }, "New tenant registered");
     return NextResponse.json({ success: true, redirect: "/onboarding" }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Registration failed");
-    return NextResponse.json({ error: "Error al crear la cuenta" }, { status: 500 });
+    return apiError(error, { publicMessage: "Error al crear la cuenta", code: "REGISTER_FAILED" });
   }
 }

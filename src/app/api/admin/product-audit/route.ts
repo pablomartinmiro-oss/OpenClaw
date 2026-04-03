@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -9,12 +10,10 @@ import { logger } from "@/lib/logger";
  * Returns duplicate products, test products, and zero-price products.
  */
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/admin/product-audit" });
 
   try {
@@ -62,7 +61,10 @@ export async function GET() {
       inactiveProducts: inactiveProducts.map((p) => ({ id: p.id, name: p.name, category: p.category })),
     });
   } catch (error) {
-    log.error({ error }, "Product audit failed");
-    return NextResponse.json({ error: "Audit failed" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to run product audit",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

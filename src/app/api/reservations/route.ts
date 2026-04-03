@@ -1,17 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { createNotification } from "@/lib/notifications";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/reservations" });
   const { searchParams } = request.nextUrl;
 
@@ -49,21 +48,19 @@ export async function GET(request: NextRequest) {
     log.info({ count: reservations.length }, "Reservations fetched");
     return NextResponse.json({ reservations });
   } catch (error) {
-    log.error({ error }, "Failed to fetch reservations");
-    return NextResponse.json(
-      { error: "Failed to fetch reservations" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to fetch reservations",
+      code: "RESERVATION_LIST_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/reservations" });
 
   try {
@@ -104,7 +101,7 @@ export async function POST(request: NextRequest) {
         internalNotes: internalNotes as string | undefined,
         notificationType: notificationType as string | undefined,
         quoteId: quoteId as string | undefined,
-        createdBy: session.user.id,
+        createdBy: session.userId,
         emailSentAt: undefined,
         whatsappSentAt: undefined,
         // Voucher fields
@@ -136,11 +133,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ reservation }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create reservation");
-    return NextResponse.json(
-      { error: "Failed to create reservation" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to create reservation",
+      code: "RESERVATION_CREATE_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 

@@ -1,7 +1,10 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const rl = await rateLimit(getClientIP(request), "public");
+  if (rl) return rl;
   return NextResponse.json(
     {
       status: "ok",

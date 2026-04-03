@@ -18,7 +18,7 @@ const envSchema = z.object({
   GHL_CLIENT_ID: z.string().min(1),
   GHL_CLIENT_SECRET: z.string().min(1),
   GHL_REDIRECT_URI: z.string().url(),
-  GHL_WEBHOOK_SECRET: z.string().min(1).optional(),
+  // GHL_WEBHOOK_SECRET removed — webhook verification now uses GHL's RSA public key
 
   // Encryption
   ENCRYPTION_KEY: z.string().length(64), // 32 bytes hex-encoded

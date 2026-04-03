@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { getGHLClient } from "@/lib/ghl/api";
 import { logger } from "@/lib/logger";
 
@@ -13,12 +14,10 @@ const SKICENTER_FIELDS = [
 ];
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/admin/ghl/create-fields" });
 
   try {
@@ -44,10 +43,10 @@ export async function POST(request: NextRequest) {
     log.info({ created: created.length, skipped: skipped.length }, "Custom fields sync complete");
     return NextResponse.json({ ok: true, created, skipped });
   } catch (error) {
-    log.error({ error }, "Custom fields creation failed");
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to create custom fields",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

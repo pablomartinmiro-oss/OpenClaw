@@ -17,22 +17,16 @@ const PUBLIC_ROUTES = [
   "/api/contact",
   "/api/crm/webhooks",
   "/api/crm/oauth",
+  "/api/crm/redsys",
   "/api/cron/sync",
-  "/api/onboarding",
-  "/agency",
-  "/command",
   "/api/cron/quote-reminders",
-  "/survey",
+  "/api/onboarding",
   "/api/survey",
-  "/api/agents/run",
-  "/api/integrations/gmail",
-  "/api/integrations/transcript",
-  "/api/brain/briefing",
-  "/api/chief",
-  "/chief-of-staff",
+  "/api/voucher",
+  "/survey",
 ];
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Allow public routes
@@ -55,10 +49,6 @@ export async function proxy(req: NextRequest) {
   }
 
   // Check JWT token (edge-compatible, no DB access)
-  // Explicitly pass cookie name to match what NextAuth sets —
-  // without this, getToken infers secure vs non-secure from the
-  // internal request protocol (HTTP behind Railway proxy), which
-  // differs from the HTTPS-based cookie name NextAuth actually writes.
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
@@ -66,8 +56,11 @@ export async function proxy(req: NextRequest) {
     secureCookie: useSecureCookies,
   });
 
-  // Not authenticated → redirect to login
+  // Not authenticated → redirect to login (pages) or 401 (API)
   if (!token) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
@@ -78,8 +71,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  // Onboarding check: if tenant hasn't completed onboarding, redirect to /onboarding
-  // (except if already on onboarding pages or API routes)
+  // Onboarding check: if tenant hasn't completed onboarding, redirect
   const onboardingComplete = token.onboardingComplete as boolean | undefined;
   if (
     onboardingComplete === false &&
@@ -94,7 +86,13 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  return NextResponse.next();
+  // Add security headers
+  const response = NextResponse.next();
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  return response;
 }
 
 export const config = {

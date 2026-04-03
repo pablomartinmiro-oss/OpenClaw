@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { sendEmail } from "@/lib/email/client";
 import { buildCancellationClientEmailHTML, buildCancellationAdminEmailHTML } from "@/lib/email/templates";
 
@@ -35,13 +36,11 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, quoteId: id, path: "/api/quotes/[id]/cancel" });
 
   try {
@@ -213,7 +212,10 @@ export async function POST(
       bonoAmount,
     });
   } catch (error) {
-    log.error({ error }, "Failed to cancel quote");
-    return NextResponse.json({ error: "Error al cancelar presupuesto" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Error al cancelar presupuesto",
+      code: "QUOTE_CANCEL_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }

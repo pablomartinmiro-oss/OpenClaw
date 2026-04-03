@@ -1,10 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody } from "@/lib/validation";
 import { randomBytes } from "crypto";
 import { sendEmail } from "@/lib/email/client";
+import { z } from "zod";
+
+// Simplified schema for this route — only email needed (name/role assigned later)
+const inviteEmailSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
 
 function buildInviteEmailHTML(inviteUrl: string): string {
   return `
@@ -25,21 +33,19 @@ function buildInviteEmailHTML(inviteUrl: string): string {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/team/invite" });
 
   try {
     const body = await request.json();
-    const { email } = body as { email: string };
+    const validated = validateBody(body, inviteEmailSchema);
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
+    const data = validated.data;
 
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ error: "Email inválido" }, { status: 400 });
-    }
+    const email = data.email;
 
     // Check if user already exists in this tenant
     const existing = await prisma.user.findUnique({
@@ -94,7 +100,10 @@ export async function POST(request: NextRequest) {
     log.info({ email, inviteToken }, "Team invite created");
     return NextResponse.json({ inviteUrl }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create invite");
-    return NextResponse.json({ error: "Error al crear la invitación" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Error al crear la invitación",
+      code: "INVITE_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

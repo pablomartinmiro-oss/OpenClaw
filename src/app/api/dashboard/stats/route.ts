@@ -1,16 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/dashboard/stats" });
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -115,10 +114,10 @@ export async function GET() {
       },
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch dashboard stats");
-    return NextResponse.json(
-      { error: "Failed to fetch stats" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al cargar estadísticas",
+      code: "DASHBOARD_STATS_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

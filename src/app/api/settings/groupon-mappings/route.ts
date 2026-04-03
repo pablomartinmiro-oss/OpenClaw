@@ -1,16 +1,23 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody } from "@/lib/validation";
+import { z } from "zod";
+
+const createGrouponMappingSchema = z.object({
+  grouponDesc: z.string().min(1, "grouponDesc es obligatorio"),
+  pattern: z.string().min(1, "pattern es obligatorio"),
+  services: z.array(z.record(z.unknown())).min(1, "services es obligatorio"),
+});
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/groupon-mappings" });
 
   try {
@@ -22,38 +29,30 @@ export async function GET() {
     log.info({ count: mappings.length }, "Groupon mappings fetched");
     return NextResponse.json({ mappings });
   } catch (error) {
-    log.error({ error }, "Failed to fetch groupon mappings");
-    return NextResponse.json({ error: "Failed to fetch mappings" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to fetch mappings",
+      code: "GROUPON_MAPPING_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/groupon-mappings" });
 
   try {
     const body = await request.json();
-    const { grouponDesc, pattern, services } = body as {
-      grouponDesc?: string;
-      pattern?: string;
-      services?: Record<string, unknown>[];
-    };
-
-    if (!grouponDesc || !pattern || !services || !Array.isArray(services)) {
-      return NextResponse.json(
-        { error: "grouponDesc, pattern y services son obligatorios" },
-        { status: 400 }
-      );
-    }
+    const validated = validateBody(body, createGrouponMappingSchema);
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
+    const data = validated.data;
 
     // Validate regex pattern
     try {
-      new RegExp(pattern, "i");
+      new RegExp(data.pattern, "i");
     } catch {
       return NextResponse.json({ error: "Patrón regex inválido" }, { status: 400 });
     }
@@ -61,27 +60,28 @@ export async function POST(request: NextRequest) {
     const mapping = await prisma.grouponProductMapping.create({
       data: {
         tenantId,
-        grouponDesc,
-        pattern,
-        services: JSON.parse(JSON.stringify(services)),
+        grouponDesc: data.grouponDesc,
+        pattern: data.pattern,
+        services: JSON.parse(JSON.stringify(data.services)),
       },
     });
 
     log.info({ mappingId: mapping.id }, "Groupon mapping created");
     return NextResponse.json({ mapping }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create groupon mapping");
-    return NextResponse.json({ error: "Failed to create mapping" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to create mapping",
+      code: "GROUPON_MAPPING_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/settings/groupon-mappings" });
 
   try {
@@ -106,7 +106,10 @@ export async function DELETE(request: NextRequest) {
     log.info({ mappingId: id }, "Groupon mapping deleted");
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error({ error }, "Failed to delete groupon mapping");
-    return NextResponse.json({ error: "Failed to delete mapping" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to delete mapping",
+      code: "GROUPON_MAPPING_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

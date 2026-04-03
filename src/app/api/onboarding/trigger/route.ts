@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/onboarding/trigger" });
 
@@ -116,7 +117,7 @@ export async function POST(req: Request) {
     }
 
     // Step 2: Send personalized email
-    const emailSent = await sendEmail({
+    const emailSent = await sendTriggerEmail({
       contactId: contact.opportunityId,
       email: contact.email,
       subject: emailSubject,
@@ -136,15 +137,17 @@ export async function POST(req: Request) {
       personalized: !!researchData,
       research: researchData,
     });
-  } catch (err) {
-    log.error({ err }, "Onboarding trigger failed");
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  } catch (error) {
+    return apiError(error, {
+      publicMessage: "Onboarding trigger failed",
+      code: "TRIGGER_ERROR",
+    });
   }
 }
 
 // ─── Email sending ─────────────────────────────────────────────────────────
 
-async function sendEmail({
+async function sendTriggerEmail({
   contactId,
   email,
   subject,
@@ -236,7 +239,7 @@ function buildFallbackEmail(
 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
   <h1 style="color: #1a1a1a; font-size: 22px;">Hola ${contactName} 👋</h1>
   <p style="font-size: 15px; line-height: 1.7; color: #444;">
-    Estamos listos para configurar el sistema de <strong>${company}</strong>. 
+    Estamos listos para configurar el sistema de <strong>${company}</strong>.
     Antes de empezar, necesitamos entender mejor vuestro negocio para hacer una configuración a medida.
   </p>
   <p style="font-size: 15px; line-height: 1.7; color: #444;">
@@ -244,7 +247,7 @@ function buildFallbackEmail(
   </p>
   <div style="text-align: center; margin: 32px 0;">
     <a href="${INTAKE_FORM_URL}?company=${encodeURIComponent(company)}&contact=${encodeURIComponent(contactName)}"
-       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px; 
+       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px;
               text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
       Completar formulario de onboarding →
     </a>

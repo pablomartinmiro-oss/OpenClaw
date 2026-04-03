@@ -1,19 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
 
   try {
@@ -27,11 +26,11 @@ export async function GET(
 
     return NextResponse.json({ quote });
   } catch (error) {
-    logger.error({ error }, "Failed to fetch quote");
-    return NextResponse.json(
-      { error: "Failed to fetch quote", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to fetch quote",
+      code: "QUOTE_FETCH_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }
 
@@ -39,12 +38,10 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${id}` });
 
@@ -72,11 +69,11 @@ export async function PATCH(
     log.info({ quoteId: id, status: quote.status }, "Quote updated");
     return NextResponse.json({ quote });
   } catch (error) {
-    log.error({ error }, "Failed to update quote");
-    return NextResponse.json(
-      { error: "Failed to update quote", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to update quote",
+      code: "QUOTE_UPDATE_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }
 
@@ -84,12 +81,10 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${id}` });
 
@@ -107,10 +102,10 @@ export async function DELETE(
     log.info({ quoteId: id }, "Quote deleted");
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error({ error }, "Failed to delete quote");
-    return NextResponse.json(
-      { error: "Failed to delete quote", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to delete quote",
+      code: "QUOTE_DELETE_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }

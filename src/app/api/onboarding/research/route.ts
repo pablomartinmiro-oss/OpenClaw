@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/onboarding/research" });
 
@@ -80,7 +81,7 @@ EXAMPLES:
 INTAKE DECISION RULES:
 - Lead leakage detected → prioritize speed-to-lead questions
 - No digital presence likely → ask about current lead tracking method
-- Sports/leisure → ask about membership models and peak hours  
+- Sports/leisure → ask about membership models and peak hours
 - Tourism/seasonal → ask about booking cycles and peak season management
 - Service business → ask about appointment scheduling and follow-up
 - Real estate → ask about lead sources, qualification, and follow-up cadence
@@ -250,9 +251,11 @@ Based on the company name and any context clues, determine what type of business
     );
 
     return NextResponse.json(response);
-  } catch (err) {
-    log.error({ err }, "Research endpoint failed");
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  } catch (error) {
+    return apiError(error, {
+      publicMessage: "Research endpoint failed",
+      code: "RESEARCH_ERROR",
+    });
   }
 }
 
@@ -302,9 +305,9 @@ function buildPersonalizedEmail({
           <span style="font-size: 12px; color: #666;">Muy alto</span>
         </div>`;
       } else {
-        inputHtml = `<textarea name="q${i + 1}" rows="2" 
-          style="width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #e5e7eb; 
-                 border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif; 
+        inputHtml = `<textarea name="q${i + 1}" rows="2"
+          style="width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #e5e7eb;
+                 border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif;
                  resize: vertical; box-sizing: border-box;"
           placeholder="Tu respuesta aquí..."></textarea>`;
       }
@@ -336,8 +339,8 @@ function buildPersonalizedEmail({
   </p>
 
   <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 8px;">
-    Antes de configurar tu sistema, queremos entender bien cómo funciona <strong>${companyName}</strong>. 
-    Por eso hemos preparado unas preguntas específicas para tu tipo de negocio — no es un formulario genérico, 
+    Antes de configurar tu sistema, queremos entender bien cómo funciona <strong>${companyName}</strong>.
+    Por eso hemos preparado unas preguntas específicas para tu tipo de negocio — no es un formulario genérico,
     sino preguntas que nos ayudarán a configurar exactamente lo que necesitáis.
   </p>
 
@@ -347,7 +350,7 @@ function buildPersonalizedEmail({
 
   <div style="text-align: center; margin: 32px 0;">
     <a href="${formUrl}?company=${encodeURIComponent(companyName)}&contact=${encodeURIComponent(contactName)}"
-       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px; 
+       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px;
               text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
       Responder preguntas →
     </a>
@@ -365,7 +368,7 @@ function buildPersonalizedEmail({
 
   <div style="text-align: center; margin: 32px 0;">
     <a href="${formUrl}?company=${encodeURIComponent(companyName)}&contact=${encodeURIComponent(contactName)}"
-       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px; 
+       style="background: #6366f1; color: white; padding: 14px 36px; border-radius: 8px;
               text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
       Enviar mis respuestas →
     </a>
@@ -374,7 +377,7 @@ function buildPersonalizedEmail({
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
 
   <p style="font-size: 13px; color: #888; line-height: 1.6;">
-    Una vez recibamos tus respuestas, nuestro equipo las analizará y tendrás tu sistema configurado 
+    Una vez recibamos tus respuestas, nuestro equipo las analizará y tendrás tu sistema configurado
     en <strong>24-48 horas</strong>. Te enviaremos un email de confirmación con los próximos pasos.
   </p>
 

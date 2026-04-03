@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { sendEmail } from "@/lib/email/client";
 import { buildConfirmationEmailHTML } from "@/lib/email/templates";
 import { getGHLClient } from "@/lib/ghl/api";
@@ -13,12 +14,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, path: `/api/quotes/${id}/mark-paid` });
 
@@ -157,10 +156,10 @@ export async function POST(
 
     return NextResponse.json({ quote: updated });
   } catch (error) {
-    log.error({ error, quoteId: id }, "Failed to mark quote as paid");
-    return NextResponse.json(
-      { error: "Error al marcar como pagado" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al marcar como pagado",
+      code: "QUOTE_MARK_PAID_ERROR",
+      logContext: { tenantId, quoteId: id },
+    });
   }
 }

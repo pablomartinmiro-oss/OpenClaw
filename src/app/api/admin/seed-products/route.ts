@@ -1,17 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { buildFullCatalog, SEASON_CALENDAR } from "@/lib/constants/product-catalog";
 
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ route: "seed-products" });
 
   try {
@@ -70,10 +69,10 @@ export async function POST() {
       seasons: seasonCount,
     });
   } catch (error) {
-    log.error({ error }, "Seed failed");
-    return NextResponse.json(
-      { error: "Seed failed", detail: error instanceof Error ? error.message : "" },
-      { status: 500 },
-    );
+    return apiError(error, {
+      publicMessage: "Failed to seed products",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

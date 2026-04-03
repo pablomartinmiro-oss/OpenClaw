@@ -6,8 +6,12 @@ import { encrypt } from "@/lib/encryption";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { fullSync } from "@/lib/ghl/sync";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const rl = await rateLimit(getClientIP(req), "api");
+  if (rl) return rl;
+
   const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || req.url;
   const { searchParams } = req.nextUrl;
   const code = searchParams.get("code");

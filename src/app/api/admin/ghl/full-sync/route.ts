@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { fullSync } from "@/lib/ghl/sync";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -12,12 +12,10 @@ const log = logger.child({ route: "/api/admin/ghl/full-sync" });
 export const maxDuration = 300;
 
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
 
   // Check if sync is already in progress
   const syncStatus = await prisma.syncStatus.findUnique({
@@ -43,7 +41,7 @@ export async function POST() {
     })
     .catch(async (error) => {
       const msg = error instanceof Error ? error.message : "Unknown error";
-      console.error(`[SYNC-ROUTE] Background sync CRASHED: ${msg}`);
+      log.error(`[SYNC-ROUTE] Background sync CRASHED: ${msg}`);
       // Safety: make sure DB is updated even if fullSync's internal catch failed
       try {
         await prisma.syncStatus.upsert({
@@ -56,7 +54,7 @@ export async function POST() {
           data: { syncState: "error", lastSyncError: msg },
         });
       } catch (dbErr) {
-        console.error("[SYNC-ROUTE] Failed to write error to DB:", dbErr);
+        log.error({ err: dbErr }, "[SYNC-ROUTE] Failed to write error to DB");
       }
     });
 

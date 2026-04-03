@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { buildFullCatalog, SEASON_CALENDAR } from "@/lib/constants/product-catalog";
@@ -21,12 +22,10 @@ const log = logger.child({ route: "reset-demo" });
  * Only callable by demo tenant users.
  */
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
 
   // Verify this is the demo tenant
   const tenant = await prisma.tenant.findUnique({
@@ -271,10 +270,10 @@ export async function POST() {
       },
     });
   } catch (error) {
-    log.error({ error }, "Demo reset failed");
-    return NextResponse.json(
-      { error: "Reset failed", detail: error instanceof Error ? error.message : "" },
-      { status: 500 },
-    );
+    return apiError(error, {
+      publicMessage: "Failed to reset demo data",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

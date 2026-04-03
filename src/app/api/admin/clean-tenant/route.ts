@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -10,12 +11,10 @@ import { logger } from "@/lib/logger";
  * Keeps: products, season calendar, cached GHL data.
  */
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const tenantId = session.user.tenantId;
+  const { tenantId } = session;
   const log = logger.child({ route: "clean-tenant", tenantId });
 
   try {
@@ -43,10 +42,10 @@ export async function POST() {
       },
     });
   } catch (error) {
-    log.error({ error }, "Clean tenant failed");
-    return NextResponse.json(
-      { error: "Failed to clean tenant" },
-      { status: 500 },
-    );
+    return apiError(error, {
+      publicMessage: "Failed to clean tenant",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

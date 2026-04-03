@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 interface VoucherData {
   producto: string;
@@ -39,12 +40,11 @@ Si no puedes leer algún campo, usa null. NO inventes datos.
 Responde SOLO con el JSON, sin texto adicional ni markdown.`;
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const log = logger.child({ tenantId: session.user.tenantId, path: "/api/voucher/read" });
+  const { tenantId } = session;
+  const log = logger.child({ tenantId, path: "/api/voucher/read" });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -146,10 +146,10 @@ export async function POST(request: NextRequest) {
     log.info({ producto: voucherData.producto }, "Voucher read successfully");
     return NextResponse.json({ voucher: voucherData });
   } catch (error) {
-    log.error({ error }, "Voucher read failed");
-    return NextResponse.json(
-      { error: "Error al leer el cupón" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al leer el cupón",
+      code: "VOUCHER_READ_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { getGHLClient } from "@/lib/ghl/api";
 import { prisma } from "@/lib/db";
 import { getDataMode } from "@/lib/data/getDataMode";
@@ -8,12 +9,10 @@ import { mapContactToCache } from "@/lib/ghl/sync";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/crm/contacts" });
   const url = new URL(req.url);
   // Accept both ?search= (new) and ?query= (legacy)
@@ -64,21 +63,15 @@ export async function GET(req: Request) {
       meta: { total, currentPage: page, nextPage: page * limit < total ? page + 1 : null },
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch contacts");
-    return NextResponse.json(
-      { error: "Failed to fetch contacts", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch contacts", code: "CRM_CONTACTS_FETCH", logContext: { tenantId } });
   }
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const body = await req.json();
   const log = logger.child({ tenantId, path: "/api/crm/contacts" });
 
@@ -102,8 +95,6 @@ export async function POST(req: Request) {
     log.info({ contactId: created.id }, "Contact created in GHL + cache");
     return NextResponse.json({ contact: created });
   } catch (error) {
-    log.error({ error }, "Failed to create contact");
-
     if (await getDataMode(tenantId) === "live") {
       await prisma.syncQueue.create({
         data: {
@@ -115,9 +106,6 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json(
-      { error: "Error al crear contacto. Se reintentará automáticamente.", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Error al crear contacto. Se reintentará automáticamente.", code: "CRM_CONTACT_CREATE", logContext: { tenantId } });
   }
 }

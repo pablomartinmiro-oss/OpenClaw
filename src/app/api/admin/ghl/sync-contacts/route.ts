@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { fullSync } from "@/lib/ghl/sync";
 import { logger } from "@/lib/logger";
 
@@ -9,12 +10,10 @@ import { logger } from "@/lib/logger";
  * Kept for backward compatibility.
  */
 export async function POST() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/admin/ghl/sync-contacts" });
 
   try {
@@ -22,10 +21,10 @@ export async function POST() {
     log.info({ totalSynced: result.contacts }, "Contact sync complete");
     return NextResponse.json({ ok: true, totalSynced: result.contacts });
   } catch (error) {
-    log.error({ error }, "Contact sync failed");
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Sync failed" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to sync contacts",
+      code: "ADMIN_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

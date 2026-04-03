@@ -1,16 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
+
+  const { tenantId } = session;
 
   const status = await prisma.syncStatus.findUnique({
-    where: { tenantId: session.user.tenantId },
+    where: { tenantId },
   });
 
   return NextResponse.json({

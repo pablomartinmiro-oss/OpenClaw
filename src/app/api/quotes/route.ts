@@ -1,16 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody, createQuoteSchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/quotes" });
   const { searchParams } = request.nextUrl;
   const status = searchParams.get("status");
@@ -30,49 +30,46 @@ export async function GET(request: NextRequest) {
     log.info({ count: quotes.length }, "Quotes fetched");
     return NextResponse.json({ quotes });
   } catch (error) {
-    log.error({ error }, "Failed to fetch quotes");
-    return NextResponse.json(
-      { error: "Failed to fetch quotes", code: "QUOTES_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to fetch quotes",
+      code: "QUOTES_FETCH_ERROR",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/quotes" });
 
   try {
     const body = await request.json();
-    const {
-      clientName, clientEmail, clientPhone, clientNotes,
-      destination, checkIn, checkOut, adults, children,
-      wantsAccommodation, wantsForfait, wantsClases, wantsEquipment,
-      ghlContactId,
-    } = body as Record<string, unknown>;
+    const validated = validateBody(body, createQuoteSchema);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const data = validated.data;
 
     const quote = await prisma.quote.create({
       data: {
         tenantId,
-        clientName: clientName as string,
-        clientEmail: (clientEmail as string) || null,
-        clientPhone: (clientPhone as string) || null,
-        clientNotes: (clientNotes as string) || null,
-        ghlContactId: (ghlContactId as string) || null,
-        destination: destination as string,
-        checkIn: new Date(checkIn as string),
-        checkOut: new Date(checkOut as string),
-        adults: Number(adults) || 1,
-        children: Number(children) || 0,
-        wantsAccommodation: (wantsAccommodation as boolean) || false,
-        wantsForfait: (wantsForfait as boolean) || false,
-        wantsClases: (wantsClases as boolean) || false,
-        wantsEquipment: (wantsEquipment as boolean) || false,
+        clientName: data.clientName,
+        clientEmail: data.clientEmail || null,
+        clientPhone: data.clientPhone || null,
+        clientNotes: data.clientNotes || null,
+        ghlContactId: data.ghlContactId || null,
+        destination: data.destination,
+        checkIn: data.checkIn,
+        checkOut: data.checkOut,
+        adults: data.adults,
+        children: data.children,
+        wantsAccommodation: data.wantsAccommodation,
+        wantsForfait: data.wantsForfait,
+        wantsClases: data.wantsClases,
+        wantsEquipment: data.wantsEquipment,
         status: "nuevo",
         totalAmount: 0,
       },
@@ -82,10 +79,10 @@ export async function POST(request: NextRequest) {
     log.info({ quoteId: quote.id }, "Quote created");
     return NextResponse.json({ quote }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create quote");
-    return NextResponse.json(
-      { error: "Failed to create quote" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Failed to create quote",
+      code: "QUOTE_CREATE_ERROR",
+      logContext: { tenantId },
+    });
   }
 }

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { getGHLClient } from "@/lib/ghl/api";
 import { getDataMode } from "@/lib/data/getDataMode";
 import { logger } from "@/lib/logger";
@@ -9,12 +10,10 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const log = logger.child({ tenantId, conversationId: id });
 
@@ -30,11 +29,7 @@ export async function GET(
     log.info({ count: messages.length }, "Messages fetched live");
     return NextResponse.json({ messages, nextPage: null });
   } catch (error) {
-    log.error({ error }, "Failed to fetch messages");
-    return NextResponse.json(
-      { error: "Failed to fetch messages", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch messages", code: "CRM_MESSAGES_FETCH", logContext: { tenantId, conversationId: id } });
   }
 }
 
@@ -42,12 +37,10 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { id } = await params;
   const body = await req.json();
   const log = logger.child({ tenantId, conversationId: id });
@@ -66,10 +59,6 @@ export async function POST(
     log.info("Message sent via GHL");
     return NextResponse.json(result);
   } catch (error) {
-    log.error({ error }, "Failed to send message");
-    return NextResponse.json(
-      { error: "Failed to send message", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to send message", code: "CRM_MESSAGE_SEND", logContext: { tenantId, conversationId: id } });
   }
 }

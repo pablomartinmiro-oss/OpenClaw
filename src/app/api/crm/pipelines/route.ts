@@ -1,17 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import type { GHLPipelineStage } from "@/lib/ghl/types";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/crm/pipelines" });
 
   try {
@@ -28,10 +27,6 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    log.error({ error }, "Failed to fetch pipelines");
-    return NextResponse.json(
-      { error: "Failed to fetch pipelines", code: "GHL_ERROR" },
-      { status: 500 }
-    );
+    return apiError(error, { publicMessage: "Failed to fetch pipelines", code: "CRM_PIPELINES_FETCH", logContext: { tenantId } });
   }
 }

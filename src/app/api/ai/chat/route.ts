@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { anthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { AI_SYSTEM_PROMPT } from "@/components/ai/system-prompt";
 
 // Allow streaming responses up to 30 seconds
@@ -24,11 +25,8 @@ function isOffTopic(message: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  
-  if (!session?.user) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   try {
     const { messages, context } = await req.json();
@@ -44,10 +42,10 @@ export async function POST(req: Request) {
       );
     }
 
-    logger.info({ 
-      userId: session.user.id, 
+    logger.info({
+      userId: session.userId,
       messageCount: messages.length,
-      context 
+      context
     }, "AI chat request");
 
     // Check for API key
@@ -72,13 +70,10 @@ export async function POST(req: Request) {
 
     return result.toDataStreamResponse();
   } catch (error) {
-    logger.error({ error }, "AI chat error");
-    return new Response(
-      JSON.stringify({ 
-        error: "Failed to process request",
-        message: error instanceof Error ? error.message : "Unknown error"
-      }), 
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al procesar la solicitud de chat",
+      code: "AI_CHAT_FAILED",
+      logContext: { tenantId: session.tenantId },
+    });
   }
 }

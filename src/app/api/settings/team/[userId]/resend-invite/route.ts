@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 import { randomBytes } from "crypto";
 import { sendEmail } from "@/lib/email/client";
 
@@ -28,12 +29,10 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const { userId } = await params;
   const log = logger.child({ tenantId, path: `/api/settings/team/${userId}/resend-invite` });
 
@@ -69,7 +68,10 @@ export async function POST(
     log.info({ userId, email: user.email }, "Invite resent");
     return NextResponse.json({ success: true, inviteUrl });
   } catch (error) {
-    log.error({ error }, "Failed to resend invite");
-    return NextResponse.json({ error: "Error al reenviar la invitación" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Error al reenviar la invitación",
+      code: "INVITE_ERROR",
+      logContext: { tenantId, userId },
+    });
   }
 }

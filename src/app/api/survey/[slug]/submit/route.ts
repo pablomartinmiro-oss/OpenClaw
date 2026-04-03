@@ -6,6 +6,8 @@ import { sendEmail } from "@/lib/email/client";
 import { createSurveyOpportunity } from "@/lib/quotes/opportunity";
 import { createNotification } from "@/lib/notifications";
 import { normalizeDestination } from "@/lib/destinations";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ module: "survey-submit" });
 
@@ -59,6 +61,9 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const rl = await rateLimit(getClientIP(req), "public");
+  if (rl) return rl;
+
   const { slug } = await params;
 
   const tenant = await prisma.tenant.findUnique({

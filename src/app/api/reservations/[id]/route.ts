@@ -1,20 +1,19 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const { tenantId } = session.user;
+  const { tenantId } = session;
 
   try {
     const reservation = await prisma.reservation.findFirst({
@@ -28,8 +27,11 @@ export async function GET(
 
     return NextResponse.json({ reservation });
   } catch (error) {
-    logger.error({ error, id }, "Failed to fetch reservation");
-    return NextResponse.json({ error: "Failed to fetch reservation" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to fetch reservation",
+      code: "RESERVATION_GET_ERROR",
+      logContext: { tenantId, reservationId: id },
+    });
   }
 }
 
@@ -37,13 +39,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, reservationId: id });
 
   try {
@@ -92,8 +92,11 @@ export async function PATCH(
     log.info({ status }, "Reservation updated");
     return NextResponse.json({ reservation });
   } catch (error) {
-    log.error({ error }, "Failed to update reservation");
-    return NextResponse.json({ error: "Failed to update reservation" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to update reservation",
+      code: "RESERVATION_UPDATE_ERROR",
+      logContext: { tenantId, reservationId: id },
+    });
   }
 }
 
@@ -101,13 +104,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
   const { id } = await params;
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, reservationId: id });
 
   try {
@@ -123,7 +124,10 @@ export async function DELETE(
     log.info({ reservationId: id }, "Reservation deleted");
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error({ error }, "Failed to delete reservation");
-    return NextResponse.json({ error: "Failed to delete reservation" }, { status: 500 });
+    return apiError(error, {
+      publicMessage: "Failed to delete reservation",
+      code: "RESERVATION_DELETE_ERROR",
+      logContext: { tenantId, reservationId: id },
+    });
   }
 }

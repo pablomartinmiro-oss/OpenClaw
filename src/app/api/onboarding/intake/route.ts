@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 /**
  * POST /api/onboarding/intake
- * 
+ *
  * Called by GHL form webhook when client submits the intake form.
  * - Runs Client Analyzer logic
  * - Produces a structured client brief
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk"; // eslint-disable-line
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/onboarding/intake" });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -22,18 +23,20 @@ export async function POST(req: Request) {
 
     // Extract form responses from GHL webhook
     const responses = extractFormResponses(body);
-    
+
     // Run Client Analyzer
     const brief = await analyzeClient(responses);
-    
+
     // Post to Canopy as an issue
     await createCanopyBrief(brief, responses);
 
     return NextResponse.json({ ok: true, brief });
 
-  } catch (err) {
-    log.error({ err }, "Intake processing failed");
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  } catch (error) {
+    return apiError(error, {
+      publicMessage: "Intake processing failed",
+      code: "INTAKE_ERROR",
+    });
   }
 }
 
@@ -97,7 +100,7 @@ Return only valid JSON, no markdown.`;
   });
 
   const text = msg.content[0].type === "text" ? msg.content[0].text : "{}";
-  
+
   try {
     return JSON.parse(text);
   } catch {
@@ -108,7 +111,7 @@ Return only valid JSON, no markdown.`;
 
 async function createCanopyBrief(brief: Record<string, unknown>, responses: Record<string, string>) {
   const CANOPY_URL = process.env.CANOPY_API_URL || "http://localhost:9089";
-  
+
   // Login to get token
   const loginRes = await fetch(`${CANOPY_URL}/api/v1/auth/login`, {
     method: "POST",

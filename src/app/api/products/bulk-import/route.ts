@@ -1,45 +1,30 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
-
-interface ImportProduct {
-  name: string;
-  category: string;
-  station: string;
-  price: number;
-  priceType: string;
-}
+import { apiError } from "@/lib/api-response";
+import { validateBody, bulkImportProductSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const log = logger.child({ path: "/api/products/bulk-import" });
+  const { tenantId } = session;
+  const log = logger.child({ tenantId, path: "/api/products/bulk-import" });
 
   try {
     const body = await req.json();
-    const products = body.products as ImportProduct[];
-
-    if (!Array.isArray(products) || products.length === 0) {
-      return NextResponse.json({ error: "No products provided" }, { status: 400 });
-    }
-
-    if (products.length > 500) {
-      return NextResponse.json({ error: "Maximum 500 products per import" }, { status: 400 });
-    }
+    const validated = validateBody(body, bulkImportProductSchema);
+    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
+    const data = validated.data;
 
     let imported = 0;
     let updated = 0;
 
-    for (const p of products) {
-      if (!p.name || typeof p.price !== "number") continue;
-
+    for (const p of data.products) {
       const existing = await prisma.product.findFirst({
-        where: { name: p.name },
+        where: { name: p.name, OR: [{ tenantId }, { tenantId: null }] },
       });
 
       if (existing) {
@@ -56,6 +41,7 @@ export async function POST(req: NextRequest) {
       } else {
         await prisma.product.create({
           data: {
+            tenantId,
             name: p.name,
             category: p.category || "alquiler",
             station: p.station || "all",
@@ -71,7 +57,6 @@ export async function POST(req: NextRequest) {
     log.info({ imported, updated }, "Bulk import completed");
     return NextResponse.json({ imported: imported + updated, created: imported, updated });
   } catch (error) {
-    log.error({ error }, "Failed to bulk import products");
-    return NextResponse.json({ error: "Failed to import products" }, { status: 500 });
+    return apiError(error, { publicMessage: "Failed to import products", code: "PRODUCTS_ERROR", logContext: { tenantId } });
   }
 }

@@ -1,16 +1,16 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { apiError } from "@/lib/api-response";
+import { validateBody, seasonCalendarSchema } from "@/lib/validation";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId } = session.user;
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/season-calendar" });
 
   try {
@@ -22,34 +22,29 @@ export async function GET() {
     log.info({ count: entries.length }, "Season calendar fetched");
     return NextResponse.json({ entries });
   } catch (error) {
-    log.error({ error }, "Failed to fetch season calendar");
-    return NextResponse.json(
-      { error: "Failed to fetch season calendar" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al cargar calendario de temporadas",
+      code: "SEASON_CALENDAR_FETCH_FAILED",
+      logContext: { tenantId },
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
-  const { tenantId, permissions } = session.user;
-
+  const { tenantId } = session;
   const log = logger.child({ tenantId, path: "/api/season-calendar" });
 
   try {
     const body = await request.json();
-    const { station, season, startDate, endDate, label } = body;
-
-    if (!station || !season || !startDate || !endDate) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    const validation = validateBody(body, seasonCalendarSchema);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { station, season, startDate, endDate, label } = validation.data;
 
     const entry = await prisma.seasonCalendar.create({
       data: {
@@ -65,10 +60,10 @@ export async function POST(request: NextRequest) {
     log.info({ entryId: entry.id }, "Season calendar entry created");
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
-    log.error({ error }, "Failed to create season calendar entry");
-    return NextResponse.json(
-      { error: "Failed to create season calendar entry" },
-      { status: 500 }
-    );
+    return apiError(error, {
+      publicMessage: "Error al crear entrada de calendario",
+      code: "SEASON_CALENDAR_CREATE_FAILED",
+      logContext: { tenantId },
+    });
   }
 }

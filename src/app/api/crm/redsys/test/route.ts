@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/config";
+import { requireTenant } from "@/lib/auth/guard";
+import { apiError } from "@/lib/api-response";
 import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
 
 /**
@@ -9,11 +10,10 @@ import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
  * Auth required (Owner only).
  */
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.tenantId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [session, authError] = await requireTenant();
+  if (authError) return authError;
 
+  // session used for auth gating; tenantId available as session.tenantId if needed
   const baseUrl = process.env.AUTH_URL ?? "https://crm-dash-prod.up.railway.app";
   const orderId = generateOrderId();
 
@@ -47,9 +47,6 @@ export async function GET() {
       ].join("\n"),
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate test form" },
-      { status: 500 }
-    );
+    return apiError(err, { publicMessage: "Failed to generate test form", code: "REDSYS_TEST_ERROR", logContext: { tenantId: session.tenantId } });
   }
 }

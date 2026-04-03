@@ -3,49 +3,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/db";
 import { buildNotificationEmail, buildConfirmationEmail } from "./email-templates";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-response";
+import { validateBody, contactFormSchema } from "@/lib/validation";
 
 const log = logger.child({ module: "contact-form" });
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface ContactBody {
-  nombre?: string;
-  email?: string;
-  telefono?: string;
-  asunto?: string;
-  mensaje?: string;
-  privacidad?: boolean;
-  website?: string; // honeypot
-}
-
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as ContactBody;
-  const { nombre, email, telefono, asunto, mensaje, privacidad, website } = body;
+  const rl = await rateLimit(getClientIP(req), "public");
+  if (rl) return rl;
 
-  // Honeypot check — bots fill hidden fields
-  if (website) {
+  const body = await req.json();
+
+  // Honeypot check — bots fill hidden fields (check before validation)
+  if (body.website) {
     return NextResponse.json({ success: true });
   }
 
-  // Validate required fields
-  if (!nombre?.trim() || !email?.trim() || !mensaje?.trim() || !privacidad) {
-    return NextResponse.json(
-      { error: "Campos obligatorios incompletos" },
-      { status: 400 },
-    );
+  const validation = validateBody(body, contactFormSchema);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  if (!EMAIL_REGEX.test(email.trim())) {
-    return NextResponse.json({ error: "Email invalido" }, { status: 400 });
-  }
-
-  if (mensaje.trim().length < 10) {
-    return NextResponse.json(
-      { error: "El mensaje debe tener al menos 10 caracteres" },
-      { status: 400 },
-    );
-  }
-
+  const { nombre, email, telefono, asunto, mensaje } = validation.data;
   const normalizedEmail = email.trim().toLowerCase();
 
   // Rate limiting — max 3 per email per hour
@@ -88,7 +68,7 @@ export async function POST(req: NextRequest) {
     nombre: nombre.trim(),
     email: normalizedEmail,
     telefono: telefono?.trim(),
-    asunto,
+    asunto: asunto || undefined,
     mensaje: mensaje.trim(),
   });
 
