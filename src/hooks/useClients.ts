@@ -30,7 +30,7 @@ export function useClients(search?: string, page: number = 1, limit: number = 25
   params.set("page", String(page));
   params.set("limit", String(limit));
 
-  return useQuery<{ clients: Client[]; total: number; page: number; limit: number }>({
+  return useQuery<{ clients: Client[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>({
     queryKey: ["clients", search, page, limit],
     queryFn: () => fetchJSON(`/api/booking/clients?${params}`),
   });

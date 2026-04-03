@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Verify product exists for this tenant
     const product = await prisma.product.findFirst({
-      where: { id: data.productId, OR: [{ tenantId }, { tenantId: null }] },
+      where: { id: data.productId, tenantId },
     });
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });

@@ -34,8 +34,9 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "asc" },
     });
 
+    const order = date ? (orders[0] ?? null) : null;
     log.info({ count: orders.length }, "Daily orders fetched");
-    return NextResponse.json({ orders });
+    return NextResponse.json(date ? { order } : { orders });
   } catch (error) {
     return apiError(error, {
       publicMessage: "Failed to fetch daily orders",

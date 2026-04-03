@@ -35,7 +35,7 @@ export async function PATCH(
     const data = validated.data;
 
     const variant = await prisma.experienceVariant.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...(data.label !== undefined && { label: data.label }),
         ...(data.priceModifier !== undefined && { priceModifier: data.priceModifier }),

@@ -35,7 +35,7 @@ export async function PATCH(
     const data = validated.data;
 
     const timeSlot = await prisma.productTimeSlot.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...(data.type !== undefined && { type: data.type }),
         ...(data.startTime !== undefined && { startTime: data.startTime }),

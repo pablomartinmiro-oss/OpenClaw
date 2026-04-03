@@ -4,6 +4,7 @@ import { z } from "zod";
 export * from "./core";
 export * from "./catalog";
 export * from "./booking";
+export * from "./hotel";
 
 // ==================== HELPER ====================
 /**

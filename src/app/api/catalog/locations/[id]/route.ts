@@ -35,7 +35,7 @@ export async function PATCH(
     const data = validated.data;
 
     const location = await prisma.location.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.slug !== undefined && { slug: data.slug }),
