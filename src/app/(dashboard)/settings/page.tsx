@@ -16,7 +16,8 @@ import { PriceImportCard } from "./_components/PriceImportCard";
 import { SeedCatalogCard } from "./_components/SeedCatalogCard";
 import { SurveyUrlCard } from "./_components/SurveyUrlCard";
 import { ModulesCard } from "./_components/ModulesCard";
-import { Building2, RefreshCw, Package, Plug, Users, Blocks } from "lucide-react";
+import { EmailTemplatesCard } from "./_components/EmailTemplatesCard";
+import { Building2, RefreshCw, Package, Plug, Users, Blocks, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
@@ -176,6 +177,16 @@ export default function SettingsPage() {
         <section>
           <SectionHeader icon={Blocks} title="Modulos" />
           <ModulesCard />
+        </section>
+      </RoleGate>
+
+      <SectionDivider />
+
+      {/* Plantillas de Email */}
+      <RoleGate permission="settings:tenant">
+        <section>
+          <SectionHeader icon={Mail} title="Plantillas de Email" />
+          <EmailTemplatesCard />
         </section>
       </RoleGate>
 

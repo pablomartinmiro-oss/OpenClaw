@@ -78,6 +78,26 @@ export function useDeleteActivityBooking() {
   });
 }
 
+// ==================== INCIDENTS ====================
+export function useFlagActivityIncident() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, incidentNotes }: { id: string; incidentNotes: string }) => {
+      const res = await fetch(`/api/booking/activities/${id}/incident`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ incidentNotes }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["activityBookings"] });
+      qc.invalidateQueries({ queryKey: ["unifiedCalendar"] });
+    },
+  });
+}
+
 // ==================== MONITORS ====================
 export function useAssignMonitor() {
   const qc = useQueryClient();

@@ -182,6 +182,25 @@ export function useDeleteReservation() {
   });
 }
 
+export function useApplyReservationDiscount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, code }: { id: string; code: string }) =>
+      fetchJSON<{ reservation: Reservation; discount: { type: string; code: string; discountAmount: number; originalTotal: number; newTotal: number } }>(
+        `/api/reservations/${id}/apply-discount`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        }
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reservations"] });
+      qc.invalidateQueries({ queryKey: ["reservation-stats"] });
+    },
+  });
+}
+
 export function useCreateFromQuote() {
   const qc = useQueryClient();
   return useMutation({

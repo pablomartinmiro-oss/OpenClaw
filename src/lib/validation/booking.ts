@@ -63,7 +63,7 @@ export const createActivityBookingSchema = z.object({
   operationalNotes: z.string().max(2000).optional().nullable(),
 });
 export const updateActivityBookingSchema = z.object({
-  status: z.enum(["scheduled", "pending", "confirmed", "cancelled"]).optional(),
+  status: z.enum(["scheduled", "pending", "confirmed", "cancelled", "incident"]).optional(),
   operationalNotes: z.string().max(2000).optional().nullable(),
   arrivedClient: z.boolean().optional(),
 });
@@ -81,6 +81,16 @@ export const createDailyOrderSchema = z.object({
 });
 export const updateDailyOrderSchema = z.object({
   notes: z.string().max(5000).optional().nullable(),
+});
+
+// ==================== APPLY DISCOUNT ====================
+export const applyReservationDiscountSchema = z.object({
+  code: z.string().min(1).max(50),
+});
+
+// ==================== ACTIVITY INCIDENT ====================
+export const flagActivityIncidentSchema = z.object({
+  incidentNotes: z.string().min(1).max(2000),
 });
 
 // ==================== CLIENTS ====================
