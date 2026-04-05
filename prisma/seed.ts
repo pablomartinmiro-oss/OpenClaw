@@ -496,7 +496,175 @@ async function seedNewModules(tenantId: string) {
       create: { tenantId, module: mod, isEnabled: true },
     });
   }
+  // Enable additional modules
+  const extraModules = ["suppliers", "storefront", "reviews", "ticketing", "packs"];
+  for (const mod of extraModules) {
+    await prisma.moduleConfig.upsert({
+      where: { tenantId_module: { tenantId, module: mod } },
+      update: {},
+      create: { tenantId, module: mod, isEnabled: true },
+    });
+  }
   console.log("Enabled new modules for demo tenant");
+}
+
+async function seedDemoContent(tenantId: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // ==================== SPA SLOTS (5 for today) ====================
+  await prisma.spaSlot.deleteMany({ where: { tenantId, date: today } });
+  const allTreatments = await prisma.spaTreatment.findMany({ where: { tenantId } });
+  const slotTimes = ["10:00", "11:30", "14:00", "16:00", "17:30"];
+  let slotCount = 0;
+  for (let i = 0; i < Math.min(allTreatments.length, 3); i++) {
+    const t = allTreatments[i];
+    const t1 = slotTimes[i * 2 % slotTimes.length];
+    const t2 = slotTimes[(i * 2 + 1) % slotTimes.length];
+    for (const time of [t1, t2]) {
+      const booked = Math.random() > 0.5 ? 1 : 0;
+      await prisma.spaSlot.create({
+        data: { tenantId, date: today, time, treatmentId: t.id, capacity: 1, booked, status: booked ? "full" : "available" },
+      });
+      slotCount++;
+    }
+  }
+  console.log(`Seeded ${slotCount} spa slots for today`);
+
+  // ==================== RESTAURANT BOOKINGS (5 for today) ====================
+  await prisma.restaurantBooking.deleteMany({ where: { tenantId, date: today } });
+  const restaurant = await prisma.restaurant.findFirst({ where: { tenantId } });
+  if (restaurant) {
+    const bookings = [
+      { time: "13:30", guestCount: 2, status: "confirmed", notes: "Mesa junto a ventana" },
+      { time: "14:00", guestCount: 4, status: "confirmed", notes: null },
+      { time: "14:30", guestCount: 6, status: "no_show", notes: "Cumpleaños — tarta especial" },
+      { time: "20:30", guestCount: 3, status: "confirmed", notes: "Alergia a frutos secos" },
+      { time: "21:00", guestCount: 2, status: "confirmed", notes: null },
+    ];
+    for (const b of bookings) {
+      await prisma.restaurantBooking.create({
+        data: {
+          tenantId, restaurantId: restaurant.id, date: today,
+          time: b.time, guestCount: b.guestCount, status: b.status,
+          specialRequests: b.notes, depositStatus: "paid",
+        },
+      });
+    }
+    console.log("Seeded 5 restaurant bookings for today");
+  }
+
+  // ==================== INVOICES + LINES + TRANSACTION ====================
+  await prisma.invoiceLine.deleteMany({ where: { tenantId } });
+  await prisma.transaction.deleteMany({ where: { tenantId } });
+  await prisma.invoice.deleteMany({ where: { tenantId } });
+
+  const invoices = [
+    { number: "FAC-2026-0001", status: "paid", subtotal: 413.22, taxAmount: 86.78, total: 500, issuedAt: new Date("2026-03-15"), paidAt: new Date("2026-03-20"), notes: null,
+      lines: [{ description: "Alquiler equipo esquí adulto — 5 días", quantity: 2, unitPrice: 180, lineTotal: 360 }, { description: "Seguro daños equipo", quantity: 2, unitPrice: 20.66, lineTotal: 41.32 }] },
+    { number: "FAC-2026-0002", status: "sent", subtotal: 991.74, taxAmount: 208.26, total: 1200, issuedAt: new Date("2026-03-28"), paidAt: null, notes: "Familia López — 2 adultos, 2 niños",
+      lines: [{ description: "Pack Aventura Familiar (4 pax)", quantity: 1, unitPrice: 991.74, lineTotal: 991.74 }] },
+    { number: "FAC-2026-0003", status: "draft", subtotal: 132.23, taxAmount: 27.77, total: 160, issuedAt: null, paidAt: null, notes: null,
+      lines: [{ description: "Masaje Relajante 60 min", quantity: 2, unitPrice: 66.12, lineTotal: 132.23 }] },
+  ];
+  for (const inv of invoices) {
+    const { lines, ...invData } = inv;
+    const created = await prisma.invoice.create({ data: { tenantId, ...invData } });
+    for (const line of lines) {
+      await prisma.invoiceLine.create({ data: { tenantId, invoiceId: created.id, ...line, taxRate: 21 } });
+    }
+    if (inv.status === "paid") {
+      await prisma.transaction.create({
+        data: { tenantId, invoiceId: created.id, date: inv.paidAt!, amount: inv.total, method: "card", status: "completed", reference: "TPV-00412" },
+      });
+    }
+  }
+  console.log("Seeded 3 invoices with lines + 1 transaction");
+
+  // ==================== EXPENSES (3) ====================
+  await prisma.expense.deleteMany({ where: { tenantId } });
+  const expCats = await prisma.expenseCategory.findMany({ where: { tenantId } });
+  const costCenters = await prisma.costCenter.findMany({ where: { tenantId } });
+  const catMap: Record<string, string> = {};
+  for (const ec of expCats) catMap[ec.code] = ec.id;
+  const ccOp = costCenters.find((c) => c.code === "OP");
+  const ccAdm = costCenters.find((c) => c.code === "ADM");
+
+  const expenses = [
+    { concept: "Electricidad marzo", amount: 450, categoryCode: "SUM", costCenterId: ccOp?.id ?? null, status: "accounted", paymentMethod: "direct_debit", date: new Date("2026-03-31") },
+    { concept: "Nóminas marzo", amount: 12000, categoryCode: "PER", costCenterId: ccAdm?.id ?? null, status: "justified", paymentMethod: "transfer", date: new Date("2026-03-31") },
+    { concept: "Campaña Google Ads", amount: 800, categoryCode: "MKT", costCenterId: null, status: "pending", paymentMethod: "card", date: new Date("2026-03-25") },
+  ];
+  for (const exp of expenses) {
+    const { categoryCode, ...data } = exp;
+    await prisma.expense.create({ data: { tenantId, categoryId: catMap[categoryCode], ...data } });
+  }
+  console.log("Seeded 3 expenses");
+
+  // ==================== SUPPLIERS (2) ====================
+  const suppliers = [
+    { fiscalName: "Aventura Total S.L.", nif: "B12345678", email: "admin@aventuratotal.es", phone: "+34 974 123 456", commissionPercentage: 15, status: "active" },
+    { fiscalName: "Sierra Nevada Sports", nif: "B87654321", email: "contacto@snsports.es", phone: "+34 958 654 321", commissionPercentage: 10, status: "active" },
+  ];
+  for (const s of suppliers) {
+    await prisma.supplier.upsert({
+      where: { tenantId_nif: { tenantId, nif: s.nif } },
+      update: {},
+      create: { tenantId, ...s },
+    });
+  }
+  console.log("Seeded 2 suppliers");
+
+  // ==================== DISCOUNT CODES (2) ====================
+  const discounts = [
+    { code: "BIENVENIDO10", type: "percentage", value: 10, maxUses: 100, isActive: true, expirationDate: null },
+    { code: "VERANO2026", type: "fixed", value: 20, maxUses: 0, isActive: true, expirationDate: new Date("2026-09-30") },
+  ];
+  for (const d of discounts) {
+    await prisma.discountCode.upsert({
+      where: { tenantId_code: { tenantId, code: d.code } },
+      update: {},
+      create: { tenantId, ...d },
+    });
+  }
+  console.log("Seeded 2 discount codes");
+
+  // ==================== REVIEWS (4) ====================
+  await prisma.review.deleteMany({ where: { tenantId } });
+  const reviews = [
+    { entityType: "experience", entityId: "baqueira-esqui", rating: 5, authorName: "Laura Fernández", authorEmail: "laura@email.com", title: "Increíble experiencia", body: "Las pistas estaban en perfecto estado y el equipo de alquiler era de gran calidad. Repetiremos seguro.", status: "approved", stayDate: new Date("2026-02-15") },
+    { entityType: "hotel", entityId: "suite-familiar", rating: 4, authorName: "Miguel Ángel Ruiz", authorEmail: "miguel@email.com", title: "Muy buena relación calidad-precio", body: "La suite familiar era espaciosa y limpia. El desayuno buffet excelente. Solo faltaba un poco más de presión en la ducha.", status: "approved", stayDate: new Date("2026-03-01") },
+    { entityType: "spa", entityId: "masaje-deportivo", rating: 3, authorName: "Ana Belén Torres", authorEmail: "anabelen@email.com", title: "Correcto pero mejorable", body: "El masaje estuvo bien pero la sala estaba un poco fría. El terapeuta fue amable.", status: "pending", stayDate: new Date("2026-03-10") },
+    { entityType: "restaurant", entityId: "el-mirador", rating: 1, authorName: "Pedro García", authorEmail: "pedro@email.com", title: "Muy decepcionante", body: "Esperamos 45 minutos para que nos sirvieran y la comida llegó fría.", status: "rejected", stayDate: new Date("2026-03-05") },
+  ];
+  for (const r of reviews) {
+    await prisma.review.create({ data: { tenantId, ...r } });
+  }
+  console.log("Seeded 4 reviews");
+
+  // ==================== CMS STATIC PAGES (2) ====================
+  const pages = [
+    { title: "Sobre nosotros", slug: "sobre-nosotros", isPublished: true, metaDescription: "Conoce la historia de Skicenter, tu centro de esquí de confianza.",
+      content: "<h2>Nuestra historia</h2><p>Skicenter nació en 2018 con la misión de hacer accesible el esquí y los deportes de montaña a todo el mundo. Desde nuestras tres estaciones — Baqueira Beret, Sierra Nevada y La Pinilla — ofrecemos experiencias inolvidables para familias, parejas y grupos de amigos.</p><p>Nuestro equipo de más de 30 profesionales se dedica a que cada cliente disfrute al máximo de la nieve, el bienestar y la gastronomía de montaña.</p>",
+      blocks: [{ type: "text", content: { html: "<p>Contacto: info@skicenter.com | +34 900 123 456</p>" }, sortOrder: 0 }] },
+    { title: "Política de cancelación", slug: "politica-cancelacion", isPublished: true, metaDescription: "Consulta nuestra política de cancelación y devoluciones.",
+      content: "<h2>Política de cancelación</h2><p>Las reservas pueden cancelarse gratuitamente hasta 48 horas antes de la fecha de actividad. Cancelaciones con menos de 48 horas de antelación tendrán un cargo del 50% del importe total.</p><p>En caso de condiciones meteorológicas adversas que impidan la realización de la actividad, se ofrecerá un bono de compensación por el 100% del importe.</p>",
+      blocks: [{ type: "text", content: { html: "<p>Última actualización: marzo 2026</p>" }, sortOrder: 0 }] },
+  ];
+  for (const p of pages) {
+    const { blocks, ...pageData } = p;
+    const page = await prisma.staticPage.upsert({
+      where: { tenantId_slug: { tenantId, slug: p.slug } },
+      update: {},
+      create: { tenantId, ...pageData },
+    });
+    // Upsert blocks: delete existing then recreate
+    await prisma.pageBlock.deleteMany({ where: { tenantId, pageId: page.id } });
+    for (const block of blocks) {
+      await prisma.pageBlock.create({ data: { tenantId, pageId: page.id, type: block.type, content: block.content, sortOrder: block.sortOrder } });
+    }
+  }
+  console.log("Seeded 2 static pages with blocks");
 }
 
 async function main() {
@@ -584,6 +752,8 @@ async function main() {
   await seedDemoData(demoTenant.id);
 
   await seedNewModules(demoTenant.id);
+
+  await seedDemoContent(demoTenant.id);
 
   console.log("Demo tenant seed complete");
 }
