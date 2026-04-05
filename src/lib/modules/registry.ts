@@ -72,7 +72,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "operaciones",
     navItems: [
-      { label: "Hotel", href: "/hotel", icon: "Building2", permission: "hotel:view" },
+      { label: "Hotel", href: "/hotel", icon: "Building2", permission: null },
     ],
     permissions: ["hotel:view", "hotel:edit", "hotel:manage"],
   },
@@ -85,7 +85,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "operaciones",
     navItems: [
-      { label: "Spa", href: "/spa", icon: "Sparkles", permission: "spa:view" },
+      { label: "Spa", href: "/spa", icon: "Sparkles", permission: null },
     ],
     permissions: ["spa:view", "spa:edit", "spa:manage"],
   },
@@ -98,7 +98,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "operaciones",
     navItems: [
-      { label: "Restaurante", href: "/restaurant", icon: "UtensilsCrossed", permission: "restaurant:view" },
+      { label: "Restaurante", href: "/restaurant", icon: "UtensilsCrossed", permission: null },
     ],
     permissions: ["restaurant:view", "restaurant:edit", "restaurant:manage"],
   },
@@ -111,7 +111,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "gestion",
     navItems: [
-      { label: "Finanzas", href: "/finance", icon: "Receipt", permission: "finance:view" },
+      { label: "Finanzas", href: "/finance", icon: "Receipt", permission: null },
     ],
     permissions: ["finance:view", "finance:edit", "finance:manage"],
   },
@@ -124,7 +124,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "gestion",
     navItems: [
-      { label: "Proveedores", href: "/suppliers", icon: "Truck", permission: "suppliers:view" },
+      { label: "Proveedores", href: "/suppliers", icon: "Truck", permission: null },
     ],
     permissions: ["suppliers:view", "suppliers:edit", "suppliers:manage"],
   },
@@ -137,7 +137,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "gestion",
     navItems: [
-      { label: "REAV", href: "/reav", icon: "Scale", permission: "reav:view" },
+      { label: "REAV", href: "/reav", icon: "Scale", permission: null },
     ],
     permissions: ["reav:view", "reav:edit"],
   },
@@ -150,7 +150,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "gestion",
     navItems: [
-      { label: "TPV", href: "/tpv", icon: "CreditCard", permission: "tpv:view" },
+      { label: "TPV", href: "/tpv", icon: "CreditCard", permission: null },
     ],
     permissions: ["tpv:view", "tpv:operate", "tpv:manage"],
   },
@@ -163,7 +163,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "online",
     navItems: [
-      { label: "Tienda Online", href: "/storefront", icon: "ShoppingCart", permission: "storefront:view" },
+      { label: "Tienda Online", href: "/storefront", icon: "ShoppingCart", permission: null },
     ],
     permissions: ["storefront:view", "storefront:edit"],
   },
@@ -176,7 +176,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "online",
     navItems: [
-      { label: "Contenidos", href: "/cms", icon: "PanelsTopLeft", permission: "cms:view" },
+      { label: "Contenidos", href: "/cms", icon: "PanelsTopLeft", permission: null },
     ],
     permissions: ["cms:view", "cms:edit"],
   },
@@ -189,7 +189,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "ventas",
     navItems: [
-      { label: "Ticketing", href: "/ticketing", icon: "Ticket", permission: "ticketing:view" },
+      { label: "Ticketing", href: "/ticketing", icon: "Ticket", permission: null },
     ],
     permissions: ["ticketing:view", "ticketing:edit", "ticketing:manage"],
   },
@@ -202,7 +202,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "online",
     navItems: [
-      { label: "Resenas", href: "/reviews", icon: "Star", permission: "reviews:view" },
+      { label: "Resenas", href: "/reviews", icon: "Star", permission: null },
     ],
     permissions: ["reviews:view", "reviews:moderate"],
   },
@@ -215,7 +215,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "ventas",
     navItems: [
-      { label: "Packs", href: "/packs", icon: "Boxes", permission: "packs:view" },
+      { label: "Packs", href: "/packs", icon: "Boxes", permission: null },
     ],
     permissions: ["packs:view", "packs:edit"],
   },

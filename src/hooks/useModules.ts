@@ -41,6 +41,8 @@ export function useModules() {
     isLoading,
     error,
     isEnabled: (slug: string) => {
+      // While loading, show all modules (fail open for sidebar)
+      if (isLoading || modules.length === 0) return true;
       const mod = modules.find((m) => m.slug === slug);
       return mod ? mod.isEnabled || mod.isCore : false;
     },

@@ -80,7 +80,7 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { can, roleName } = usePermissions();
-  const { isEnabled } = useModules();
+  const { isEnabled, modules } = useModules();
 
   /** Build nav items from enabled modules */
   const resolvedItems = useMemo(() => {
@@ -110,7 +110,8 @@ export function MobileNav() {
 
     items.sort((a, b) => a.sectionOrder - b.sectionOrder);
     return items;
-  }, [isEnabled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modules]);
 
   /** Filter by permission and role */
   const visibleItems = resolvedItems.filter((item) => {

@@ -84,7 +84,7 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { can, roleName } = usePermissions();
-  const { isEnabled } = useModules();
+  const { isEnabled, modules } = useModules();
   const { data: draftCount = 0 } = useQuoteDraftCount();
 
   /** Build nav items from enabled modules */
@@ -117,7 +117,8 @@ export function Sidebar({ unreadCount = 0, todayReservations = 0 }: SidebarProps
     // Sort by section order (items within a section keep registry order)
     items.sort((a, b) => a.sectionOrder - b.sectionOrder);
     return items;
-  }, [isEnabled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modules]);
 
   /** Filter by permission and role */
   const visibleItems = resolvedItems.filter((item) => {
