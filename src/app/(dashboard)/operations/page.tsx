@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useActivityBookings } from "@/hooks/useBookingOps";
+import { ClipboardList, CalendarDays, ChevronLeft, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { useActivityBookings, useUnifiedCalendar } from "@/hooks/useBookingOps";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
 import ActivityBookingList from "./_components/ActivityBookingList";
 import DailyOrderSection from "./_components/DailyOrderSection";
+import UnifiedCalendar from "./_components/UnifiedCalendar";
 
 function formatDateISO(d: Date): string {
   return d.toISOString().split("T")[0];
@@ -21,15 +22,20 @@ function formatDateDisplay(dateStr: string): string {
   });
 }
 
+type ViewMode = "list" | "calendar";
+
 export default function OperationsPage() {
   const [selectedDate, setSelectedDate] = useState(() =>
     formatDateISO(new Date())
   );
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
 
-  const { data, isLoading } = useActivityBookings(selectedDate);
-  const bookings = data?.bookings ?? [];
+  const { data: activityData, isLoading: loadingActivities } = useActivityBookings(selectedDate);
+  const { data: calendarData, isLoading: loadingCalendar } = useUnifiedCalendar(selectedDate);
+  const bookings = activityData?.bookings ?? [];
 
   const isToday = selectedDate === formatDateISO(new Date());
+  const isLoading = viewMode === "calendar" ? loadingCalendar : loadingActivities;
 
   const shiftDate = (days: number) => {
     const d = new Date(selectedDate + "T12:00:00");
@@ -48,13 +54,35 @@ export default function OperationsPage() {
           <div>
             <h1 className="text-2xl font-bold text-[#2D2A26]">Operaciones</h1>
             <p className="text-sm text-[#8A8580]">
-              Gestion diaria de actividades y monitores
+              Gestion diaria de actividades, restaurante y spa
             </p>
           </div>
         </div>
 
-        {/* Date picker */}
         <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center rounded-xl border border-[#E8E4DE] bg-white overflow-hidden">
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex h-9 w-9 items-center justify-center transition-colors ${
+                viewMode === "calendar" ? "bg-[#E87B5A] text-white" : "text-[#8A8580] hover:text-[#2D2A26]"
+              }`}
+              title="Vista calendario"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex h-9 w-9 items-center justify-center transition-colors ${
+                viewMode === "list" ? "bg-[#E87B5A] text-white" : "text-[#8A8580] hover:text-[#2D2A26]"
+              }`}
+              title="Vista lista"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Date picker */}
           <button
             onClick={() => shiftDate(-1)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E4DE] bg-white text-[#8A8580] hover:border-[#E87B5A] hover:text-[#E87B5A] transition-colors"
@@ -97,26 +125,35 @@ export default function OperationsPage() {
         <p className="text-sm font-medium text-[#2D2A26] capitalize">
           {formatDateDisplay(selectedDate)}
         </p>
-        <p className="text-xs text-[#8A8580] mt-0.5">
-          {bookings.length}{" "}
-          {bookings.length === 1 ? "actividad programada" : "actividades programadas"}
-        </p>
+        {viewMode === "list" && (
+          <p className="text-xs text-[#8A8580] mt-0.5">
+            {bookings.length}{" "}
+            {bookings.length === 1 ? "actividad programada" : "actividades programadas"}
+          </p>
+        )}
       </div>
 
       {/* Content */}
       {isLoading ? (
         <PageSkeleton />
+      ) : viewMode === "calendar" && calendarData ? (
+        <>
+          <UnifiedCalendar
+            activities={calendarData.activities}
+            restaurantBookings={calendarData.restaurantBookings}
+            spaSlots={calendarData.spaSlots}
+            summary={calendarData.summary}
+          />
+          <DailyOrderSection date={selectedDate} />
+        </>
       ) : (
         <>
-          {/* Activity bookings list */}
           <div>
             <h2 className="text-sm font-semibold text-[#2D2A26] mb-3">
               Actividades del dia
             </h2>
             <ActivityBookingList bookings={bookings} />
           </div>
-
-          {/* Daily order notes */}
           <DailyOrderSection date={selectedDate} />
         </>
       )}

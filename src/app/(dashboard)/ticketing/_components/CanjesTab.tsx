@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, RotateCcw, X } from "lucide-react";
+import { Plus, Pencil, Trash2, RotateCcw, X, Layers, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   useRedemptions,
@@ -11,6 +11,7 @@ import {
 } from "@/hooks/useTicketing";
 import type { CouponRedemption } from "@/hooks/useTicketing";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
+import BatchRedemptionModal from "./BatchRedemptionModal";
 
 const inputCls =
   "w-full rounded-[10px] border border-[#E8E4DE] px-3 py-2 text-sm text-[#2D2A26] placeholder:text-[#8A8580] focus:border-[#E87B5A] focus:outline-none focus:ring-1 focus:ring-[#E87B5A]";
@@ -34,6 +35,12 @@ const FIN_COLORS: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700",
   redeemed: "bg-emerald-50 text-emerald-700",
   incident: "bg-red-50 text-red-700",
+};
+const OCR_BADGE: Record<string, { label: string; cls: string }> = {
+  alta: { label: "Alta", cls: "bg-emerald-50 text-emerald-700" },
+  media: { label: "Media", cls: "bg-amber-50 text-amber-700" },
+  baja: { label: "Baja", cls: "bg-red-50 text-red-700" },
+  conflicto: { label: "Conflicto", cls: "bg-purple-50 text-purple-700" },
 };
 
 interface RedemptionForm {
@@ -143,6 +150,7 @@ export default function CanjesTab() {
   const deleteRed = useDeleteRedemption();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRedemption | null>(null);
 
   const redemptions = data?.redemptions ?? [];
@@ -196,9 +204,14 @@ export default function CanjesTab() {
           </select>
           <p className="text-sm text-[#8A8580]">{redemptions.length} canje{redemptions.length !== 1 ? "s" : ""}</p>
         </div>
-        <button onClick={handleAdd} className="flex items-center gap-2 rounded-[10px] bg-[#E87B5A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#D56E4F] transition-colors">
-          <Plus className="h-4 w-4" /> Nuevo Canje
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setBatchOpen(true)} className="flex items-center gap-2 rounded-[10px] border border-[#E8E4DE] px-4 py-2.5 text-sm font-medium text-[#2D2A26] hover:bg-[#FAF9F7] transition-colors">
+            <Layers className="h-4 w-4" /> Canjear lote
+          </button>
+          <button onClick={handleAdd} className="flex items-center gap-2 rounded-[10px] bg-[#E87B5A] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#D56E4F] transition-colors">
+            <Plus className="h-4 w-4" /> Nuevo Canje
+          </button>
+        </div>
       </div>
 
       {redemptions.length === 0 ? (
@@ -217,6 +230,7 @@ export default function CanjesTab() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#8A8580] uppercase tracking-wider">Contacto</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-[#8A8580] uppercase tracking-wider">Estado</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-[#8A8580] uppercase tracking-wider">Financiero</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-[#8A8580] uppercase tracking-wider">OCR</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#8A8580] uppercase tracking-wider">Fecha</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-[#8A8580] uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -240,6 +254,26 @@ export default function CanjesTab() {
                       <span className={`inline-flex rounded-[6px] px-2 py-0.5 text-xs font-medium ${FIN_COLORS[r.financialStatus] ?? "bg-gray-100 text-gray-500"}`}>
                         {FIN_LABELS[r.financialStatus] ?? r.financialStatus}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {(() => {
+                        const ocr = r.ocrExtraction as Record<string, unknown> | null;
+                        const conf = ocr?.confidence as string | undefined;
+                        if (!conf) return <span className="text-xs text-[#8A8580]">—</span>;
+                        const badge = OCR_BADGE[conf];
+                        return (
+                          <div className="flex items-center justify-center gap-1">
+                            <span className={`inline-flex rounded-[6px] px-2 py-0.5 text-xs font-medium ${badge?.cls ?? "bg-gray-100 text-gray-500"}`}>
+                              {badge?.label ?? conf}
+                            </span>
+                            {Boolean(ocr?.softDuplicate) && (
+                              <span className="text-[#D4A853]" role="img" aria-label="Posible duplicado">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-sm text-[#8A8580]">
                       {new Date(r.createdAt).toLocaleDateString("es-ES")}
@@ -268,6 +302,11 @@ export default function CanjesTab() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <BatchRedemptionModal
+        isOpen={batchOpen}
+        onClose={() => setBatchOpen(false)}
       />
     </div>
   );

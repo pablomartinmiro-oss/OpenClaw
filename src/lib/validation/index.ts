@@ -16,6 +16,8 @@ export * from "./cms";
 export * from "./packs";
 export * from "./reviews";
 export * from "./ticketing";
+export * from "./payroll";
+export * from "./cancellations";
 
 // ==================== HELPER ====================
 /**

@@ -27,6 +27,7 @@ import {
   Boxes,
   ClipboardList,
   UserCheck,
+  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -65,6 +66,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Star,
   Boxes,
   UserCheck,
+  Wallet,
 };
 
 interface ResolvedNavItem {

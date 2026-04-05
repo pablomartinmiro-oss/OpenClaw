@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, Receipt, CreditCard, Settings2 } from "lucide-react";
+import { BarChart3, Receipt, CreditCard, Settings2, FileBarChart } from "lucide-react";
 import DashboardTab from "./_components/DashboardTab";
 import InvoicesTab from "./_components/InvoicesTab";
 import ExpensesTab from "./_components/ExpensesTab";
 import ConfigTab from "./_components/ConfigTab";
+import ReportsTab from "./_components/ReportsTab";
 
 const TABS = [
   { key: "dashboard", label: "Resumen", icon: BarChart3 },
   { key: "invoices", label: "Facturas", icon: Receipt },
   { key: "expenses", label: "Gastos", icon: CreditCard },
+  { key: "reports", label: "Informes", icon: FileBarChart },
   { key: "config", label: "Configuración", icon: Settings2 },
 ] as const;
 
@@ -42,6 +44,7 @@ export default function FinancePage() {
       {activeTab === "dashboard" && <DashboardTab />}
       {activeTab === "invoices" && <InvoicesTab />}
       {activeTab === "expenses" && <ExpensesTab />}
+      {activeTab === "reports" && <ReportsTab />}
       {activeTab === "config" && <ConfigTab />}
     </div>
   );

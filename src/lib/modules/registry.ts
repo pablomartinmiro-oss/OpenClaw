@@ -58,6 +58,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     navItems: [
       { label: "Presupuestos", href: "/presupuestos", icon: "FileText", permission: null, roles: ["Owner / Manager"] },
       { label: "Reservas", href: "/reservas", icon: "CalendarCheck", permission: "reservations:view" },
+      { label: "Cancelaciones", href: "/cancellations", icon: "XCircle", permission: null, roles: ["Owner / Manager"] },
       { label: "Operaciones", href: "/operations", icon: "ClipboardList", permission: null, roles: ["Owner / Manager"] },
       { label: "Clientes", href: "/clients", icon: "UserCheck", permission: null },
     ],
@@ -112,6 +113,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     section: "gestion",
     navItems: [
       { label: "Finanzas", href: "/finance", icon: "Receipt", permission: null },
+      { label: "Nominas", href: "/payroll", icon: "Wallet", permission: null },
     ],
     permissions: ["finance:view", "finance:edit", "finance:manage"],
   },

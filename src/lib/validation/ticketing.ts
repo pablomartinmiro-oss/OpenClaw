@@ -68,3 +68,20 @@ export const updateCouponEmailConfigSchema = z.object({
   eventTrigger: z.string().min(1).max(100).optional(),
   enabled: z.boolean().optional(),
 });
+
+// ==================== BATCH COUPON SUBMISSION ====================
+
+export const batchCouponSubmissionSchema = z.object({
+  coupons: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        platformId: z.string().optional(),
+        imageBase64: z.string().optional(),
+      })
+    )
+    .min(1)
+    .max(10),
+});

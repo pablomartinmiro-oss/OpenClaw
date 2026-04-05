@@ -148,6 +148,14 @@ model Tenant {
   // Packs
   legoPacks             LegoPack[]
   legoPackLines         LegoPackLine[]
+
+  // Cancellations
+  cancellationRequests  CancellationRequest[]
+  cancellationLogs      CancellationLog[]
+
+  // Payroll
+  payrollRecords        PayrollRecord[]
+  payrollExtras         PayrollExtra[]
 }
 
 // ==================== USER ====================
@@ -171,9 +179,10 @@ model User {
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   role          Role      @relation(fields: [roleId], references: [id])
   notifications Notification[]
-  restaurantStaff RestaurantStaff[]
-  bookingMonitors BookingMonitor[]
-  cashSessions    CashSession[]
+  restaurantStaff  RestaurantStaff[]
+  bookingMonitors  BookingMonitor[]
+  cashSessions     CashSession[]
+  payrollRecords   PayrollRecord[]
 
   @@unique([email, tenantId])
   @@index([tenantId])
@@ -1275,6 +1284,9 @@ model Supplier {
   email                String?
   phone                String?
   commissionPercentage Float    @default(0)
+  commissionType       String   @default("percentage") // "percentage" | "fixed" | "margin" | "hybrid"
+  fixedCostPerUnit     Float?
+  marginPercentage     Float?
   paymentMethod        String   @default("transfer") // "transfer" | "card"
   settlementFrequency  String   @default("monthly") // "biweekly" | "monthly" | "quarterly"
   status               String   @default("active") // "active" | "inactive" | "blocked"
@@ -1577,10 +1589,55 @@ model CompensationVoucher {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cancellation CancellationRequest? @relation("CancellationVouchers", fields: [cancellationId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, code])
   @@index([tenantId, isUsed])
+}
+
+// ==================== CANCELLATIONS ====================
+
+model CancellationRequest {
+  id                String    @id @default(cuid())
+  tenantId          String
+  reservationId     String?
+  quoteId           String?
+  reason            String?
+  status            String    @default("recibida") // recibida, en_revision, pendiente_documentacion, pendiente_decision, resuelta, cerrada
+  resolution        String?   // rejected, fully_accepted, partially_accepted
+  operationalStatus String?
+  financialStatus   String?   // devuelta_economicamente, pendiente_devolucion, bono_emitido
+  refundAmount      Float?
+  creditNoteNumber  String?   // ANU-YYYY-NNNN
+  submissionDate    DateTime  @default(now())
+  resolvedAt        DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  logs            CancellationLog[]
+  vouchers        CompensationVoucher[] @relation("CancellationVouchers")
+
+  @@index([tenantId, status])
+  @@index([tenantId, reservationId])
+}
+
+model CancellationLog {
+  id             String   @id @default(cuid())
+  tenantId       String
+  requestId      String
+  previousStatus String
+  newStatus      String
+  actorId        String
+  notes          String?
+  timestamp      DateTime @default(now())
+
+  tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  request CancellationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, requestId])
 }
 
 // ==================== CMS ====================
@@ -1806,4 +1863,44 @@ model LegoPackLine {
   pack   LegoPack @relation(fields: [packId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, packId])
+}
+
+// ==================== PAYROLL ====================
+
+model PayrollRecord {
+  id          String    @id @default(cuid())
+  tenantId    String
+  userId      String
+  year        Int
+  month       Int       // 1-12
+  baseSalary  Float     @default(0)
+  totalExtras Float     @default(0)
+  totalAmount Float     @default(0)
+  status      String    @default("draft") // draft, approved, paid
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  extras PayrollExtra[]
+
+  @@unique([tenantId, userId, year, month])
+  @@index([tenantId, year, month])
+}
+
+model PayrollExtra {
+  id        String   @id @default(cuid())
+  tenantId  String
+  payrollId String
+  concept   String
+  type      String   @default("bonus") // bonus, deduction, commission, overtime
+  amount    Float
+  createdAt DateTime @default(now())
+
+  tenant  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payroll PayrollRecord @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, payrollId])
 }

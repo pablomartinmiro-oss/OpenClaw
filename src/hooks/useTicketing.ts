@@ -296,3 +296,44 @@ export const useUpdateEmailConfig = () =>
   useMutWithId<UpdateEmailConfig>("/api/ticketing/email-config", "PATCH", emailKeys);
 export const useDeleteEmailConfig = () =>
   useDelById("/api/ticketing/email-config", emailKeys);
+
+// ==================== BATCH COUPON SUBMISSION ====================
+
+export interface BatchCouponInput {
+  code: string;
+  email?: string;
+  phone?: string;
+  platformId?: string;
+  imageBase64?: string;
+}
+
+export interface BatchResult {
+  index: number;
+  code: string;
+  status: "created" | "duplicate" | "error";
+  redemptionId?: string;
+  ocrConfidence?: string;
+  hardDuplicate?: boolean;
+  softDuplicate?: boolean;
+  error?: string;
+}
+
+export function useBatchRedemption() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (coupons: BatchCouponInput[]) => {
+      const res = await fetch("/api/ticketing/redemptions/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coupons }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{
+        results: BatchResult[];
+        summary: { total: number; created: number; duplicates: number };
+      }>;
+    },
+    onSuccess: () =>
+      redKeys.forEach((k) => qc.invalidateQueries({ queryKey: k })),
+  });
+}

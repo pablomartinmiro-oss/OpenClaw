@@ -67,6 +67,32 @@ function useDelById(basePath: string, keys: string[][]) {
   });
 }
 
+// ==================== REPORTS (P&L) ====================
+export interface FinanceReportsData {
+  summary: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netProfit: number;
+    profitMargin: number;
+  };
+  revenueByGroup: Array<{ label: string; amount: number; percentage: number }>;
+  expensesByGroup: Array<{ label: string; amount: number; percentage: number }>;
+  monthlyTrend: Array<{
+    month: string;
+    revenue: number;
+    expenses: number;
+    profit: number;
+  }>;
+}
+
+export function useFinanceReports(from?: string, to?: string, groupBy?: string) {
+  const url = buildUrl("/api/finance/reports", { from, to, groupBy });
+  return useQuery<FinanceReportsData>({
+    queryKey: ["financeReports", from, to, groupBy],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
 // ==================== DASHBOARD ====================
 export interface FinanceDashboardData {
   summary: {

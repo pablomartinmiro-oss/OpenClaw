@@ -78,6 +78,9 @@ export interface Supplier {
   email: string | null;
   phone: string | null;
   commissionPercentage: number;
+  commissionType: string;
+  fixedCostPerUnit: number | null;
+  marginPercentage: number | null;
   paymentMethod: string;
   settlementFrequency: string;
   status: string;
@@ -147,6 +150,9 @@ type CreateSup = {
   email?: string | null;
   phone?: string | null;
   commissionPercentage?: number;
+  commissionType?: string;
+  fixedCostPerUnit?: number | null;
+  marginPercentage?: number | null;
   paymentMethod?: string;
   settlementFrequency?: string;
   status?: string;

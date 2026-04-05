@@ -10,6 +10,11 @@ export const createSupplierSchema = z.object({
   email: z.string().email().max(255).optional().nullable(),
   phone: z.string().max(30).optional().nullable(),
   commissionPercentage: z.coerce.number().min(0).max(100).default(0),
+  commissionType: z
+    .enum(["percentage", "fixed", "margin", "hybrid"])
+    .default("percentage"),
+  fixedCostPerUnit: z.coerce.number().min(0).optional().nullable(),
+  marginPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
   paymentMethod: z.enum(["transfer", "card"]).default("transfer"),
   settlementFrequency: z
     .enum(["biweekly", "monthly", "quarterly"])

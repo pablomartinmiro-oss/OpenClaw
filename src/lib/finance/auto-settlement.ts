@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import type { SupplierSettlement } from "@/generated/prisma/client";
+import type { Supplier, SupplierSettlement } from "@/generated/prisma/client";
 
 /**
  * Generate a settlement for a supplier over a date range.
@@ -87,7 +87,11 @@ export async function generateSettlement(
 
       const saleAmount = item.totalPrice;
       const commPct = supplier.commissionPercentage;
-      const commAmount = Math.round(saleAmount * commPct) / 100;
+      const commAmount = calculateCommission(
+        supplier,
+        saleAmount,
+        item.quantity
+      );
 
       lines.push({
         serviceType: product.category === "spa" ? "spa" : "activity",
@@ -159,4 +163,33 @@ export async function generateSettlement(
   );
 
   return settlement;
+}
+
+/**
+ * Calculate commission based on supplier's commission type.
+ * Supports: percentage, fixed (per pax), margin, hybrid (fixed + percentage).
+ */
+function calculateCommission(
+  supplier: Pick<
+    Supplier,
+    "commissionType" | "commissionPercentage" | "fixedCostPerUnit" | "marginPercentage"
+  >,
+  saleAmount: number,
+  paxCount: number
+): number {
+  switch (supplier.commissionType) {
+    case "percentage":
+      return Math.round(saleAmount * (supplier.commissionPercentage / 100) * 100) / 100;
+    case "fixed":
+      return Math.round(paxCount * (supplier.fixedCostPerUnit ?? 0) * 100) / 100;
+    case "margin":
+      return Math.round(saleAmount * ((supplier.marginPercentage ?? 0) / 100) * 100) / 100;
+    case "hybrid": {
+      const fixed = paxCount * (supplier.fixedCostPerUnit ?? 0);
+      const pct = saleAmount * (supplier.commissionPercentage / 100);
+      return Math.round((fixed + pct) * 100) / 100;
+    }
+    default:
+      return Math.round(saleAmount * (supplier.commissionPercentage / 100) * 100) / 100;
+  }
 }
