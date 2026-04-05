@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "./CartContext";
 
 interface StorefrontNavProps {
@@ -24,12 +24,36 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const base = `/s/${slug}`;
 
+  const closeMobile = () => setMobileOpen(false);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  const isActivePath = (path: string) => {
+    const href = `${base}${path}`;
+    return path === ""
+      ? pathname === base || pathname === `${base}/`
+      : pathname.startsWith(href);
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
           {/* Logo / name */}
-          <Link href={base} className="text-xl font-bold text-gray-900 truncate">
+          <Link
+            href={base}
+            className="text-xl font-bold text-gray-900 truncate max-w-[200px]"
+          >
             {tenantName}
           </Link>
 
@@ -37,10 +61,7 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
           <nav className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const href = `${base}${item.path}`;
-              const isActive =
-                item.path === ""
-                  ? pathname === base || pathname === `${base}/`
-                  : pathname.startsWith(href);
+              const isActive = isActivePath(item.path);
               return (
                 <Link
                   key={item.path}
@@ -58,14 +79,15 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
           </nav>
 
           {/* Cart + mobile toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               href={`${base}/carrito`}
               className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              aria-label={`Carrito (${itemCount} articulos)`}
             >
               <CartIcon />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E87B5A] text-[11px] font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E87B5A] text-[11px] font-bold text-white shadow-sm">
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
@@ -74,8 +96,9 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              aria-label="Menu"
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
@@ -83,31 +106,53 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
         </div>
       </div>
 
-      {/* Mobile nav */}
+      {/* Mobile nav overlay */}
       {mobileOpen && (
-        <nav className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2">
-          {NAV_ITEMS.map((item) => {
-            const href = `${base}${item.path}`;
-            const isActive =
-              item.path === ""
-                ? pathname === base || pathname === `${base}/`
-                : pathname.startsWith(href);
-            return (
-              <Link
-                key={item.path}
-                href={href}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? "text-[#E87B5A] bg-orange-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 top-16 bg-black/20 z-40"
+            onClick={() => setMobileOpen(false)}
+          />
+          {/* Menu */}
+          <nav className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-lg px-4 pb-4 pt-2">
+            {NAV_ITEMS.map((item) => {
+              const href = `${base}${item.path}`;
+              const isActive = isActivePath(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  href={href}
+                  onClick={closeMobile}
+                  className={`block px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? "text-[#E87B5A] bg-orange-50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            {/* Cart link in mobile menu */}
+            <Link
+              href={`${base}/carrito`}
+              onClick={closeMobile}
+              className={`flex items-center justify-between px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
+                pathname.startsWith(`${base}/carrito`)
+                  ? "text-[#E87B5A] bg-orange-50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <span>Carrito</span>
+              {itemCount > 0 && (
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#E87B5A] px-1.5 text-[11px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+          </nav>
+        </>
       )}
     </header>
   );

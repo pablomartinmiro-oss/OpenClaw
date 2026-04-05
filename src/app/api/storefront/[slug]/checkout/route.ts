@@ -6,12 +6,15 @@ import { apiError } from "@/lib/api-response";
 import { lookupTenant } from "@/lib/storefront/tenant-lookup";
 import { validateBody, checkoutSchema } from "@/lib/validation";
 import { getCart, deleteCart } from "@/lib/storefront/cart";
+import { generateRedsysForm, generateOrderId } from "@/lib/redsys/client";
 import type { Prisma } from "@/generated/prisma/client";
 
 type RouteCtx = { params: Promise<{ slug: string }> };
 
+const BASE_URL = process.env.AUTH_URL ?? "https://crm-dash-prod.up.railway.app";
+
 /**
- * POST — convert cart to a Quote with QuoteItems.
+ * POST — convert cart to a Quote with QuoteItems + generate Redsys payment.
  * Body: { cartId, clientName, clientEmail, clientPhone? }
  */
 export async function POST(request: NextRequest, ctx: RouteCtx) {
@@ -76,6 +79,34 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
     const checkIn = itemDates[0] ?? new Date();
     const checkOut = itemDates[itemDates.length - 1] ?? new Date();
 
+    // Generate Redsys payment if configured
+    const orderId = generateOrderId();
+    let redsysResult: {
+      url: string;
+      params: {
+        Ds_SignatureVersion: string;
+        Ds_MerchantParameters: string;
+        Ds_Signature: string;
+      };
+    } | null = null;
+
+    try {
+      const quoteRef = orderId.slice(0, 8).toUpperCase();
+      redsysResult = generateRedsysForm({
+        orderId,
+        amount: cart.total,
+        description: `Pedido ${quoteRef} — ${tenant.name}`,
+        merchantUrl: `${BASE_URL}/api/crm/webhooks/redsys`,
+        urlOk: `${BASE_URL}/s/${slug}/checkout?status=ok&order=${orderId}`,
+        urlKo: `${BASE_URL}/s/${slug}/checkout?status=error&order=${orderId}`,
+      });
+    } catch (redsysError) {
+      log.info(
+        { error: redsysError },
+        "Redsys not configured — proceeding with manual payment"
+      );
+    }
+
     const quote = await prisma.quote.create({
       data: {
         tenantId: tenant.id,
@@ -87,9 +118,12 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
         checkOut,
         adults: 1,
         children: 0,
-        status: "nuevo",
+        status: redsysResult ? "pendiente_pago" : "nuevo",
         totalAmount: cart.total,
         source: "storefront",
+        redsysOrderId: redsysResult ? orderId : null,
+        redsysPaymentUrl: redsysResult ? redsysResult.url : null,
+        paymentStatus: "pending",
         internalNotes: cart.discountCode
           ? `Codigo descuento: ${cart.discountCode} (-${cart.discountAmount?.toFixed(2)} EUR)`
           : null,
@@ -134,17 +168,32 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
     await deleteCart(cart.id);
 
     log.info(
-      { quoteId: quote.id, total: quote.totalAmount },
-      "Checkout completed — quote created from cart"
-    );
-
-    // TODO: Generate Redsys payment URL when configured
-    return NextResponse.json(
       {
         quoteId: quote.id,
         total: quote.totalAmount,
+        redsys: !!redsysResult,
+      },
+      "Checkout completed — quote created from cart"
+    );
+
+    // Build response with Redsys form data if available
+    const quoteNumber = quote.id.slice(-8).toUpperCase();
+
+    return NextResponse.json(
+      {
+        quoteId: quote.id,
+        quoteNumber,
+        total: quote.totalAmount,
         status: quote.status,
-        paymentUrl: null, // Redsys payment URL placeholder
+        paymentMode: redsysResult ? "redsys" : "manual",
+        redsys: redsysResult
+          ? {
+              url: redsysResult.url,
+              Ds_SignatureVersion: redsysResult.params.Ds_SignatureVersion,
+              Ds_MerchantParameters: redsysResult.params.Ds_MerchantParameters,
+              Ds_Signature: redsysResult.params.Ds_Signature,
+            }
+          : null,
       },
       { status: 201 }
     );

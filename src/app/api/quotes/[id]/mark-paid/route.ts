@@ -9,6 +9,7 @@ import { buildConfirmationEmailHTML } from "@/lib/email/templates";
 import { getGHLClient } from "@/lib/ghl/api";
 import { findStageByName } from "@/lib/ghl/stages";
 import { generateTasksForPaidQuote } from "@/lib/tasks/generate";
+import { createInvoiceFromQuote } from "@/lib/finance/auto-invoice-from-quote";
 
 export async function POST(
   request: NextRequest,
@@ -75,6 +76,11 @@ export async function POST(
     } catch (taskError) {
       log.error({ error: taskError }, "Failed to generate auto-tasks");
     }
+
+    // Auto-generate invoice (fire-and-forget)
+    createInvoiceFromQuote(tenantId, id).catch((invoiceError) => {
+      log.error({ error: invoiceError, quoteId: id }, "Failed to auto-create invoice from quote");
+    });
 
     // Send confirmation email via GHL
     if (quote.clientEmail) {

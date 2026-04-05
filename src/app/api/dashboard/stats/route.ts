@@ -13,6 +13,16 @@ export async function GET() {
   const log = logger.child({ tenantId, path: "/api/dashboard/stats" });
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
+  // Today range for module stats
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  // This month range for finance stats
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 1);
+
   try {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -33,6 +43,13 @@ export async function GET() {
       lostCount,
       contactsBySource,
       opportunitiesByPipeline,
+      // Module stats — hotel, restaurant, spa, finance, tpv
+      hotelOccupancy,
+      restaurantBookingsToday,
+      spaAppointmentsToday,
+      monthlyRevenue,
+      outstandingInvoices,
+      tpvSalesToday,
     ] = await Promise.all([
       prisma.cachedContact.count({ where: { tenantId } }),
       prisma.cachedOpportunity.count({ where: { tenantId } }),
@@ -75,6 +92,54 @@ export async function GET() {
         _count: true,
         _sum: { monetaryValue: true },
       }),
+      // Hotel: reservations with activityDate = today (proxy for rooms occupied)
+      prisma.reservation.count({
+        where: {
+          tenantId,
+          activityDate: { gte: todayStart, lt: todayEnd },
+          status: { in: ["confirmada", "pendiente"] },
+        },
+      }),
+      // Restaurant: bookings today
+      prisma.restaurantBooking.count({
+        where: {
+          tenantId,
+          date: { gte: todayStart, lt: todayEnd },
+          status: { not: "cancelled" },
+        },
+      }),
+      // Spa: slots with booked > 0 today
+      prisma.spaSlot.count({
+        where: {
+          tenantId,
+          date: { gte: todayStart, lt: todayEnd },
+          booked: { gt: 0 },
+        },
+      }),
+      // Finance: paid invoices this month
+      prisma.invoice.aggregate({
+        where: {
+          tenantId,
+          status: "paid",
+          paidAt: { gte: monthStart, lt: monthEnd },
+        },
+        _sum: { total: true },
+      }),
+      // Finance: outstanding (non-paid, non-cancelled) invoices
+      prisma.invoice.count({
+        where: {
+          tenantId,
+          status: { in: ["draft", "sent"] },
+        },
+      }),
+      // TPV: today's sales total
+      prisma.tpvSale.aggregate({
+        where: {
+          tenantId,
+          date: { gte: todayStart, lt: todayEnd },
+        },
+        _sum: { totalAmount: true },
+      }),
     ]);
 
     // Build pipeline breakdown with names
@@ -94,6 +159,8 @@ export async function GET() {
       count: g._count,
     }));
 
+    log.info("Dashboard stats fetched with module data");
+
     return NextResponse.json({
       ghlConnected,
       ghlError: tenant?.syncState === "error" ? tenant.lastSyncError : null,
@@ -111,6 +178,13 @@ export async function GET() {
         recentOpportunities,
         lastSync: syncStatus?.lastFullSync ?? syncStatus?.lastIncrSync,
         syncInProgress: syncStatus?.syncInProgress ?? false,
+        // Module stats
+        hotelOccupancy,
+        restaurantBookingsToday,
+        spaAppointmentsToday,
+        monthlyRevenue: monthlyRevenue._sum.total ?? 0,
+        outstandingInvoices,
+        tpvSalesToday: tpvSalesToday._sum.totalAmount ?? 0,
       },
     });
   } catch (error) {

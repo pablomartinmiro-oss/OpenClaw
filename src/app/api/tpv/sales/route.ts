@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { validateBody, createTpvSaleSchema } from "@/lib/validation";
 import { Prisma } from "@/generated/prisma/client";
+import { createInvoiceFromTpvSale } from "@/lib/finance/auto-invoice";
 
 export async function GET(request: NextRequest) {
   const [session, authError] = await requireTenant();
@@ -158,6 +159,15 @@ export async function POST(request: NextRequest) {
       { saleId: sale.id, ticketNumber },
       "TPV sale created"
     );
+
+    // Auto-generate invoice from TPV sale (fire-and-forget)
+    createInvoiceFromTpvSale(tenantId, sale.id).catch((invoiceError) => {
+      log.error(
+        { error: invoiceError, saleId: sale.id },
+        "Failed to auto-create invoice from TPV sale"
+      );
+    });
+
     return NextResponse.json({ sale }, { status: 201 });
   } catch (error) {
     return apiError(error, {

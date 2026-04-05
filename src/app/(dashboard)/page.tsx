@@ -5,7 +5,9 @@ import Link from "next/link";
 import {
   Euro, Users, MessageCircle,
   BarChart3, CalendarCheck, Snowflake, Target, Trophy, XCircle, Send, RefreshCw,
+  Hotel, UtensilsCrossed, Sparkles, CreditCard,
 } from "lucide-react";
+import { useModules } from "@/hooks/useModules";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useReservationStats } from "@/hooks/useReservations";
@@ -70,6 +72,9 @@ interface DashboardStats {
     recentContacts: { id: string; name: string | null; email: string | null; source: string | null; updatedAt: string }[];
     recentOpportunities: { id: string; name: string | null; monetaryValue: number | null; status: string | null; updatedAt: string }[];
     lastSync: string | null; syncInProgress: boolean;
+    // Module stats
+    hotelOccupancy: number; restaurantBookingsToday: number; spaAppointmentsToday: number;
+    monthlyRevenue: number; outstandingInvoices: number; tpvSalesToday: number;
   };
 }
 
@@ -97,6 +102,7 @@ export default function DashboardHome() {
   const { data: quotes, isLoading: quotesLoading } = useQuotes();
   const { data: dashStats, isLoading: statsLoading, isFetching: statsFetching } = useDashboardStats();
   const { data: resStats, isLoading: resStatsLoading } = useReservationStats(dateRange);
+  const { isEnabled } = useModules();
 
   function handleRefresh() {
     queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -161,6 +167,27 @@ export default function DashboardHome() {
         <Link href="/reservas"><StatCard title="Reservas Hoy" value={resStats?.today.total ?? 0} description={`${resStats?.today.confirmed ?? 0} confirmadas`} icon={CalendarCheck} loading={resStatsLoading} iconColor="text-blue-600" iconBg="bg-blue-50" sparkline={makeSparkline(resStats?.today.total ?? 0)} /></Link>
         <Link href="/reservas"><StatCard title="Ingresos Semanales" value={formatCurrency(resStats?.weekly.totalRevenue ?? 0)} description={`${resStats?.weekly.totalReservations ?? 0} reservas`} icon={Euro} loading={resStatsLoading} iconColor="text-green-600" iconBg="bg-green-50" trend={{ value: conversionRate > 0 ? conversionRate : 5, label: "conversion" }} sparkline={makeSparkline(resStats?.weekly.totalRevenue ? resStats.weekly.totalRevenue / 100 : 1)} /></Link>
       </div>
+
+      {/* ── Hoy en el complejo ─────────────────────────────────── */}
+      {stats && (isEnabled("hotel") || isEnabled("restaurant") || isEnabled("spa") || isEnabled("tpv")) && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Hoy en el complejo</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {isEnabled("hotel") && (
+              <StatCard title="Ocupacion Hotel" value={stats.hotelOccupancy} description="reservas alojamiento hoy" icon={Hotel} loading={statsLoading} iconColor="text-indigo-600" iconBg="bg-indigo-50" />
+            )}
+            {isEnabled("restaurant") && (
+              <StatCard title="Reservas Restaurante" value={stats.restaurantBookingsToday} description="mesas reservadas hoy" icon={UtensilsCrossed} loading={statsLoading} iconColor="text-orange-600" iconBg="bg-orange-50" />
+            )}
+            {isEnabled("spa") && (
+              <StatCard title="Citas Spa" value={stats.spaAppointmentsToday} description="tratamientos hoy" icon={Sparkles} loading={statsLoading} iconColor="text-purple-600" iconBg="bg-purple-50" />
+            )}
+            {isEnabled("tpv") && (
+              <StatCard title="Ventas TPV" value={formatCurrency(stats.tpvSalesToday)} description="recaudado hoy" icon={CreditCard} loading={statsLoading} iconColor="text-emerald-600" iconBg="bg-emerald-50" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Needs Attention ────────────────────────────────────── */}
       <NeedsAttention quotes={allQuotes} loading={quotesLoading} />
