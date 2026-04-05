@@ -56,7 +56,7 @@ function RegisterForm() {
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
-          companyName: companyName.trim(),
+          ...(inviteToken ? {} : { companyName: companyName.trim() }),
           inviteToken: inviteToken || undefined,
         }),
       });
