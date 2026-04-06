@@ -138,16 +138,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isDemo = user.isDemo;
       }
 
-      // Re-check onboardingComplete from DB on every token refresh
-      // so the middleware sees the updated value after onboarding completes
-      if (trigger !== "signIn" && token.tenantId && !token.onboardingComplete) {
+      // Re-check role + onboarding from DB on every token refresh
+      // so role changes take effect without re-login
+      if (trigger !== "signIn" && token.sub && token.tenantId) {
         try {
-          const tenant = await prisma.tenant.findUnique({
-            where: { id: token.tenantId },
-            select: { onboardingComplete: true },
+          const freshUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: {
+              roleId: true,
+              role: { select: { name: true, permissions: true } },
+              tenant: { select: { onboardingComplete: true, isDemo: true } },
+            },
           });
-          if (tenant?.onboardingComplete) {
-            token.onboardingComplete = true;
+          if (freshUser) {
+            token.roleId = freshUser.roleId;
+            token.roleName = freshUser.role.name;
+            token.permissions = (freshUser.role.permissions as string[] || []) as PermissionKey[];
+            token.onboardingComplete = freshUser.tenant.onboardingComplete;
+            token.isDemo = freshUser.tenant.isDemo;
           }
         } catch {
           // Ignore — keep stale value rather than break auth
