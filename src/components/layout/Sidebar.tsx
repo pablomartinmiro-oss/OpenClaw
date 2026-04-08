@@ -34,6 +34,7 @@ import {
   Calendar,
   Clock,
   XCircle,
+  User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Calendar,
   Clock,
   XCircle,
+  User,
 };
 
 interface ResolvedNavItem {
