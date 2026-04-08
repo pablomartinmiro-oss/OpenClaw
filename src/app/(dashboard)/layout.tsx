@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { InstructorSidebar } from "@/components/layout/InstructorSidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
@@ -14,6 +15,9 @@ import { GHLStatusBanner } from "@/components/shared/GHLStatusBanner";
 import { DemoBanner } from "@/components/shared/DemoBanner";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { AIChatWidget } from "@/components/ai/AIChatWidget";
+import { InstructorRedirect } from "@/components/layout/InstructorRedirect";
+import { useMyInstructorProfile } from "@/hooks/useInstructors";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function DashboardLayout({
   children,
@@ -36,35 +40,54 @@ export default function DashboardLayout({
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <div className="flex h-screen overflow-hidden">
-          {/* Desktop sidebar */}
-          <div className="hidden md:block">
-            <Sidebar />
-          </div>
-
-          {/* Main content */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex items-center gap-2 md:block">
-              <div className="md:hidden pl-2">
-                <MobileNav />
-              </div>
-              <div className="flex-1">
-                <Topbar />
-              </div>
-            </div>
-
-            <DemoBanner />
-            <GHLStatusBanner />
-
-            <main className="flex-1 overflow-auto bg-slate-50/50 p-5 md:p-7">
-              <ErrorBoundary>{children}</ErrorBoundary>
-            </main>
-          </div>
-        </div>
+        <InstructorRedirect />
+        <DashboardShell>{children}</DashboardShell>
         <CommandPalette />
         <AIChatWidget />
         <Toaster />
       </QueryClientProvider>
     </SessionProvider>
   );
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
+  const { isInstructor } = useInstructorDetect();
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Desktop sidebar — swap based on role */}
+      <div className="hidden md:block">
+        {isInstructor ? <InstructorSidebar /> : <Sidebar />}
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex items-center gap-2 md:block">
+          <div className="md:hidden pl-2">
+            <MobileNav />
+          </div>
+          <div className="flex-1">
+            <Topbar />
+          </div>
+        </div>
+
+        <DemoBanner />
+        {!isInstructor && <GHLStatusBanner />}
+
+        <main className={`flex-1 overflow-auto p-5 md:p-7 ${isInstructor ? "bg-[#FAF9F7]" : "bg-slate-50/50"}`}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function useInstructorDetect() {
+  const { data } = useMyInstructorProfile();
+  const { roleName } = usePermissions();
+
+  const isManager = roleName?.toLowerCase().startsWith("owner") || roleName?.toLowerCase().includes("manager");
+  const isInstructor = data?.isInstructor === true && !isManager;
+
+  return { isInstructor };
 }
