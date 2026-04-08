@@ -51,7 +51,19 @@ export default function DashboardLayout({
 }
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { isInstructor } = useInstructorDetect();
+  const { isInstructor, isLoading } = useInstructorDetect();
+
+  // Block render until we know the role — prevents admin flash
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#FAF9F7]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#E8E4DE] border-t-[#E87B5A]" />
+          <p className="text-sm text-[#8A8580]">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -83,11 +95,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 }
 
 function useInstructorDetect() {
-  const { data } = useMyInstructorProfile();
+  const { data, isLoading } = useMyInstructorProfile();
   const { roleName } = usePermissions();
 
   const isManager = roleName?.toLowerCase().startsWith("owner") || roleName?.toLowerCase().includes("manager");
   const isInstructor = data?.isInstructor === true && !isManager;
 
-  return { isInstructor };
+  return { isInstructor, isLoading };
 }
