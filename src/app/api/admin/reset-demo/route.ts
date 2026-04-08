@@ -13,6 +13,7 @@ import {
   DEMO_CONVERSATIONS,
   DEMO_CAPACITY,
 } from "@/lib/constants/demo-seed-data";
+import { hash } from "bcryptjs";
 
 const log = logger.child({ route: "reset-demo" });
 
@@ -256,7 +257,86 @@ export async function POST() {
       }
     }
 
-    log.info("Demo reset complete");
+    // Instructors: ensure profesor@ user exists + seed instructor data
+    await prisma.instructorAssignment.deleteMany({ where: { tenantId } });
+    await prisma.instructorTimeEntry.deleteMany({ where: { tenantId } });
+    await prisma.instructorAvailability.deleteMany({ where: { tenantId } });
+    await prisma.instructor.deleteMany({ where: { tenantId } });
+    await prisma.activityBooking.deleteMany({ where: { tenantId } });
+
+    const pw = await hash("demo123", 12);
+    const salesRole = await prisma.role.findFirst({ where: { tenantId, name: "Sales Rep" } });
+    if (salesRole) {
+      await prisma.user.upsert({
+        where: { email_tenantId: { email: "profesor@demo.skicenter.com", tenantId } },
+        update: {},
+        create: { email: "profesor@demo.skicenter.com", name: "Alejandro López", passwordHash: pw, tenantId, roleId: salesRole.id },
+      });
+    }
+
+    const profUser = await prisma.user.findFirst({ where: { tenantId, email: "profesor@demo.skicenter.com" } });
+    const natUser = await prisma.user.findFirst({ where: { tenantId, email: "natalia@demo.skicenter.com" } });
+    const carUser = await prisma.user.findFirst({ where: { tenantId, email: "manager@demo.skicenter.com" } });
+    const instrUsers = [profUser, natUser, carUser].filter(Boolean);
+
+    if (instrUsers.length >= 3) {
+      const instrData = [
+        { userId: instrUsers[0]!.id, tdLevel: "TD3", station: "baqueira", disciplines: ["esqui", "snow"], languages: ["es", "en", "fr"], hourlyRate: 28, perStudentBonus: 3, certNumber: "TD3-2024-0412", contractType: "fijo_discontinuo" },
+        { userId: instrUsers[1]!.id, tdLevel: "TD2", station: "baqueira", disciplines: ["esqui"], languages: ["es", "en"], hourlyRate: 22, perStudentBonus: 2.5, certNumber: "TD2-2023-1087", contractType: "fijo_discontinuo" },
+        { userId: instrUsers[2]!.id, tdLevel: "TD1", station: "baqueira", disciplines: ["snow", "freestyle"], languages: ["es", "de"], hourlyRate: 18, perStudentBonus: 2, certNumber: "TD1-2025-0203", contractType: "temporal" },
+      ];
+      const instrIds: string[] = [];
+      for (const d of instrData) {
+        const inst = await prisma.instructor.create({ data: { tenantId, ...d, specialties: [], isActive: true } });
+        instrIds.push(inst.id);
+        for (let day = 1; day <= 6; day++) {
+          await prisma.instructorAvailability.create({ data: { tenantId, instructorId: inst.id, dayOfWeek: day, startTime: "09:00", endTime: "17:00", isActive: true } });
+        }
+      }
+
+      // Time entries (7 days)
+      for (let dayOff = 0; dayOff < 7; dayOff++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - dayOff);
+        if (d.getDay() === 0) continue;
+        for (const instId of instrIds) {
+          const clockIn = new Date(d);
+          clockIn.setHours(8, 45 + Math.floor(Math.random() * 15), 0, 0);
+          const clockOut = dayOff === 0 ? null : new Date(d);
+          if (clockOut) clockOut.setHours(16, 30 + Math.floor(Math.random() * 30), 0, 0);
+          const totalMin = clockOut ? Math.round((clockOut.getTime() - clockIn.getTime()) / 60000) : 0;
+          const breakMin = clockOut ? 45 : 0;
+          await prisma.instructorTimeEntry.create({
+            data: { tenantId, instructorId: instId, date: d, clockIn, clockOut, totalMinutes: totalMin, breakMinutes: breakMin, netMinutes: Math.max(0, totalMin - breakMin), source: "mobile", lockedAt: dayOff > 1 ? new Date() : null, lockedBy: dayOff > 1 ? "system" : null },
+          });
+        }
+      }
+
+      // Activity bookings + assignments from confirmed reservations
+      const confirmed = await prisma.reservation.findMany({ where: { tenantId, status: "confirmada" }, take: 15, orderBy: { activityDate: "asc" } });
+      const lessonTypes = ["group", "private", "group", "group", "adaptive"];
+      const scheds = [{ s: "09:15", e: "12:00" }, { s: "10:00", e: "12:00" }, { s: "13:00", e: "16:00" }, { s: "09:15", e: "12:15" }, { s: "13:00", e: "15:00" }];
+      for (let i = 0; i < confirmed.length; i++) {
+        const res = confirmed[i];
+        const bk = await prisma.activityBooking.create({ data: { tenantId, reservationId: res.id, activityDate: res.activityDate, status: res.activityDate < today ? "confirmed" : "scheduled", arrivedClient: res.activityDate < today } });
+        const idx = i % instrIds.length;
+        const sc = scheds[i % scheds.length];
+        const lt = lessonTypes[i % lessonTypes.length];
+        const sc2 = lt === "group" ? 3 + Math.floor(Math.random() * 5) : lt === "private" ? 1 : 2;
+        await prisma.instructorAssignment.create({
+          data: { tenantId, instructorId: instrIds[idx], bookingId: bk.id, lessonType: lt, studentCount: sc2, scheduledStart: sc.s, scheduledEnd: sc.e, hourlyRate: instrData[idx].hourlyRate, bonusPerStudent: instrData[idx].perStudentBonus, surcharge: lt === "adaptive" ? 8 : 0, surchargeReason: lt === "adaptive" ? "Clase adaptativa" : null, status: res.activityDate < today ? "completed" : "assigned", completedAt: res.activityDate < today ? res.activityDate : null },
+        });
+      }
+    }
+
+    // Enable instructors module
+    await prisma.moduleConfig.upsert({
+      where: { tenantId_module: { tenantId, module: "instructors" } },
+      update: { isEnabled: true },
+      create: { tenantId, module: "instructors", isEnabled: true },
+    });
+
+    log.info("Demo reset complete (with instructors)");
 
     return NextResponse.json({
       success: true,
@@ -267,6 +347,7 @@ export async function POST() {
         deals: DEMO_DEALS.length,
         conversations: DEMO_CONVERSATIONS.length,
         products: catalog.length,
+        instructors: instrUsers.length,
       },
     });
   } catch (error) {
