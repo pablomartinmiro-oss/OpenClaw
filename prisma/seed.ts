@@ -504,13 +504,14 @@ async function seedNewModules(tenantId: string) {
       { userId: demoUsers[1].id, tdLevel: "TD2", station: "baqueira", disciplines: ["esqui"], languages: ["es", "en"], hourlyRate: 22, perStudentBonus: 2.5, certNumber: "TD2-2023-1087", contractType: "fijo_discontinuo" },
       { userId: demoUsers[2].id, tdLevel: "TD1", station: "baqueira", disciplines: ["snow", "freestyle"], languages: ["es", "de"], hourlyRate: 18, perStudentBonus: 2, certNumber: "TD1-2025-0203", contractType: "temporal" },
     ];
+    const instructorIds: string[] = [];
     for (const data of instructorData) {
       const inst = await prisma.instructor.upsert({
         where: { tenantId_userId: { tenantId, userId: data.userId } },
         update: {},
         create: { tenantId, ...data, specialties: [], isActive: true },
       });
-      // Seed availability Mon-Sat 9-17
+      instructorIds.push(inst.id);
       for (let day = 1; day <= 6; day++) {
         await prisma.instructorAvailability.upsert({
           where: { tenantId_instructorId_dayOfWeek: { tenantId, instructorId: inst.id, dayOfWeek: day } },
@@ -519,7 +520,86 @@ async function seedNewModules(tenantId: string) {
         });
       }
     }
-    console.log("Seeded 3 demo instructors with availability");
+
+    // Seed time entries for past 7 days
+    await prisma.instructorTimeEntry.deleteMany({ where: { tenantId } });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let dayOff = 0; dayOff < 7; dayOff++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - dayOff);
+      if (d.getDay() === 0) continue; // skip Sunday
+      for (const instId of instructorIds) {
+        const clockIn = new Date(d);
+        clockIn.setHours(8, 45 + Math.floor(Math.random() * 15), 0, 0);
+        const clockOut = dayOff === 0 ? null : new Date(d);
+        if (clockOut) clockOut.setHours(16, 30 + Math.floor(Math.random() * 30), 0, 0);
+        const totalMin = clockOut ? Math.round((clockOut.getTime() - clockIn.getTime()) / 60000) : 0;
+        const breakMin = clockOut ? 45 : 0;
+        const netMin = Math.max(0, totalMin - breakMin);
+        await prisma.instructorTimeEntry.create({
+          data: {
+            tenantId, instructorId: instId, date: d, clockIn, clockOut,
+            totalMinutes: totalMin, breakMinutes: breakMin, netMinutes: netMin,
+            source: "mobile",
+            lockedAt: dayOff > 1 ? new Date() : null,
+            lockedBy: dayOff > 1 ? "system" : null,
+          },
+        });
+      }
+    }
+
+    // Create ActivityBookings + Assignments from confirmed reservations
+    await prisma.instructorAssignment.deleteMany({ where: { tenantId } });
+    await prisma.activityBooking.deleteMany({ where: { tenantId } });
+    const confirmedRes = await prisma.reservation.findMany({
+      where: { tenantId, status: "confirmada" },
+      take: 15,
+      orderBy: { activityDate: "asc" },
+    });
+    const lessonTypes = ["group", "private", "group", "group", "adaptive"];
+    const schedules = [
+      { start: "09:15", end: "12:00" },
+      { start: "10:00", end: "12:00" },
+      { start: "13:00", end: "16:00" },
+      { start: "09:15", end: "12:15" },
+      { start: "13:00", end: "15:00" },
+    ];
+    for (let i = 0; i < confirmedRes.length; i++) {
+      const res = confirmedRes[i];
+      const booking = await prisma.activityBooking.create({
+        data: {
+          tenantId,
+          reservationId: res.id,
+          activityDate: res.activityDate,
+          status: res.activityDate < today ? "confirmed" : "scheduled",
+          arrivedClient: res.activityDate < today,
+        },
+      });
+      const instIdx = i % instructorIds.length;
+      const sched = schedules[i % schedules.length];
+      const lt = lessonTypes[i % lessonTypes.length];
+      const studentCount = lt === "group" ? 3 + Math.floor(Math.random() * 5) : lt === "private" ? 1 : 2;
+      const inst = instructorData[instIdx];
+      await prisma.instructorAssignment.create({
+        data: {
+          tenantId,
+          instructorId: instructorIds[instIdx],
+          bookingId: booking.id,
+          lessonType: lt,
+          studentCount,
+          scheduledStart: sched.start,
+          scheduledEnd: sched.end,
+          hourlyRate: inst.hourlyRate,
+          bonusPerStudent: inst.perStudentBonus,
+          surcharge: lt === "adaptive" ? 8 : 0,
+          surchargeReason: lt === "adaptive" ? "Clase adaptativa" : null,
+          status: res.activityDate < today ? "completed" : "assigned",
+          completedAt: res.activityDate < today ? res.activityDate : null,
+        },
+      });
+    }
+    console.log("Seeded 3 instructors, time entries, activity bookings & assignments");
   }
 
   // Enable additional modules

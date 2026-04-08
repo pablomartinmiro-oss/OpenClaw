@@ -9,6 +9,15 @@ function fetchJSON<T>(url: string): Promise<T> {
   });
 }
 
+// ==================== MY PROFILE ====================
+
+export function useMyInstructorProfile() {
+  return useQuery<{ instructor: Instructor | null; isInstructor: boolean }>({
+    queryKey: ["instructor-me"],
+    queryFn: () => fetchJSON("/api/instructors/me"),
+  });
+}
+
 // ==================== TYPES ====================
 
 export interface InstructorUser {

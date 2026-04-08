@@ -9,10 +9,16 @@ import { toast } from "sonner";
 interface Props {
   instructors: Instructor[];
   entries: TimeEntry[];
+  autoSelectId?: string;
 }
 
-export default function ClockInOutWidget({ instructors, entries }: Props) {
-  const [selectedId, setSelectedId] = useState("");
+export default function ClockInOutWidget({ instructors, entries, autoSelectId }: Props) {
+  const [selectedId, setSelectedId] = useState(autoSelectId ?? "");
+
+  // Auto-select when autoSelectId arrives
+  useEffect(() => {
+    if (autoSelectId && !selectedId) setSelectedId(autoSelectId);
+  }, [autoSelectId, selectedId]);
   const [elapsed, setElapsed] = useState("");
   const clockInMutation = useClockIn();
   const clockOutMutation = useClockOut();
