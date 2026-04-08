@@ -10,7 +10,7 @@ You are an autonomous senior full-stack engineer building a multi-tenant hospita
 - **Deploy:** Railway (Docker + Postgres + Redis)
 - **Live URL:** https://crm-dash-prod.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Prisma models:** 79 models across 16 modules
+- **Prisma models:** 83 models across 17 modules
 - **Phases completed:** A through X (CRM dashboard) + Platform Expansion Phase 1 (module architecture)
 
 ## Key Docs
@@ -43,9 +43,9 @@ You are an autonomous senior full-stack engineer building a multi-tenant hospita
 | `S3_ACCESS_KEY_ID` | S3 access key |
 | `S3_SECRET_ACCESS_KEY` | S3 secret key |
 
-## Module System (16 Modules)
+## Module System (17 Modules)
 
-The platform is organized into **16 toggleable modules**. Each tenant can enable/disable modules via Settings.
+The platform is organized into **17 toggleable modules**. Each tenant can enable/disable modules via Settings.
 
 | Module | Slug | Section | Dependencies | Models |
 |--------|------|---------|--------------|--------|
@@ -55,6 +55,7 @@ The platform is organized into **16 toggleable modules**. Each tenant can enable
 | Reservas | `booking` | Ventas | catalog | Quote, QuoteItem, Reservation, ActivityBooking, BookingMonitor, DailyOrder |
 | Hotel | `hotel` | Operaciones | booking | RoomType, RoomRateSeason, RoomRate, RoomBlock |
 | Spa | `spa` | Operaciones | booking | SpaCategory, SpaTreatment, SpaResource, SpaSlot, SpaScheduleTemplate |
+| Alquiler | `rental` | Operaciones | booking | RentalInventory, RentalOrder, RentalOrderItem, CustomerSizingProfile |
 | Restaurante | `restaurant` | Operaciones | — | Restaurant, RestaurantShift, RestaurantClosure, RestaurantBooking, RestaurantStaff |
 | Finanzas | `finance` | Gestión | — | Invoice, InvoiceLine, Transaction, CostCenter, ExpenseCategory, Expense, ExpenseFile, RecurringExpense |
 | Proveedores | `suppliers` | Gestión | finance | Supplier, SupplierSettlement, SettlementLine, SettlementDocument, SettlementStatusLog |
@@ -270,6 +271,12 @@ Warm/premium aesthetic inspired by kinso.ai:
 | `/api/ticketing/email-config` | ticketing | GET, POST, PATCH, DELETE | Coupon email configs |
 | `/api/reviews` | reviews | GET, POST, PATCH, DELETE | Customer reviews |
 | `/api/packs` | packs | GET, POST, PATCH, DELETE | Lego packs + lines |
+| `/api/rental/inventory` | rental | GET, POST, PATCH, DELETE | Equipment inventory pools |
+| `/api/rental/orders` | rental | GET, POST, PATCH, DELETE | Rental orders + items |
+| `/api/rental/orders/[id]/pickup` | rental | POST | Pickup workflow (atomic) |
+| `/api/rental/orders/[id]/return` | rental | POST | Return workflow (atomic) |
+| `/api/rental/profiles` | rental | GET, POST, PATCH, DELETE | Customer sizing profiles |
+| `/api/rental/dashboard` | rental | GET | Dashboard stats |
 
 ## File Structure (Key Directories)
 

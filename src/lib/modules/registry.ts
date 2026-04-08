@@ -221,6 +221,19 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     ],
     permissions: ["packs:view", "packs:edit"],
   },
+  rental: {
+    slug: "rental",
+    name: "Alquiler",
+    icon: "Snowflake",
+    description: "Inventario de equipos, pedidos de alquiler y perfiles de tallas",
+    dependencies: ["booking"],
+    isCore: false,
+    section: "operaciones",
+    navItems: [
+      { label: "Alquiler", href: "/alquiler", icon: "Snowflake", permission: null },
+    ],
+    permissions: ["rental:view", "rental:edit", "rental:manage"],
+  },
   instructors: {
     slug: "instructors",
     name: "Profesores",

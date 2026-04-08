@@ -19,6 +19,7 @@ export * from "./ticketing";
 export * from "./payroll";
 export * from "./cancellations";
 export * from "./instructors";
+export * from "./rental";
 
 // ==================== HELPER ====================
 /**

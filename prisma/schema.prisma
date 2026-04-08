@@ -162,6 +162,11 @@ model Tenant {
   instructorAvailability   InstructorAvailability[]
   instructorTimeEntries    InstructorTimeEntry[]
   instructorAssignments    InstructorAssignment[]
+
+  // Rental
+  rentalInventory          RentalInventory[]
+  rentalOrders             RentalOrder[]
+  customerSizingProfiles   CustomerSizingProfile[]
 }
 
 // ==================== USER ====================
@@ -524,6 +529,7 @@ model Reservation {
   tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   quote             Quote?            @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   activityBookings  ActivityBooking[]
+  rentalOrders      RentalOrder[]
 
   @@index([tenantId, status])
   @@index([tenantId, activityDate])
@@ -2053,4 +2059,126 @@ model InstructorAssignment {
   @@unique([tenantId, instructorId, bookingId])
   @@index([tenantId, bookingId])
   @@index([tenantId, instructorId, status])
+}
+
+// ==================== RENTAL ====================
+
+model RentalInventory {
+  id                String   @id @default(cuid())
+  tenantId          String
+  stationSlug       String
+  equipmentType     String   // SKI | BOOT | POLE | HELMET | SNOWBOARD | SNOWBOARD_BOOT
+  size              String   // Flexible: "42" (EU shoe), "170" (ski cm), "M" (helmet)
+  qualityTier       String   // "media" | "alta"
+  totalQuantity     Int      @default(0)
+  availableQuantity Int      @default(0)
+  minStockAlert     Int      @default(5)
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, stationSlug, equipmentType, size, qualityTier])
+  @@index([tenantId, stationSlug])
+  @@index([tenantId, equipmentType])
+}
+
+model RentalOrder {
+  id              String    @id @default(cuid())
+  tenantId        String
+  reservationId   String?
+  clientName      String
+  clientEmail     String?
+  clientPhone     String?
+  stationSlug     String
+  pickupDate      DateTime
+  returnDate      DateTime
+  status          String    @default("RESERVED") // RESERVED | PREPARED | PICKED_UP | RETURNED | INSPECTED | CANCELLED
+
+  // Timestamps
+  preparedAt      DateTime?
+  preparedBy      String?
+  pickedUpAt      DateTime?
+  pickedUpBy      String?
+  returnedAt      DateTime?
+  returnedBy      String?
+  inspectedAt     DateTime?
+  inspectedBy     String?
+  cancelledAt     DateTime?
+
+  // Pricing
+  totalPrice      Float     @default(0)
+  discount        Float     @default(0)
+  paymentStatus   String    @default("pending") // pending | paid | partial | refunded
+
+  notes           String?
+  internalNotes   String?
+  createdBy       String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reservation Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  items       RentalOrderItem[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, pickupDate])
+  @@index([tenantId, returnDate])
+  @@index([tenantId, stationSlug])
+  @@index([tenantId, reservationId])
+}
+
+model RentalOrderItem {
+  id                String    @id @default(cuid())
+  rentalOrderId     String
+  participantName   String
+  equipmentType     String    // SKI | BOOT | POLE | HELMET | SNOWBOARD | SNOWBOARD_BOOT
+  size              String?   // Assigned at pickup
+  qualityTier       String    // "media" | "alta"
+  dinSetting        Float?    // ISO 11088 DIN value for ski bindings
+  itemStatus        String    @default("RESERVED") // RESERVED | ASSIGNED | PICKED_UP | RETURNED | DAMAGED
+
+  // Return inspection
+  conditionOnReturn String?   // "OK" | "NEEDS_SERVICE" | "DAMAGED"
+  damageNotes       String?
+
+  // Pricing
+  unitPrice         Float     @default(0)
+
+  // Phase 2: individual item tracking
+  serialNumber      String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  rentalOrder RentalOrder @relation(fields: [rentalOrderId], references: [id], onDelete: Cascade)
+
+  @@index([rentalOrderId])
+  @@index([rentalOrderId, equipmentType])
+}
+
+model CustomerSizingProfile {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  clientEmail         String
+  clientName          String
+  clientPhone         String?
+  height              Float?    // cm
+  weight              Float?    // kg
+  shoeSize            String?   // EU size: "42", "38.5"
+  age                 Int?
+  abilityLevel        String?   // beginner | intermediate | advanced | expert
+  bootSoleLength      Float?    // mm (for DIN calculation)
+  preferredDinSetting Float?
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, clientEmail])
+  @@index([tenantId, clientName])
+  @@index([tenantId, clientPhone])
 }

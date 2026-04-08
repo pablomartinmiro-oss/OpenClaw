@@ -605,8 +605,80 @@ async function seedNewModules(tenantId: string) {
     console.log("Seeded 3 instructors, time entries, activity bookings & assignments");
   }
 
+  // ==================== RENTAL ====================
+  await prisma.rentalInventory.deleteMany({ where: { tenantId } });
+  await prisma.rentalOrderItem.deleteMany({
+    where: { rentalOrder: { tenantId } },
+  });
+  await prisma.rentalOrder.deleteMany({ where: { tenantId } });
+  await prisma.customerSizingProfile.deleteMany({ where: { tenantId } });
+
+  const { buildRentalInventorySeed, RENTAL_ORDERS_SEED, SIZING_PROFILES_SEED } = await import("../src/lib/constants/rental-seed-data");
+
+  // Seed inventory
+  const inventorySeed = buildRentalInventorySeed();
+  for (const inv of inventorySeed) {
+    await prisma.rentalInventory.create({
+      data: { tenantId, ...inv },
+    });
+  }
+  console.log(`Seeded ${inventorySeed.length} rental inventory entries`);
+
+  // Seed rental orders
+  const rentalToday = new Date();
+  rentalToday.setHours(0, 0, 0, 0);
+  for (const orderSeed of RENTAL_ORDERS_SEED) {
+    const pickupDate = new Date(rentalToday);
+    pickupDate.setDate(pickupDate.getDate() + orderSeed.pickupDaysOffset);
+    const returnDate = new Date(rentalToday);
+    returnDate.setDate(returnDate.getDate() + orderSeed.returnDaysOffset);
+
+    const order = await prisma.rentalOrder.create({
+      data: {
+        tenantId,
+        clientName: orderSeed.clientName,
+        clientEmail: orderSeed.clientEmail,
+        clientPhone: orderSeed.clientPhone,
+        stationSlug: orderSeed.stationSlug,
+        pickupDate,
+        returnDate,
+        status: orderSeed.status,
+        totalPrice: orderSeed.totalPrice,
+        paymentStatus: orderSeed.paymentStatus,
+        pickedUpAt: orderSeed.status === "PICKED_UP" || orderSeed.status === "RETURNED" ? pickupDate : null,
+        returnedAt: orderSeed.status === "RETURNED" ? returnDate : null,
+        cancelledAt: orderSeed.status === "CANCELLED" ? rentalToday : null,
+      },
+    });
+
+    for (const itemSeed of orderSeed.items) {
+      await prisma.rentalOrderItem.create({
+        data: {
+          rentalOrderId: order.id,
+          participantName: itemSeed.participantName,
+          equipmentType: itemSeed.equipmentType,
+          size: itemSeed.size,
+          qualityTier: itemSeed.qualityTier,
+          dinSetting: itemSeed.dinSetting,
+          itemStatus: itemSeed.itemStatus,
+          conditionOnReturn: itemSeed.conditionOnReturn,
+          unitPrice: itemSeed.unitPrice,
+        },
+      });
+    }
+  }
+  console.log(`Seeded ${RENTAL_ORDERS_SEED.length} rental orders`);
+
+  // Seed sizing profiles
+  for (const profile of SIZING_PROFILES_SEED) {
+    await prisma.customerSizingProfile.create({
+      data: { tenantId, ...profile },
+    });
+  }
+  console.log(`Seeded ${SIZING_PROFILES_SEED.length} sizing profiles`);
+
   // Enable additional modules
-  const extraModules = ["suppliers", "storefront", "reviews", "ticketing", "packs", "instructors"];
+  const extraModules = ["suppliers", "storefront", "reviews", "ticketing", "packs", "instructors", "rental"];
   for (const mod of extraModules) {
     await prisma.moduleConfig.upsert({
       where: { tenantId_module: { tenantId, module: mod } },
