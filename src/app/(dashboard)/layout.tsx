@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { InstructorSidebar } from "@/components/layout/InstructorSidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { InstructorTopbar } from "@/components/layout/InstructorTopbar";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GHLStatusBanner } from "@/components/shared/GHLStatusBanner";
@@ -42,8 +43,6 @@ export default function DashboardLayout({
       <QueryClientProvider client={queryClient}>
         <InstructorRedirect />
         <DashboardShell>{children}</DashboardShell>
-        <CommandPalette />
-        <AIChatWidget />
         <Toaster />
       </QueryClientProvider>
     </SessionProvider>
@@ -74,14 +73,18 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center gap-2 md:block">
-          <div className="md:hidden pl-2">
-            <MobileNav />
+        {isInstructor ? (
+          <InstructorTopbar />
+        ) : (
+          <div className="flex items-center gap-2 md:block">
+            <div className="md:hidden pl-2">
+              <MobileNav />
+            </div>
+            <div className="flex-1">
+              <Topbar />
+            </div>
           </div>
-          <div className="flex-1">
-            <Topbar />
-          </div>
-        </div>
+        )}
 
         <DemoBanner />
         {!isInstructor && <GHLStatusBanner />}
@@ -90,6 +93,14 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
+
+      {/* Admin-only: command palette + AI chat */}
+      {!isInstructor && (
+        <>
+          <CommandPalette />
+          <AIChatWidget />
+        </>
+      )}
     </div>
   );
 }
