@@ -54,7 +54,7 @@ export async function requireOwner(): Promise<
   const [session, error] = await requireTenant();
   if (error) return [null, error];
 
-  if (session.roleName !== "owner") {
+  if (!session.roleName.toLowerCase().startsWith("owner")) {
     return [
       null,
       NextResponse.json({ error: "Owner access required" }, { status: 403 }),
