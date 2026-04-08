@@ -497,12 +497,15 @@ async function seedNewModules(tenantId: string) {
     });
   }
   // ==================== INSTRUCTORS ====================
-  const demoUsers = await prisma.user.findMany({ where: { tenantId }, take: 3 });
+  const profesorUser = await prisma.user.findFirst({ where: { tenantId, email: "profesor@demo.skicenter.com" } });
+  const nataliaUser = await prisma.user.findFirst({ where: { tenantId, email: "natalia@demo.skicenter.com" } });
+  const carlosUser = await prisma.user.findFirst({ where: { tenantId, email: "manager@demo.skicenter.com" } });
+  const demoUsers = [profesorUser, nataliaUser, carlosUser].filter(Boolean);
   if (demoUsers.length >= 3) {
     const instructorData = [
-      { userId: demoUsers[0].id, tdLevel: "TD3", station: "baqueira", disciplines: ["esqui", "snow"], languages: ["es", "en", "fr"], hourlyRate: 28, perStudentBonus: 3, certNumber: "TD3-2024-0412", contractType: "fijo_discontinuo" },
-      { userId: demoUsers[1].id, tdLevel: "TD2", station: "baqueira", disciplines: ["esqui"], languages: ["es", "en"], hourlyRate: 22, perStudentBonus: 2.5, certNumber: "TD2-2023-1087", contractType: "fijo_discontinuo" },
-      { userId: demoUsers[2].id, tdLevel: "TD1", station: "baqueira", disciplines: ["snow", "freestyle"], languages: ["es", "de"], hourlyRate: 18, perStudentBonus: 2, certNumber: "TD1-2025-0203", contractType: "temporal" },
+      { userId: demoUsers[0]!.id, tdLevel: "TD3", station: "baqueira", disciplines: ["esqui", "snow"], languages: ["es", "en", "fr"], hourlyRate: 28, perStudentBonus: 3, certNumber: "TD3-2024-0412", contractType: "fijo_discontinuo" },
+      { userId: demoUsers[1]!.id, tdLevel: "TD2", station: "baqueira", disciplines: ["esqui"], languages: ["es", "en"], hourlyRate: 22, perStudentBonus: 2.5, certNumber: "TD2-2023-1087", contractType: "fijo_discontinuo" },
+      { userId: demoUsers[2]!.id, tdLevel: "TD1", station: "baqueira", disciplines: ["snow", "freestyle"], languages: ["es", "de"], hourlyRate: 18, perStudentBonus: 2, certNumber: "TD1-2025-0203", contractType: "temporal" },
     ];
     const instructorIds: string[] = [];
     for (const data of instructorData) {
@@ -826,6 +829,13 @@ async function main() {
     where: { email_tenantId: { email: "manager@demo.skicenter.com", tenantId: demoTenant.id } },
     update: {},
     create: { email: "manager@demo.skicenter.com", name: "Carlos Martínez", passwordHash: pw, tenantId: demoTenant.id, roleId: roles.va.id },
+  });
+
+  // Dedicated instructor demo user
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "profesor@demo.skicenter.com", tenantId: demoTenant.id } },
+    update: {},
+    create: { email: "profesor@demo.skicenter.com", name: "Alejandro López", passwordHash: pw, tenantId: demoTenant.id, roleId: roles.sales.id },
   });
 
   // Keep old demo users for backward compat
