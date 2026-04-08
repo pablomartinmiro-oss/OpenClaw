@@ -21,6 +21,7 @@ const PUBLIC_ROUTES = [
   "/api/crm/redsys",
   "/api/cron/sync",
   "/api/cron/quote-reminders",
+  "/api/cron/lock-time-entries",
   "/api/onboarding",
   "/api/storefront",
   "/api/reviews/public",

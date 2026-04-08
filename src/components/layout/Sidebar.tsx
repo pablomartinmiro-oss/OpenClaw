@@ -30,6 +30,10 @@ import {
   ClipboardList,
   UserCheck,
   Wallet,
+  GraduationCap,
+  Calendar,
+  Clock,
+  XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,6 +69,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Boxes,
   UserCheck,
   Wallet,
+  GraduationCap,
+  Calendar,
+  Clock,
+  XCircle,
 };
 
 interface ResolvedNavItem {

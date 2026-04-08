@@ -496,8 +496,34 @@ async function seedNewModules(tenantId: string) {
       create: { tenantId, module: mod, isEnabled: true },
     });
   }
+  // ==================== INSTRUCTORS ====================
+  const demoUsers = await prisma.user.findMany({ where: { tenantId }, take: 3 });
+  if (demoUsers.length >= 3) {
+    const instructorData = [
+      { userId: demoUsers[0].id, tdLevel: "TD3", station: "baqueira", disciplines: ["esqui", "snow"], languages: ["es", "en", "fr"], hourlyRate: 28, perStudentBonus: 3, certNumber: "TD3-2024-0412", contractType: "fijo_discontinuo" },
+      { userId: demoUsers[1].id, tdLevel: "TD2", station: "baqueira", disciplines: ["esqui"], languages: ["es", "en"], hourlyRate: 22, perStudentBonus: 2.5, certNumber: "TD2-2023-1087", contractType: "fijo_discontinuo" },
+      { userId: demoUsers[2].id, tdLevel: "TD1", station: "baqueira", disciplines: ["snow", "freestyle"], languages: ["es", "de"], hourlyRate: 18, perStudentBonus: 2, certNumber: "TD1-2025-0203", contractType: "temporal" },
+    ];
+    for (const data of instructorData) {
+      const inst = await prisma.instructor.upsert({
+        where: { tenantId_userId: { tenantId, userId: data.userId } },
+        update: {},
+        create: { tenantId, ...data, specialties: [], isActive: true },
+      });
+      // Seed availability Mon-Sat 9-17
+      for (let day = 1; day <= 6; day++) {
+        await prisma.instructorAvailability.upsert({
+          where: { tenantId_instructorId_dayOfWeek: { tenantId, instructorId: inst.id, dayOfWeek: day } },
+          update: {},
+          create: { tenantId, instructorId: inst.id, dayOfWeek: day, startTime: "09:00", endTime: "17:00", isActive: true },
+        });
+      }
+    }
+    console.log("Seeded 3 demo instructors with availability");
+  }
+
   // Enable additional modules
-  const extraModules = ["suppliers", "storefront", "reviews", "ticketing", "packs"];
+  const extraModules = ["suppliers", "storefront", "reviews", "ticketing", "packs", "instructors"];
   for (const mod of extraModules) {
     await prisma.moduleConfig.upsert({
       where: { tenantId_module: { tenantId, module: mod } },

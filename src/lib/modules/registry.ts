@@ -221,6 +221,21 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     ],
     permissions: ["packs:view", "packs:edit"],
   },
+  instructors: {
+    slug: "instructors",
+    name: "Profesores",
+    icon: "GraduationCap",
+    description: "Profesores, horarios, fichaje y asignaciones",
+    dependencies: ["booking"],
+    isCore: false,
+    section: "operaciones",
+    navItems: [
+      { label: "Profesores", href: "/profesores", icon: "GraduationCap", permission: null },
+      { label: "Horario", href: "/profesores/horario", icon: "Calendar", permission: null },
+      { label: "Fichaje", href: "/profesores/fichaje", icon: "Clock", permission: null },
+    ],
+    permissions: ["instructors:view", "instructors:edit", "instructors:manage"],
+  },
 };
 
 export const ALL_MODULE_SLUGS = Object.keys(MODULE_REGISTRY);

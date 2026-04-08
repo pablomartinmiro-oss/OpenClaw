@@ -156,6 +156,12 @@ model Tenant {
   // Payroll
   payrollRecords        PayrollRecord[]
   payrollExtras         PayrollExtra[]
+
+  // Instructors
+  instructors              Instructor[]
+  instructorAvailability   InstructorAvailability[]
+  instructorTimeEntries    InstructorTimeEntry[]
+  instructorAssignments    InstructorAssignment[]
 }
 
 // ==================== USER ====================
@@ -183,6 +189,7 @@ model User {
   bookingMonitors  BookingMonitor[]
   cashSessions     CashSession[]
   payrollRecords   PayrollRecord[]
+  instructor       Instructor?
 
   @@unique([email, tenantId])
   @@index([tenantId])
@@ -1084,21 +1091,24 @@ model ActivityBooking {
   tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   reservation Reservation      @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   monitors    BookingMonitor[]
+  instructorAssignments InstructorAssignment[]
 
   @@index([tenantId, activityDate])
   @@index([tenantId, reservationId])
 }
 
 model BookingMonitor {
-  id         String   @id @default(cuid())
-  tenantId   String
-  bookingId  String
-  userId     String
-  assignedAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String
+  bookingId    String
+  userId       String
+  instructorId String?
+  assignedAt   DateTime @default(now())
 
-  tenant  Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  booking ActivityBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  booking    ActivityBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructor Instructor?     @relation(fields: [instructorId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, bookingId, userId])
   @@index([tenantId])
@@ -1903,4 +1913,144 @@ model PayrollExtra {
   payroll PayrollRecord @relation(fields: [payrollId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, payrollId])
+}
+
+// ==================== INSTRUCTORS ====================
+
+model Instructor {
+  id              String    @id @default(cuid())
+  tenantId        String
+  userId          String    @unique
+
+  // Certification (TD System - Spain)
+  tdLevel         String    // "TD1" | "TD2" | "TD3"
+  certExpiry      DateTime?
+  certNumber      String?
+
+  // Skills
+  disciplines     Json      @default("[]") // ["esqui", "snow", "telemark", "freestyle"]
+  specialties     Json      @default("[]") // ["adaptive", "competition", "children"]
+  languages       Json      @default("[]") // ["es", "en", "fr", "de", "pt"]
+  maxLevel        String?   // "A" | "B" | "C" | "D" — constrained by TD
+
+  // Compensation
+  hourlyRate      Float     @default(0)
+  perStudentBonus Float     @default(0)
+  contractType    String    @default("fijo_discontinuo") // fijo_discontinuo | temporal | autonomo
+
+  // Station assignment
+  station         String
+
+  // Season / status
+  seasonStart     DateTime?
+  seasonEnd       DateTime?
+  isActive        Boolean   @default(true)
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availability    InstructorAvailability[]
+  timeEntries     InstructorTimeEntry[]
+  assignments     InstructorAssignment[]
+  bookingMonitors BookingMonitor[]
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, station])
+}
+
+model InstructorAvailability {
+  id           String   @id @default(cuid())
+  tenantId     String
+  instructorId String
+  dayOfWeek    Int      // 0=Sun, 6=Sat
+  startTime    String   // "09:00" (HH:mm)
+  endTime      String   // "17:00" (HH:mm)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, instructorId, dayOfWeek])
+  @@index([tenantId, instructorId])
+}
+
+model InstructorTimeEntry {
+  id           String    @id @default(cuid())
+  tenantId     String
+  instructorId String
+  date         DateTime  // Working day (date only)
+
+  // Clock in/out
+  clockIn      DateTime
+  clockOut     DateTime?
+
+  // Calculated (set on clockOut)
+  totalMinutes Int       @default(0)
+  breakMinutes Int       @default(0)
+  netMinutes   Int       @default(0) // totalMinutes - breakMinutes
+
+  // Legal compliance (RD-ley 8/2019)
+  source       String    @default("manual") // "manual" | "mobile" | "kiosk"
+  ipAddress    String?
+  geoLat       Float?
+  geoLon       Float?
+
+  // Immutability: locked entries cannot be edited
+  lockedAt     DateTime?
+  lockedBy     String?
+
+  // Correction chain (instead of editing locked entries)
+  correctionOf     String?
+  correctionReason String?
+
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, instructorId, date])
+  @@index([tenantId, date])
+}
+
+model InstructorAssignment {
+  id              String    @id @default(cuid())
+  tenantId        String
+  instructorId    String
+  bookingId       String
+
+  // Lesson details
+  lessonType      String    // "group" | "private" | "adaptive"
+  studentCount    Int       @default(1)
+  scheduledStart  String    // "10:00" (HH:mm)
+  scheduledEnd    String    // "13:00" (HH:mm)
+
+  // Rate snapshot (frozen at assignment time)
+  hourlyRate      Float     @default(0)
+  bonusPerStudent Float     @default(0)
+  surcharge       Float     @default(0)
+  surchargeReason String?
+
+  // Status
+  status          String    @default("assigned") // assigned | in_progress | completed | cancelled | no_show
+  completedAt     DateTime?
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor Instructor      @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  booking    ActivityBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, instructorId, bookingId])
+  @@index([tenantId, bookingId])
+  @@index([tenantId, instructorId, status])
 }
