@@ -89,6 +89,16 @@ export async function PATCH(
       data: updateData,
     });
 
+    // Planning engine: generate operational units when confirmed
+    if (status === "confirmada") {
+      try {
+        const { onReservationConfirmed } = await import("@/lib/planning/operational-units");
+        await onReservationConfirmed(tenantId, id);
+      } catch (e) {
+        log.warn(e, "Failed to generate OUs (non-blocking)");
+      }
+    }
+
     log.info({ status }, "Reservation updated");
     return NextResponse.json({ reservation });
   } catch (error) {

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useUpdateReservation, useDeleteReservation, type Reservation } from "@/hooks/useReservations";
 import { STATUS_CONFIG, SOURCE_CONFIG, formatDate } from "./constants";
 import { DetailSections } from "./DetailSections";
+import { StructuredParticipantEditor } from "./StructuredParticipantEditor";
 
 interface ReservationDetailProps {
   reservation: Reservation;
@@ -165,6 +166,9 @@ export function ReservationDetail({ reservation, onBack }: ReservationDetailProp
           finalPrice={finalPrice}
           isPending={updateReservation.isPending}
         />
+
+        {/* Structured participants for planning engine */}
+        <StructuredParticipantEditor reservationId={reservation.id} />
       </div>
     </div>
   );

@@ -82,7 +82,7 @@ export default function MiPortalPage() {
       {/* Today's classes + Stats */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <MiClasesHoy assignments={todayClasses} />
+          <MiClasesHoy assignments={todayClasses} instructorId={myProfile.id} />
         </div>
         <div className="lg:col-span-2">
           <MiStats entries={entries} myProfile={myProfile} />
