@@ -329,6 +329,104 @@ export async function POST() {
       }
     }
 
+    // Update school products with planning fields
+    await prisma.product.updateMany({
+      where: { category: "escuela" },
+      data: { discipline: "esqui", requiresGrouping: true, planningMode: "dynamic_grouping", maxParticipants: 10, minAge: 6, maxAge: 99 },
+    });
+    await prisma.product.updateMany({
+      where: { category: "clase_particular" },
+      data: { discipline: "esqui", requiresGrouping: false, planningMode: "fixed_slot", maxParticipants: 6, minAge: 3, maxAge: 99 },
+    });
+
+    // Create structured participants + GroupCells for confirmed reservations
+    await prisma.classCheckIn.deleteMany({ where: { tenantId } });
+    await prisma.operationalUnit.deleteMany({ where: { tenantId } });
+    await prisma.groupCell.deleteMany({ where: { tenantId } });
+    await prisma.participant.deleteMany({ where: { tenantId } });
+    await prisma.incident.deleteMany({ where: { tenantId } });
+
+    const demoParticipants = [
+      { firstName: "Lucas", level: "A", ageBracket: "infantil", discipline: "esqui", language: "es", age: 8 },
+      { firstName: "Sofia", level: "A", ageBracket: "infantil", discipline: "esqui", language: "es", age: 9 },
+      { firstName: "Pablo", level: "B", ageBracket: "adolescente", discipline: "esqui", language: "es", age: 14 },
+      { firstName: "Emma", level: "B", ageBracket: "adulto", discipline: "snow", language: "en", age: 28 },
+      { firstName: "Hans", level: "C", ageBracket: "adulto", discipline: "esqui", language: "de", age: 35 },
+      { firstName: "Marie", level: "A", ageBracket: "adulto", discipline: "esqui", language: "fr", age: 42 },
+      { firstName: "Liam", level: "A", ageBracket: "infantil", discipline: "esqui", language: "en", age: 7 },
+      { firstName: "Martina", level: "B", ageBracket: "adolescente", discipline: "snow", language: "es", age: 15 },
+    ];
+
+    const confirmedForPlanning = await prisma.reservation.findMany({
+      where: { tenantId, status: "confirmada" },
+      take: 8,
+      orderBy: { activityDate: "asc" },
+    });
+
+    const participantIds: string[] = [];
+    for (let i = 0; i < Math.min(demoParticipants.length, confirmedForPlanning.length); i++) {
+      const dp = demoParticipants[i];
+      const res = confirmedForPlanning[i];
+      const p = await prisma.participant.create({
+        data: { tenantId, reservationId: res.id, ...dp },
+      });
+      participantIds.push(p.id);
+
+      // Create OU
+      await prisma.operationalUnit.create({
+        data: {
+          tenantId, participantId: p.id, reservationId: res.id,
+          activityDate: res.activityDate,
+          planningMode: dp.discipline === "snow" ? "dynamic_grouping" : "dynamic_grouping",
+          status: "grouped",
+        },
+      });
+    }
+
+    // Create GroupCells with participants (instrIds available from instructor block above)
+    const allInstructors = await prisma.instructor.findMany({ where: { tenantId }, take: 3 });
+    const instrIds = allInstructors.map((i) => i.id);
+    if (instrIds.length >= 3) {
+      const gc1 = await prisma.groupCell.create({
+        data: {
+          tenantId, activityDate: today, station: "baqueira",
+          timeSlotStart: "10:00", timeSlotEnd: "13:00",
+          discipline: "esqui", level: "A", ageBracket: "infantil", language: "es",
+          instructorId: instrIds[0], status: "confirmed",
+        },
+      });
+      const gc2 = await prisma.groupCell.create({
+        data: {
+          tenantId, activityDate: today, station: "baqueira",
+          timeSlotStart: "10:00", timeSlotEnd: "13:00",
+          discipline: "esqui", level: "B", ageBracket: "adulto", language: "es",
+          instructorId: instrIds[1], status: "confirmed",
+        },
+      });
+      const gc3 = await prisma.groupCell.create({
+        data: {
+          tenantId, activityDate: today, station: "baqueira",
+          timeSlotStart: "13:00", timeSlotEnd: "16:00",
+          discipline: "snow", level: "A", ageBracket: "adulto", language: "en",
+          instructorId: instrIds[2], status: "confirmed",
+        },
+      });
+
+      // Link OUs to GroupCells
+      const ous = await prisma.operationalUnit.findMany({ where: { tenantId }, take: 8 });
+      for (const ou of ous) {
+        const p = await prisma.participant.findFirst({ where: { id: ou.participantId } });
+        if (!p) continue;
+        const targetGc = p.level === "A" && p.discipline === "esqui" ? gc1.id
+          : p.level === "B" ? gc2.id
+          : gc3.id;
+        await prisma.operationalUnit.update({
+          where: { id: ou.id },
+          data: { groupCellId: targetGc, status: "grouped" },
+        });
+      }
+    }
+
     // Enable instructors module
     await prisma.moduleConfig.upsert({
       where: { tenantId_module: { tenantId, module: "instructors" } },
@@ -336,7 +434,7 @@ export async function POST() {
       create: { tenantId, module: "instructors", isEnabled: true },
     });
 
-    log.info("Demo reset complete (with instructors)");
+    log.info("Demo reset complete (with full planning data)");
 
     return NextResponse.json({
       success: true,

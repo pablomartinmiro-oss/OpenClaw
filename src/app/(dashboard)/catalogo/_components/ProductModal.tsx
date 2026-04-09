@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import type { Product } from "@/hooks/useProducts";
 import { CATEGORY_LABELS, PRICE_TYPE_LABELS, STATION_LABELS } from "./ProductTable";
 
+const PLANNING_CATEGORIES = ["escuela", "clase_particular", "snowcamp"];
+
 function getInitialForm(product: Product | null) {
   if (product) {
     return {
@@ -18,6 +20,12 @@ function getInitialForm(product: Product | null) {
       price: product.price.toString(),
       priceType: product.priceType,
       isActive: product.isActive,
+      discipline: (product as unknown as Record<string, unknown>).discipline as string || "",
+      minAge: ((product as unknown as Record<string, unknown>).minAge as number)?.toString() || "",
+      maxAge: ((product as unknown as Record<string, unknown>).maxAge as number)?.toString() || "",
+      maxParticipants: ((product as unknown as Record<string, unknown>).maxParticipants as number)?.toString() || "10",
+      requiresGrouping: ((product as unknown as Record<string, unknown>).requiresGrouping as boolean) || false,
+      planningMode: (product as unknown as Record<string, unknown>).planningMode as string || "",
     };
   }
   return {
@@ -31,6 +39,12 @@ function getInitialForm(product: Product | null) {
     price: "",
     priceType: "per_day",
     isActive: true,
+    discipline: "",
+    minAge: "",
+    maxAge: "",
+    maxParticipants: "10",
+    requiresGrouping: false,
+    planningMode: "",
   };
 }
 
@@ -48,7 +62,7 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
+    const data: Record<string, unknown> = {
       ...(product && { id: product.id }),
       category: form.category,
       name: form.name,
@@ -60,7 +74,16 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
       price: parseFloat(form.price) || 0,
       priceType: form.priceType,
       isActive: form.isActive,
-    } as Partial<Product>);
+    };
+    if (PLANNING_CATEGORIES.includes(form.category)) {
+      data.discipline = form.discipline || null;
+      data.minAge = form.minAge ? parseInt(form.minAge) : null;
+      data.maxAge = form.maxAge ? parseInt(form.maxAge) : null;
+      data.maxParticipants = form.maxParticipants ? parseInt(form.maxParticipants) : null;
+      data.requiresGrouping = form.requiresGrouping;
+      data.planningMode = form.planningMode || null;
+    }
+    onSave(data as Partial<Product>);
   };
 
   return (
@@ -189,6 +212,57 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
               </select>
             </div>
           </div>
+
+          {/* Planning fields — only for school products */}
+          {PLANNING_CATEGORIES.includes(form.category) && (
+            <div className="rounded-xl border border-[#E87B5A]/20 bg-[#E87B5A]/5 p-4 space-y-3">
+              <p className="text-xs font-semibold text-[#E87B5A] uppercase tracking-wide">Configuracion de Planning</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Disciplina</label>
+                  <select value={form.discipline} onChange={(e) => setForm({ ...form, discipline: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                    <option value="">Sin especificar</option>
+                    <option value="esqui">Esqui alpino</option>
+                    <option value="snow">Snowboard</option>
+                    <option value="telemark">Telemark</option>
+                    <option value="freestyle">Freestyle</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Modo Planning</label>
+                  <select value={form.planningMode} onChange={(e) => setForm({ ...form, planningMode: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                    <option value="">Sin especificar</option>
+                    <option value="dynamic_grouping">Agrupacion dinamica (cursillos)</option>
+                    <option value="fixed_slot">Slot fijo (particulares)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Edad min</label>
+                  <input type="number" min="0" value={form.minAge} onChange={(e) => setForm({ ...form, minAge: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="3" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Edad max</label>
+                  <input type="number" min="0" value={form.maxAge} onChange={(e) => setForm({ ...form, maxAge: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="99" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Max participantes</label>
+                  <input type="number" min="1" max="15" value={form.maxParticipants} onChange={(e) => setForm({ ...form, maxParticipants: e.target.value })}
+                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="10" />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-900">
+                <input type="checkbox" checked={form.requiresGrouping} onChange={(e) => setForm({ ...form, requiresGrouping: e.target.checked })}
+                  className="h-4 w-4 rounded border-border text-[#E87B5A] focus:ring-[#E87B5A]" />
+                Requiere agrupacion automatica
+              </label>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <input
