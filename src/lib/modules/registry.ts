@@ -249,6 +249,8 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
       { label: "Horario", href: "/profesores/horario", icon: "Calendar", permission: null, roles: ["Owner / Manager"] },
       { label: "Fichaje", href: "/profesores/fichaje", icon: "Clock", permission: null, roles: ["Owner / Manager"] },
       { label: "Incidencias", href: "/profesores/incidencias", icon: "AlertTriangle", permission: null, roles: ["Owner / Manager"] },
+      { label: "Diplomas", href: "/profesores/diplomas", icon: "Award", permission: null, roles: ["Owner / Manager"] },
+      { label: "Amonestaciones", href: "/profesores/amonestaciones", icon: "ShieldAlert", permission: null, roles: ["Owner / Manager"] },
       { label: "KPIs", href: "/profesores/kpis", icon: "BarChart3", permission: null, roles: ["Owner / Manager"] },
     ],
     permissions: ["instructors:view", "instructors:edit", "instructors:manage"],

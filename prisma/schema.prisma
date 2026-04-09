@@ -175,6 +175,12 @@ model Tenant {
   classCheckIns            ClassCheckIn[]
   planningIncidents        Incident[]
   freeDayRequests          FreeDayRequest[]
+
+  // Diplomas, Disciplinary, Notifications
+  diplomas                 Diploma[]
+  disciplinaryRecords      DisciplinaryRecord[]
+  notificationTemplates    NotificationTemplate[]
+  notificationLogs         NotificationLog[]
 }
 
 // ==================== USER ====================
@@ -1983,9 +1989,10 @@ model Instructor {
   timeEntries     InstructorTimeEntry[]
   assignments     InstructorAssignment[]
   bookingMonitors BookingMonitor[]
-  groupCells      GroupCell[]
-  incidents       Incident[]
-  freeDayRequests FreeDayRequest[]
+  groupCells           GroupCell[]
+  incidents            Incident[]
+  freeDayRequests      FreeDayRequest[]
+  disciplinaryRecords  DisciplinaryRecord[]
 
   @@unique([tenantId, userId])
   @@index([tenantId, isActive])
@@ -2351,4 +2358,79 @@ model FreeDayRequest {
   @@unique([tenantId, instructorId, requestDate])
   @@index([tenantId, status])
   @@index([tenantId, instructorId])
+}
+
+model Diploma {
+  id              String    @id @default(cuid())
+  tenantId        String
+  participantId   String
+  instructorId    String
+  groupCellId     String?
+  level           String    // "A" | "B" | "C" | "D"
+  discipline      String    // "esqui" | "snow"
+  station         String
+  issuedAt        DateTime  @default(now())
+  participantName String
+  instructorName  String
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, participantId])
+  @@index([tenantId, instructorId])
+}
+
+model DisciplinaryRecord {
+  id              String    @id @default(cuid())
+  tenantId        String
+  instructorId    String
+  type            String    // "warning" | "reprimand" | "suspension"
+  reason          String
+  issuedBy        String
+  issuedAt        DateTime  @default(now())
+  expiresAt       DateTime?
+  acknowledged    Boolean   @default(false)
+  acknowledgedAt  DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor  Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, instructorId])
+}
+
+model NotificationTemplate {
+  id          String    @id @default(cuid())
+  tenantId    String
+  trigger     String    // "reservation_confirmed" | "class_reminder" | "schedule_change" | "daily_summary"
+  channel     String    // "whatsapp" | "email" | "push"
+  subject     String?
+  body        String    // Template with {{variables}}
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, trigger, channel])
+  @@index([tenantId])
+}
+
+model NotificationLog {
+  id          String    @id @default(cuid())
+  tenantId    String
+  templateId  String?
+  channel     String    // "whatsapp" | "email" | "push"
+  recipient   String    // phone or email
+  subject     String?
+  body        String
+  status      String    @default("sent") // "sent" | "delivered" | "failed"
+  sentAt      DateTime  @default(now())
+  error       String?
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, sentAt])
 }
