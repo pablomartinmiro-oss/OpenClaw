@@ -245,6 +245,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     navItems: [
       { label: "Mi Portal", href: "/profesores/mi-portal", icon: "User", permission: null },
       { label: "Profesores", href: "/profesores", icon: "GraduationCap", permission: null, roles: ["Owner / Manager"] },
+      { label: "Planning", href: "/profesores/planning", icon: "CalendarCog", permission: null, roles: ["Owner / Manager"] },
       { label: "Horario", href: "/profesores/horario", icon: "Calendar", permission: null, roles: ["Owner / Manager"] },
       { label: "Fichaje", href: "/profesores/fichaje", icon: "Clock", permission: null, roles: ["Owner / Manager"] },
     ],
