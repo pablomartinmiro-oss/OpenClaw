@@ -37,6 +37,8 @@ import {
   User,
   Snowflake,
   CalendarCog,
+  AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -79,6 +81,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   User,
   Snowflake,
   CalendarCog,
+  AlertTriangle,
+  BarChart3,
 };
 
 interface ResolvedNavItem {
