@@ -167,6 +167,14 @@ model Tenant {
   rentalInventory          RentalInventory[]
   rentalOrders             RentalOrder[]
   customerSizingProfiles   CustomerSizingProfile[]
+
+  // Planning Engine
+  planningParticipants     Participant[]
+  operationalUnits         OperationalUnit[]
+  groupCells               GroupCell[]
+  classCheckIns            ClassCheckIn[]
+  planningIncidents        Incident[]
+  freeDayRequests          FreeDayRequest[]
 }
 
 // ==================== USER ====================
@@ -273,12 +281,22 @@ model Product {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  // Planning fields
+  discipline          String?  // "esqui" | "snow" | "telemark" | "freestyle"
+  minAge              Int?
+  maxAge              Int?
+  maxParticipants     Int?
+  requiresGrouping    Boolean  @default(false)
+  planningMode        String?  // "fixed_slot" | "dynamic_grouping"
+  defaultMeetingPointId String?
+
   tenant           Tenant?             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   supplier         Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   quoteItems       QuoteItem[]
   variants         ExperienceVariant[]
   timeSlots        ProductTimeSlot[]
   platformProducts PlatformProduct[]
+  operationalUnits OperationalUnit[]
 
   @@index([station, category])
   @@index([category])
@@ -526,10 +544,12 @@ model Reservation {
   updatedAt       DateTime  @updatedAt
   createdBy       String?
 
-  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  quote             Quote?            @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  activityBookings  ActivityBooking[]
-  rentalOrders      RentalOrder[]
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quote               Quote?              @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  activityBookings    ActivityBooking[]
+  rentalOrders        RentalOrder[]
+  structuredParticipants Participant[]
+  operationalUnits    OperationalUnit[]
 
   @@index([tenantId, status])
   @@index([tenantId, activityDate])
@@ -747,7 +767,8 @@ model Location {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  groupCells GroupCell[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -1962,6 +1983,9 @@ model Instructor {
   timeEntries     InstructorTimeEntry[]
   assignments     InstructorAssignment[]
   bookingMonitors BookingMonitor[]
+  groupCells      GroupCell[]
+  incidents       Incident[]
+  freeDayRequests FreeDayRequest[]
 
   @@unique([tenantId, userId])
   @@index([tenantId, isActive])
@@ -2181,4 +2205,150 @@ model CustomerSizingProfile {
   @@unique([tenantId, clientEmail])
   @@index([tenantId, clientName])
   @@index([tenantId, clientPhone])
+}
+
+// ==================== PLANNING ENGINE ====================
+
+model Participant {
+  id              String    @id @default(cuid())
+  tenantId        String
+  reservationId   String
+  firstName       String
+  lastName        String?
+  birthDate       DateTime?
+  age             Int?
+  ageBracket      String?   // "baby" | "infantil" | "adolescente" | "adulto"
+  discipline      String    // "esqui" | "snow" | "telemark" | "freestyle"
+  level           String    // "A" | "B" | "C" | "D"
+  language        String    @default("es")
+  specialNeeds    String?
+  relationship    String?   // "titular" | "hijo" | "pareja" | "amigo"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reservation     Reservation     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  operationalUnits OperationalUnit[]
+  checkIns        ClassCheckIn[]
+
+  @@index([tenantId, reservationId])
+}
+
+model OperationalUnit {
+  id              String    @id @default(cuid())
+  tenantId        String
+  participantId   String
+  reservationId   String
+  productId       String?
+  activityDate    DateTime
+  planningMode    String    // "fixed_slot" | "dynamic_grouping"
+  status          String    @default("pending") // pending | grouped | assigned | cancelled
+  groupCellId     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  participant     Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  reservation     Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  product         Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  groupCell       GroupCell?   @relation(fields: [groupCellId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, activityDate, status])
+  @@index([tenantId, reservationId])
+}
+
+model GroupCell {
+  id              String    @id @default(cuid())
+  tenantId        String
+  activityDate    DateTime
+  station         String
+  timeSlotStart   String    // "10:00" (HH:mm)
+  timeSlotEnd     String    // "13:00" (HH:mm)
+  discipline      String    // "esqui" | "snow"
+  level           String    // "A" | "B" | "C" | "D"
+  ageBracket      String?   // "baby" | "infantil" | "adolescente" | "adulto"
+  language        String    @default("es")
+  maxParticipants Int       @default(10)
+  instructorId    String?
+  meetingPointId  String?
+  status          String    @default("draft") // draft | confirmed | in_progress | completed | cancelled
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor      Instructor?       @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  meetingPoint    Location?         @relation(fields: [meetingPointId], references: [id], onDelete: SetNull)
+  units           OperationalUnit[]
+  checkIns        ClassCheckIn[]
+  incidents       Incident[]
+
+  @@index([tenantId, activityDate, station])
+  @@index([tenantId, instructorId, activityDate])
+}
+
+model ClassCheckIn {
+  id              String    @id @default(cuid())
+  tenantId        String
+  groupCellId     String
+  participantId   String
+  status          String    @default("pending") // pending | present | absent | no_show
+  checkedAt       DateTime?
+  checkedBy       String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  groupCell       GroupCell   @relation(fields: [groupCellId], references: [id], onDelete: Cascade)
+  participant     Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, groupCellId, participantId])
+  @@index([tenantId, groupCellId])
+}
+
+model Incident {
+  id              String    @id @default(cuid())
+  tenantId        String
+  groupCellId     String
+  instructorId    String
+  participantId   String?
+  type            String    // "level_mismatch" | "age_mismatch" | "danger" | "medical" | "general"
+  severity        String    @default("normal") // "normal" | "urgent"
+  description     String
+  resolved        Boolean   @default(false)
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  resolvedNotes   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  groupCell       GroupCell  @relation(fields: [groupCellId], references: [id], onDelete: Cascade)
+  instructor      Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, groupCellId])
+  @@index([tenantId, instructorId])
+  @@index([tenantId, resolved])
+}
+
+model FreeDayRequest {
+  id              String    @id @default(cuid())
+  tenantId        String
+  instructorId    String
+  requestDate     DateTime
+  reason          String?
+  status          String    @default("pending") // pending | approved | rejected
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  instructor      Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, instructorId, requestDate])
+  @@index([tenantId, status])
+  @@index([tenantId, instructorId])
 }
