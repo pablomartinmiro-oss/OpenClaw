@@ -236,9 +236,9 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
   },
   instructors: {
     slug: "instructors",
-    name: "Profesores",
+    name: "Escuela",
     icon: "GraduationCap",
-    description: "Profesores, horarios, fichaje y asignaciones",
+    description: "Escuela de esqui: profesores, planning, fichaje, diplomas",
     dependencies: ["booking"],
     isCore: false,
     section: "operaciones",
