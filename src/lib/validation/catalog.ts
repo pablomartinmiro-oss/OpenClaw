@@ -40,19 +40,61 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = createProductSchema.partial();
 
+export const BULK_IMPORT_PRICE_TYPES = [
+  "per_day",
+  "per_person_per_hour",
+  "per_session",
+  "fixed",
+  "bundle",
+] as const;
+
+const slugField = z
+  .string()
+  .min(1)
+  .max(50)
+  .regex(/^[a-z0-9_]+$/, "Debe ser un slug: letras minúsculas, números y guiones bajos");
+
+const bulkProductRow = z.object({
+  name: z.string().min(1, "El nombre es obligatorio").max(200),
+  category: slugField.optional(),
+  station: slugField.optional(),
+  price: z
+    .number({
+      invalid_type_error: "El precio debe ser un número, no una cadena de texto",
+    })
+    .min(0)
+    .max(1_000_000),
+  priceType: z
+    .enum(BULK_IMPORT_PRICE_TYPES, {
+      errorMap: () => ({
+        message: `priceType debe ser uno de: ${BULK_IMPORT_PRICE_TYPES.join(", ")}`,
+      }),
+    })
+    .optional(),
+  description: z.string().max(2000).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
 export const bulkImportProductSchema = z.object({
   products: z
-    .array(
-      z.object({
-        name: z.string().min(1),
-        category: z.string().optional(),
-        station: z.string().optional(),
-        price: z.number().min(0),
-        priceType: z.string().optional(),
-      })
-    )
-    .min(1)
-    .max(500),
+    .array(bulkProductRow)
+    .min(1, "Se requiere al menos un producto")
+    .max(500, "Máximo 500 productos por importación")
+    .superRefine((products, ctx) => {
+      const seen = new Set<string>();
+      products.forEach((p, idx) => {
+        const key = p.name.trim().toLowerCase();
+        if (seen.has(key)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Nombre duplicado en el lote: "${p.name}"`,
+            path: [idx, "name"],
+          });
+        }
+        seen.add(key);
+      });
+    }),
 });
 
 // ==================== CATEGORIES ====================
