@@ -2,8 +2,14 @@ import { z } from "zod";
 
 // ==================== AUTH ====================
 export const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
+  email: z.string().trim().email("Formato de email inválido").transform((v) => v.toLowerCase()),
+  password: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(128)
+    .regex(/[A-Z]/, "La contraseña debe contener al menos una letra mayúscula")
+    .regex(/[a-z]/, "La contraseña debe contener al menos una letra minúscula")
+    .regex(/[0-9]/, "La contraseña debe contener al menos un número"),
   name: z.string().min(1).max(200),
   companyName: z.string().min(1).max(200).optional(),
   slug: z
