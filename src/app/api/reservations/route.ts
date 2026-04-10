@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { createNotification } from "@/lib/notifications";
+import { validateBody, createReservationSchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   const [session, authError] = await requireTenant();
@@ -64,7 +65,11 @@ export async function POST(request: NextRequest) {
   const log = logger.child({ tenantId, path: "/api/reservations" });
 
   try {
-    const body = await request.json();
+    const raw = await request.json();
+    const validation = validateBody(raw, createReservationSchema);
+    if (!validation.ok) {
+      return NextResponse.json({ error: "Datos de entrada inválidos", details: validation.error }, { status: 400 });
+    }
     const {
       clientName, clientPhone, clientEmail, couponCode,
       source, station, activityDate, schedule, language,
@@ -73,51 +78,49 @@ export async function POST(request: NextRequest) {
       status: reservationStatus,
       notes, internalNotes,
       notificationType, quoteId,
-      // Voucher fields
       voucherSecurityCode, voucherCouponCode, voucherProduct,
       voucherPricePaid, voucherExpiry, voucherRedeemed, voucherRedeemedAt,
-    } = body as Record<string, unknown>;
+    } = validation.data;
 
     const reservation = await prisma.reservation.create({
       data: {
         tenantId,
-        clientName: clientName as string,
-        clientPhone: clientPhone as string,
-        clientEmail: clientEmail as string,
-        couponCode: couponCode as string | undefined,
-        source: source as string,
-        station: station as string,
-        activityDate: new Date(activityDate as string),
-        schedule: schedule as string,
-        language: (language as string) || "es",
-        participants: participants as object | undefined,
-        services: services as object | undefined,
-        totalPrice: Number(totalPrice) || 0,
-        discount: Number(discount) || 0,
-        paymentMethod: paymentMethod as string | undefined,
-        paymentRef: paymentRef as string | undefined,
-        status: (reservationStatus as string) || "pendiente",
-        notes: notes as string | undefined,
-        internalNotes: internalNotes as string | undefined,
-        notificationType: notificationType as string | undefined,
-        quoteId: quoteId as string | undefined,
+        clientName,
+        clientPhone: clientPhone ?? "",
+        clientEmail: clientEmail ?? "",
+        couponCode: couponCode ?? undefined,
+        source,
+        station,
+        activityDate,
+        schedule: schedule ?? "",
+        language: language ?? "es",
+        participants: participants ? JSON.parse(JSON.stringify(participants)) : undefined,
+        services: services ? JSON.parse(JSON.stringify(services)) : undefined,
+        totalPrice: totalPrice ?? 0,
+        discount: discount ?? 0,
+        paymentMethod: paymentMethod ?? undefined,
+        paymentRef: paymentRef ?? undefined,
+        status: reservationStatus ?? "pendiente",
+        notes: notes ?? undefined,
+        internalNotes: internalNotes ?? undefined,
+        notificationType: notificationType ?? undefined,
+        quoteId: quoteId ?? undefined,
         createdBy: session.userId,
         emailSentAt: undefined,
         whatsappSentAt: undefined,
-        // Voucher fields
-        voucherSecurityCode: voucherSecurityCode as string | undefined,
-        voucherCouponCode: voucherCouponCode as string | undefined,
-        voucherProduct: voucherProduct as string | undefined,
-        voucherPricePaid: voucherPricePaid ? Number(voucherPricePaid) : undefined,
-        voucherExpiry: voucherExpiry ? new Date(voucherExpiry as string) : undefined,
-        voucherRedeemed: (voucherRedeemed as boolean) || false,
-        voucherRedeemedAt: voucherRedeemedAt ? new Date(voucherRedeemedAt as string) : undefined,
+        voucherSecurityCode: voucherSecurityCode ?? undefined,
+        voucherCouponCode: voucherCouponCode ?? undefined,
+        voucherProduct: voucherProduct ?? undefined,
+        voucherPricePaid: voucherPricePaid ?? undefined,
+        voucherExpiry: voucherExpiry ?? undefined,
+        voucherRedeemed: voucherRedeemed ?? false,
+        voucherRedeemedAt: voucherRedeemedAt ?? undefined,
       },
     });
 
     // Update capacity if confirmed
     if (reservationStatus === "confirmada") {
-      await updateCapacity(tenantId, station as string, activityDate as string, 1);
+      await updateCapacity(tenantId, station, activityDate.toISOString(), 1);
     }
 
     log.info({ reservationId: reservation.id, status: reservationStatus }, "Reservation created");
@@ -126,8 +129,8 @@ export async function POST(request: NextRequest) {
     createNotification(
       tenantId,
       "reservation_created",
-      `Nueva reserva — ${clientName as string}`,
-      `${station as string} · ${new Date(activityDate as string).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`,
+      `Nueva reserva — ${clientName}`,
+      `${station} · ${activityDate.toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`,
       { reservationId: reservation.id }
     ).catch(() => null);
 

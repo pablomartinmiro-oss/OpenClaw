@@ -4,6 +4,7 @@ import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
+import { validateBody, updateReservationSchema } from "@/lib/validation";
 
 export async function GET(
   _request: NextRequest,
@@ -55,28 +56,29 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, unknown>;
+    const raw = await request.json();
+    const validation = validateBody(raw, updateReservationSchema);
+    if (!validation.ok) {
+      return NextResponse.json({ error: "Datos de entrada inválidos", details: validation.error }, { status: 400 });
+    }
 
-    const ALLOWED_FIELDS = [
-      "status", "notes", "internalNotes", "notificationType",
-      "clientName", "clientPhone", "clientEmail", "couponCode",
-      "station", "activityDate", "schedule", "language",
-      "totalPrice", "discount", "paymentMethod", "paymentRef",
-    ] as const;
+    const {
+      participants, services,
+      status,
+      ...scalarFields
+    } = validation.data;
 
-    const updateData: Record<string, unknown> = {};
-    for (const field of ALLOWED_FIELDS) {
-      if (body[field] !== undefined) updateData[field] = body[field];
+    const updateData: Record<string, unknown> = { ...scalarFields };
+    if (participants !== undefined) {
+      updateData.participants = participants ? JSON.parse(JSON.stringify(participants)) : null;
     }
-    if (body.participants !== undefined) {
-      updateData.participants = JSON.parse(JSON.stringify(body.participants));
+    if (services !== undefined) {
+      updateData.services = services ? JSON.parse(JSON.stringify(services)) : null;
     }
-    if (body.services !== undefined) {
-      updateData.services = JSON.parse(JSON.stringify(body.services));
-    }
+
+    if (status !== undefined) updateData.status = status;
 
     // Track notification sending
-    const status = updateData.status as string | undefined;
     if (status === "confirmada" || status === "sin_disponibilidad") {
       if (updateData.notificationType) {
         updateData.emailSentAt = new Date();
