@@ -23,8 +23,10 @@ export async function POST(req: NextRequest) {
     let updated = 0;
 
     for (const p of data.products) {
+      // Only match tenant-owned products for updates.
+      // Global catalog entries (tenantId: null) must never be mutated here.
       const existing = await prisma.product.findFirst({
-        where: { name: p.name, OR: [{ tenantId }, { tenantId: null }] },
+        where: { name: p.name, tenantId },
       });
 
       if (existing) {

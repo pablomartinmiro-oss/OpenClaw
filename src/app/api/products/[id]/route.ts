@@ -18,8 +18,11 @@ export async function PATCH(
   const log = logger.child({ tenantId, path: `/api/products/${id}` });
 
   try {
+    // Write operations only permitted on tenant-owned products.
+    // Do NOT include { tenantId: null } here — that would allow mutating
+    // the shared global catalog which is read-only for all tenants.
     const existing = await prisma.product.findFirst({
-      where: { id, OR: [{ tenantId }, { tenantId: null }] },
+      where: { id, tenantId },
     });
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -67,8 +70,9 @@ export async function DELETE(
   const log = logger.child({ tenantId, path: `/api/products/${id}` });
 
   try {
+    // Write operations only permitted on tenant-owned products.
     const existing = await prisma.product.findFirst({
-      where: { id, OR: [{ tenantId }, { tenantId: null }] },
+      where: { id, tenantId },
     });
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
