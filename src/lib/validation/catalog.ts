@@ -52,7 +52,7 @@ const slugField = z
   .string()
   .min(1)
   .max(50)
-  .regex(/^[a-z0-9_]+$/, "Debe ser un slug: letras minúsculas, números y guiones bajos");
+  .regex(/^[a-z0-9_-]+$/, "Debe ser un slug: letras minúsculas, números, guiones y guiones bajos");
 
 const bulkProductRow = z.object({
   name: z.string().min(1, "El nombre es obligatorio").max(200),
