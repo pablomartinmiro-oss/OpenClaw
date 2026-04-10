@@ -18,6 +18,47 @@ export const createQuoteSchema = z.object({
   ghlContactId: z.string().optional().nullable(),
 });
 
+export const updateQuoteSchema = z.object({
+  status: z.enum(["nuevo", "borrador", "enviado", "pagado", "expirado", "cancelado"]).optional(),
+  totalAmount: z.coerce.number().min(0).optional(),
+  expiresAt: z.coerce.date().optional().nullable(),
+  sentAt: z.coerce.date().optional().nullable(),
+  clientNotes: z.string().max(5000).optional().nullable(),
+});
+
+const quoteItemReplaceSchema = z.object({
+  productId: z.string().optional().nullable(),
+  name: z.string().min(1).max(500),
+  description: z.string().max(500).optional().nullable(),
+  category: z.string().max(100).optional().nullable(),
+  unitPrice: z.coerce.number().min(0),
+  quantity: z.coerce.number().int().min(1).max(100).optional(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
+  numDays: z.coerce.number().int().min(1).max(30).optional().nullable(),
+  numPersons: z.coerce.number().int().min(1).max(50).optional().nullable(),
+  ageDetails: z.unknown().optional(),
+  modalidad: z.string().max(100).optional().nullable(),
+  nivel: z.string().max(100).optional().nullable(),
+  sector: z.string().max(100).optional().nullable(),
+  idioma: z.string().max(100).optional().nullable(),
+  horario: z.string().max(100).optional().nullable(),
+  puntoEncuentro: z.string().max(200).optional().nullable(),
+  tipoCliente: z.string().max(100).optional().nullable(),
+  gama: z.string().max(100).optional().nullable(),
+  casco: z.boolean().optional().nullable(),
+  tipoActividad: z.string().max(100).optional().nullable(),
+  regimen: z.string().max(100).optional().nullable(),
+  alojamientoNombre: z.string().max(200).optional().nullable(),
+  seguroIncluido: z.boolean().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
+export const bulkReplaceQuoteItemsSchema = z.object({
+  items: z.array(quoteItemReplaceSchema).max(50),
+});
+
 export const quoteItemSchema = z.object({
   productId: z.string().min(1),
   quantity: z.number().int().min(1).max(100),

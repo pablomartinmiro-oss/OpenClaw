@@ -4,6 +4,7 @@ import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
+import { validateBody, updateQuoteSchema } from "@/lib/validation";
 
 export async function GET(
   _request: NextRequest,
@@ -54,14 +55,20 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    const validated = validateBody(body, updateQuoteSchema);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+    const data = validated.data;
+
     const quote = await prisma.quote.update({
       where: { id },
       data: {
-        ...(body.status !== undefined && { status: body.status }),
-        ...(body.totalAmount !== undefined && { totalAmount: parseFloat(body.totalAmount) }),
-        ...(body.expiresAt !== undefined && { expiresAt: new Date(body.expiresAt) }),
-        ...(body.sentAt !== undefined && { sentAt: new Date(body.sentAt) }),
-        ...(body.clientNotes !== undefined && { clientNotes: body.clientNotes }),
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.totalAmount !== undefined && { totalAmount: data.totalAmount }),
+        ...(data.expiresAt !== undefined && { expiresAt: data.expiresAt }),
+        ...(data.sentAt !== undefined && { sentAt: data.sentAt }),
+        ...(data.clientNotes !== undefined && { clientNotes: data.clientNotes }),
       },
       include: { items: true },
     });
