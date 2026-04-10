@@ -4,7 +4,8 @@ import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
-import { validateBody, quoteItemSchema } from "@/lib/validation";
+import { validateBody, quoteItemSchema, bulkReplaceQuoteItemsSchema } from "@/lib/validation";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function POST(
   request: NextRequest,
@@ -105,50 +106,56 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const validated = validateBody(body, bulkReplaceQuoteItemsSchema);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
 
     // Bulk replace all items
     await prisma.quoteItem.deleteMany({ where: { quoteId } });
 
     const items = [];
     let totalAmount = 0;
-    for (const itemData of body.items) {
-      const unitPrice = parseFloat(itemData.unitPrice);
-      const quantity = parseInt(itemData.quantity) || 1;
-      const discount = parseFloat(itemData.discount) || 0;
+    for (const itemData of validated.data.items) {
+      const unitPrice = itemData.unitPrice;
+      const quantity = itemData.quantity ?? 1;
+      const discount = itemData.discount ?? 0;
       const totalPrice = unitPrice * quantity * (1 - discount / 100);
       totalAmount += totalPrice;
 
       const item = await prisma.quoteItem.create({
         data: {
           quoteId,
-          productId: itemData.productId || null,
+          productId: itemData.productId ?? null,
           name: itemData.name,
-          description: itemData.description || null,
-          category: itemData.category || null,
+          description: itemData.description ?? null,
+          category: itemData.category ?? null,
           quantity,
           unitPrice,
           discount,
           totalPrice,
           // Per-product variables
-          startDate: itemData.startDate ? new Date(itemData.startDate) : null,
-          endDate: itemData.endDate ? new Date(itemData.endDate) : null,
-          numDays: itemData.numDays ? parseInt(itemData.numDays) : null,
-          numPersons: itemData.numPersons ? parseInt(itemData.numPersons) : null,
-          ageDetails: itemData.ageDetails ?? null,
-          modalidad: itemData.modalidad || null,
-          nivel: itemData.nivel || null,
-          sector: itemData.sector || null,
-          idioma: itemData.idioma || null,
-          horario: itemData.horario || null,
-          puntoEncuentro: itemData.puntoEncuentro || null,
-          tipoCliente: itemData.tipoCliente || null,
-          gama: itemData.gama || null,
+          startDate: itemData.startDate ?? null,
+          endDate: itemData.endDate ?? null,
+          numDays: itemData.numDays ?? null,
+          numPersons: itemData.numPersons ?? null,
+          ageDetails: itemData.ageDetails != null
+            ? JSON.parse(JSON.stringify(itemData.ageDetails)) as Prisma.InputJsonValue
+            : undefined,
+          modalidad: itemData.modalidad ?? null,
+          nivel: itemData.nivel ?? null,
+          sector: itemData.sector ?? null,
+          idioma: itemData.idioma ?? null,
+          horario: itemData.horario ?? null,
+          puntoEncuentro: itemData.puntoEncuentro ?? null,
+          tipoCliente: itemData.tipoCliente ?? null,
+          gama: itemData.gama ?? null,
           casco: itemData.casco ?? null,
-          tipoActividad: itemData.tipoActividad || null,
-          regimen: itemData.regimen || null,
-          alojamientoNombre: itemData.alojamientoNombre || null,
+          tipoActividad: itemData.tipoActividad ?? null,
+          regimen: itemData.regimen ?? null,
+          alojamientoNombre: itemData.alojamientoNombre ?? null,
           seguroIncluido: itemData.seguroIncluido ?? null,
-          notes: itemData.notes || null,
+          notes: itemData.notes ?? null,
         },
       });
       items.push(item);
