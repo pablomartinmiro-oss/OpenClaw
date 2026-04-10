@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createSign, generateKeyPairSync } from "crypto";
+import { describe, it, expect } from "vitest";
+import { createSign, createVerify, generateKeyPairSync } from "crypto";
 
 /**
  * Tests for GHL webhook RSA signature verification (audit finding #6).
@@ -32,7 +32,6 @@ describe("GHL Webhook Signature Verification", () => {
   ): boolean {
     if (!signature) return false;
     try {
-      const { createVerify } = require("crypto");
       const verifier = createVerify("SHA256");
       verifier.update(rawBody);
       verifier.end();
@@ -100,7 +99,6 @@ describe("GHL Webhook Route — signature enforcement", () => {
   ): 200 | 401 {
     if (!signatureHeader) return 401;
     try {
-      const { createVerify } = require("crypto");
       const verifier = createVerify("SHA256");
       verifier.update(rawBody);
       verifier.end();
