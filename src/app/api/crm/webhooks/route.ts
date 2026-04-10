@@ -47,14 +47,11 @@ T1hhTiaCeIY/OwwwNUY2yvcCAwEAAQ==
  * Verify GHL webhook signature using RSA public key.
  * GHL signs the raw body with their private key and sends the
  * base64-encoded signature in the x-wh-signature header.
- * Returns true if verified, false if signature invalid.
- * If no signature header is present, logs a warning but accepts
- * (some GHL events may not include signatures during testing).
+ * Returns true if verified, false otherwise (including missing signature).
  */
 function verifyGhlSignature(rawBody: string, signatureHeader: string | null): boolean {
   if (!signatureHeader) {
-    // No signature present — accept but log (GHL test events may omit it)
-    return true;
+    return false;
   }
 
   try {
