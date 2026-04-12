@@ -1,4 +1,4 @@
-# PORT-15: Lego Packs Enhancement
+# PORT-12: Lego Packs Enhancement
 
 ## Decision: 🔧 Adaptar | Complejidad: M
 

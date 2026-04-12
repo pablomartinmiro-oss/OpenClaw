@@ -9,11 +9,11 @@
 ## RESUMEN EJECUTIVO
 
 De los **20 módulos funcionales** de Nayade:
-- **❌ Descartar:** 1 módulo (Auth — OpenClaw ya tiene NextAuth multi-tenant superior)
+- **❌ Descartar:** 4 módulos (Auth + Hotel + Spa + Restaurant)
 - **✅ Portar tal cual:** 3 módulos (infraestructura nueva que no existe en OpenClaw)
-- **🔧 Adaptar:** 16 módulos (existen en OpenClaw pero Nayade aporta funcionalidad extra)
+- **🔧 Adaptar:** 13 módulos (existen en OpenClaw pero Nayade aporta funcionalidad extra)
 
-**Total specs:** 19 módulos → 19 archivos `PORT-NN-[modulo].md`
+**Total specs:** 16 módulos → 16 archivos `PORT-NN-[modulo].md`
 
 ---
 
@@ -30,22 +30,25 @@ De los **20 módulos funcionales** de Nayade:
 | 07 | Discounts | 🔧 Adaptar | S | Añadir validación en checkout/TPV, integración con vouchers de compensación, duplicación de códigos |
 | 08 | Reviews | 🔧 Adaptar | S | Añadir verified booking check, admin stats globales, entityType expandido |
 | 09 | CRM | 🔧 Adaptar | XL | Añadir lead pipeline completo, auto-generación quotes desde leads, activity log, pending payments, timeline |
-| 10 | Hotel | 🔧 Adaptar | L | Añadir booking público con Redsys, calendar view, campos enriquecidos (surface, amenities, gallery, fiscal) |
-| 11 | Spa | 🔧 Adaptar | L | Añadir booking público con Redsys, slot auto-generation desde templates, campos enriquecidos |
-| 12 | Restaurant | 🔧 Adaptar | L | Añadir booking público, depósitos con Redsys, global calendar, staff management avanzado, email notificaciones |
-| 13 | Suppliers + Settlements | 🔧 Adaptar | M | Añadir auto-generación settlements, XLSX export, periods preview, status workflow enriquecido |
-| 14 | REAV | 🔧 Adaptar | M | Añadir calculation engine puro, campos enriquecidos (destination, pax, channel), estados fiscales/operativos |
-| 15 | Lego Packs | 🔧 Adaptar | M | Añadir pricing snapshots, public views por categoría, price calculation endpoint, estadísticas |
-| 16 | Operations | 🔧 Adaptar | L | Añadir calendar operativo, daily activities view, monitor management (docs, payroll), reservation operational |
-| 17 | Cancellations | 🔧 Adaptar | L | Añadir workflow completo (7 estados operativos, 4 resolución, 7 financieros), voucher generation, impact preview |
-| 18 | Ticketing / Coupons | 🔧 Adaptar | L | Añadir multi-coupon submissions, OCR pipeline completo, platform settlements, dashboard KPIs |
-| 19 | TPV | 🔧 Adaptar | L | Añadir split payments, auto-create reservation + transaction + REAV + invoice, ticket email, backoffice reports |
+| 10 | Hotel | ❌ Descartado | — | No aplica a vertical ski — descartado por decisión de producto 2026-04-12 |
+| 11 | Spa | ❌ Descartado | — | No aplica a vertical ski — descartado por decisión de producto 2026-04-12 |
+| 12 | Restaurant | ❌ Descartado | — | No aplica a vertical ski — descartado por decisión de producto 2026-04-12 |
+| 10 | Suppliers + Settlements | 🔧 Adaptar | M | Añadir auto-generación settlements, XLSX export, periods preview, status workflow enriquecido |
+| 11 | REAV | 🔧 Adaptar | M | Añadir calculation engine puro, campos enriquecidos (destination, pax, channel), estados fiscales/operativos |
+| 12 | Lego Packs | 🔧 Adaptar | M | Añadir pricing snapshots, public views por categoría, price calculation endpoint, estadísticas |
+| 13 | Operations | 🔧 Adaptar | L | Añadir calendar operativo, daily activities view, monitor management (docs, payroll), reservation operational |
+| 14 | Cancellations | 🔧 Adaptar | L | Añadir workflow completo (7 estados operativos, 4 resolución, 7 financieros), voucher generation, impact preview |
+| 15 | Ticketing / Coupons | 🔧 Adaptar | L | Añadir multi-coupon submissions, OCR pipeline completo, platform settlements, dashboard KPIs |
+| 16 | TPV | 🔧 Adaptar | L | Añadir split payments, auto-create reservation + transaction + REAV + invoice, ticket email, backoffice reports |
 
 **Módulo descartado:**
 
 | Módulo | Razón |
 |--------|-------|
 | Auth + Users | OpenClaw tiene NextAuth v5 multi-tenant con JWT, RBAC con 4 roles, invite system, module-scoped permissions. Superior a Nayade (JWT local single-tenant). No hay nada que portar. |
+| Hotel | No aplica a vertical ski — descartado por decisión de producto 2026-04-12. |
+| Spa | No aplica a vertical ski — descartado por decisión de producto 2026-04-12. |
+| Restaurant | No aplica a vertical ski — descartado por decisión de producto 2026-04-12. |
 
 ---
 
@@ -58,7 +61,7 @@ Estos 3 módulos son **prerequisitos** para muchos otros. Portarlos primero.
 ```
 PORT-01: Document Numbering ←── Finance, CRM, TPV, Ticketing, Cancellations necesitan esto
 PORT-02: Email + PDF Templates ←── CRM, Cancellations, TPV, Restaurant envían emails/PDFs
-PORT-03: Redsys Payments ←── Hotel, Spa, Restaurant, CRM necesitan pagos online
+PORT-03: Redsys Payments ←── CRM, Storefront necesitan pagos online
 ```
 
 ### Fase 1 — Módulos base (dependen solo de Fase 0)
@@ -75,21 +78,18 @@ PORT-08: Reviews ←── Verified booking check, admin stats
 
 ```
 PORT-09: CRM ←── Lead pipeline, activity log (usa Catalog, Finance, Redsys, Email Templates)
-PORT-10: Hotel ←── Public booking (usa Redsys, Email Templates)
-PORT-11: Spa ←── Public booking (usa Redsys, Email Templates)
-PORT-12: Restaurant ←── Public booking, deposits (usa Redsys, Email Templates)
-PORT-13: Suppliers ←── Auto-generation (usa Catalog, Finance)
-PORT-14: REAV ←── Calculation engine (usa Finance)
+PORT-10: Suppliers ←── Auto-generation (usa Catalog, Finance)
+PORT-11: REAV ←── Calculation engine (usa Finance)
 ```
 
 ### Fase 3 — Módulos top-level (dependen de Fase 2)
 
 ```
-PORT-15: Lego Packs ←── Snapshots (usa Catalog)
-PORT-16: Operations ←── Calendar, daily activities (usa CRM, Instructors)
-PORT-17: Cancellations ←── Full workflow (usa CRM, Discounts, Email Templates)
-PORT-18: Ticketing ←── OCR pipeline, settlements (usa Catalog, CRM, Suppliers)
-PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numbering)
+PORT-12: Lego Packs ←── Snapshots (usa Catalog)
+PORT-13: Operations ←── Calendar, daily activities (usa CRM, Instructors)
+PORT-14: Cancellations ←── Full workflow (usa CRM, Discounts, Email Templates)
+PORT-15: Ticketing ←── OCR pipeline, settlements (usa Catalog, CRM, Suppliers)
+PORT-16: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numbering)
 ```
 
 ---
@@ -107,17 +107,17 @@ PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numb
    ┌──────▼──────┐  ┌──────────────┐  ┌───────────▼───────┐
    │  PORT-06    │  │  PORT-02     │  │  PORT-03          │
    │  Finance    │  │  Email/PDF   │  │  Redsys           │
-   └──────┬──────┘  └──────┬───┬──┘  └──┬────────┬───────┘
-          │                │   │        │        │
-   ┌──────▼──────┐  ┌──────▼───▼──────▼─▼──┐    │
-   │  PORT-14    │  │  PORT-09  CRM        │    │
-   │  REAV       │  │  (leads, quotes)     │    │
-   └──────┬──────┘  └──────────┬───────────┘    │
-          │                    │                 │
-   ┌──────▼──────┐  ┌─────────▼──┐  ┌──────────▼──────────┐
-   │  PORT-19    │  │  PORT-17   │  │  PORT-10/11/12      │
-   │  TPV        │  │  Cancell.  │  │  Hotel/Spa/Rest     │
-   └─────────────┘  └────────────┘  └─────────────────────┘
+   └──────┬──────┘  └──────┬───┬──┘  └──┬────────────────┘
+          │                │   │        │
+   ┌──────▼──────┐  ┌──────▼───▼──────▼─▼──┐
+   │  PORT-11    │  │  PORT-09  CRM        │
+   │  REAV       │  │  (leads, quotes)     │
+   └──────┬──────┘  └──────────┬───────────┘
+          │                    │
+   ┌──────▼──────┐  ┌─────────▼──┐
+   │  PORT-16    │  │  PORT-14   │
+   │  TPV        │  │  Cancell.  │
+   └─────────────┘  └────────────┘
 ```
 
 ---
@@ -138,13 +138,12 @@ PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numb
 | `gallery_items` | `GalleryItem` | PORT-05 |
 | `media_files` | `MediaFile` | PORT-05 |
 | `home_module_items` | `HomeModuleItem` | PORT-05 |
-| `restaurant_booking_logs` | `RestaurantBookingLog` | PORT-12 |
-| `lego_pack_snapshots` | `LegoPackSnapshot` | PORT-15 |
-| `reservation_operational` | `ReservationOperational` | PORT-16 |
-| `platform_settlements` | `PlatformSettlement` | PORT-18 |
-| `tpv_sale_payments` | `TpvSalePayment` | PORT-19 |
+| `lego_pack_snapshots` | `LegoPackSnapshot` | PORT-12 |
+| `reservation_operational` | `ReservationOperational` | PORT-13 |
+| `platform_settlements` | `PlatformSettlement` | PORT-15 |
+| `tpv_sale_payments` | `TpvSalePayment` | PORT-16 |
 | `password_reset_tokens` | — (NextAuth handles this) | — |
-| `pack_cross_sells` | `PackCrossSell` | PORT-15 |
+| `pack_cross_sells` | `PackCrossSell` | PORT-12 |
 
 ### Modelos existentes a enriquecer
 
@@ -155,19 +154,15 @@ PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numb
 | `Invoice` | `invoiceNumber` (sequential), `invoiceType`, `creditNoteForId`, `creditNoteReason`, `sentAt`, `sentCount` | PORT-06 |
 | `Transaction` | `transactionNumber`, `type`, `saleChannel`, `taxBase`, `taxAmount`, `reavMargin`, `fiscalRegime`, `tpvSaleId`, `reservationRef` | PORT-06 |
 | `Reservation` | `reservationNumber` (sequential), `channel` (13 values), `statusReservation`, `statusPayment`, `reavExpedientId`, `selectedTimeSlotId` | PORT-09 |
-| `RoomType` | `shortDescription`, `maxAdults`, `maxChildren`, `surfaceM2`, `amenities`, `gallery`, `discountPercent`, `fiscalRegime`, `metaTitle/Description` | PORT-10 |
-| `SpaTreatment` | `benefits`, `coverImageUrl`, `gallery`, `cabinRequired`, `discountPercent`, `fiscalRegime`, `metaTitle/Description` | PORT-11 |
-| `Restaurant` | `cuisine`, `heroImage`, `galleryImages`, `menuUrl`, `phone`, `email`, `badge`, `minAdvanceHours`, `maxAdvanceDays`, `cancellationHours`, `cancellationPolicy`, `legalText`, `operativeEmail` | PORT-12 |
-| `RestaurantBooking` | `locator`, `guestLastName`, `highchair`, `allergies`, `birthday`, `accessibility`, `isVip`, `cancellationReason`, `channel`, `paymentStatus`, `merchantOrder` | PORT-12 |
-| `CancellationRequest` | `fullName`, `email`, `phone`, `activityDate`, `locator`, `operationalStatus` (7 values), `resolutionStatus` (4), `financialStatus` (7), `compensationType`, `cancellationNumber`, `assignedUserId` | PORT-17 |
-| `ReavExpedient` | `expedientNumber`, `clientId`, `agentId`, `serviceDescription`, `serviceDate`, `destination`, `numberOfPax`, `fiscalStatus` (5 values), `operativeStatus` (4), channel | PORT-14 |
-| `TpvSale` | `taxBase`, `taxAmount`, `taxRate`, `reavMargin`, `reavCost`, `reavTax`, `fiscalSummary`, `saleChannel`, `sellerUserId`, `operativeCenter` | PORT-19 |
-| `TpvSaleItem` | `eventDate`, `eventTime`, `participants`, `fiscalRegime`, `taxBase`, `taxAmount`, `reavCost`, `reavMargin` | PORT-19 |
-| `CouponRedemption` | `provider`, `productTicketingId`, `securityCode`, `attachmentUrl`, `requestedDate`, `station`, `participants`, `ocrConfidenceScore`, `ocrStatus`, `ocrRawData`, `duplicateFlag`, `settlementId`, `submissionId`, `channelEntry` | PORT-18 |
-| `Supplier` | `fiscalAddress`, `contactPerson`, `settlementDayOfMonth`, `autoGenerateSettlements` | PORT-13 |
-| `SupplierSettlement` | `settlementNumber` (sequential), `pdfKey`, `sentAt` | PORT-13 |
-| `LegoPack` | `subtitle`, `shortDescription`, `coverImageUrl`, `image1-4`, `gallery`, `badge`, `priceLabel`, `availabilityMode`, `isOnlineSale`, `metaTitle/Description` | PORT-15 |
-| `LegoPackLine` | `sourceType` (experience/pack), `internalName`, `groupLabel`, `isClientVisible`, `defaultQuantity`, `isQuantityEditable`, `discountType/Value`, `overridePriceLabel`, `frontendNote` | PORT-15 |
+| `CancellationRequest` | `fullName`, `email`, `phone`, `activityDate`, `locator`, `operationalStatus` (7 values), `resolutionStatus` (4), `financialStatus` (7), `compensationType`, `cancellationNumber`, `assignedUserId` | PORT-14 |
+| `ReavExpedient` | `expedientNumber`, `clientId`, `agentId`, `serviceDescription`, `serviceDate`, `destination`, `numberOfPax`, `fiscalStatus` (5 values), `operativeStatus` (4), channel | PORT-11 |
+| `TpvSale` | `taxBase`, `taxAmount`, `taxRate`, `reavMargin`, `reavCost`, `reavTax`, `fiscalSummary`, `saleChannel`, `sellerUserId`, `operativeCenter` | PORT-16 |
+| `TpvSaleItem` | `eventDate`, `eventTime`, `participants`, `fiscalRegime`, `taxBase`, `taxAmount`, `reavCost`, `reavMargin` | PORT-16 |
+| `CouponRedemption` | `provider`, `productTicketingId`, `securityCode`, `attachmentUrl`, `requestedDate`, `station`, `participants`, `ocrConfidenceScore`, `ocrStatus`, `ocrRawData`, `duplicateFlag`, `settlementId`, `submissionId`, `channelEntry` | PORT-15 |
+| `Supplier` | `fiscalAddress`, `contactPerson`, `settlementDayOfMonth`, `autoGenerateSettlements` | PORT-10 |
+| `SupplierSettlement` | `settlementNumber` (sequential), `pdfKey`, `sentAt` | PORT-10 |
+| `LegoPack` | `subtitle`, `shortDescription`, `coverImageUrl`, `image1-4`, `gallery`, `badge`, `priceLabel`, `availabilityMode`, `isOnlineSale`, `metaTitle/Description` | PORT-12 |
+| `LegoPackLine` | `sourceType` (experience/pack), `internalName`, `groupLabel`, `isClientVisible`, `defaultQuantity`, `isQuantityEditable`, `discountType/Value`, `overridePriceLabel`, `frontendNote` | PORT-12 |
 | `SlideshowItem` | `badge`, `title`, `subtitle`, `description`, `ctaText`, `ctaUrl`, `reserveUrl` | PORT-05 |
 | `DiscountCode` | `name`, `description`, `discountType` (percent/fixed), `observations`, `origin` (manual/voucher), `compensationVoucherId`, `clientEmail/Name` | PORT-07 |
 
@@ -186,18 +181,15 @@ PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numb
 | PORT-07 Discounts | 3 | Validate + verify voucher + duplicate |
 | PORT-08 Reviews | 2 | Verified check + global stats |
 | PORT-09 CRM | 25+ | Full lead pipeline + pending payments |
-| PORT-10 Hotel | 4 | Public booking + calendar + search |
-| PORT-11 Spa | 4 | Public booking + slot availability |
-| PORT-12 Restaurant | 10 | Public booking + global calendar + staff |
-| PORT-13 Suppliers | 5 | Auto-generate + XLSX + periods |
-| PORT-14 REAV | 3 | Calculation engine + enriched CRUD |
-| PORT-15 Lego Packs | 8 | Public views + snapshots + pricing |
-| PORT-16 Operations | 8 | Calendar + daily activities + monitor mgmt |
-| PORT-17 Cancellations | 15 | Full workflow with 12 mutation endpoints |
-| PORT-18 Ticketing | 10 | Multi-coupon + OCR + platform settlements |
-| PORT-19 TPV | 5 | Split payments + ticket email + backoffice |
+| PORT-10 Suppliers | 5 | Auto-generate + XLSX + periods |
+| PORT-11 REAV | 3 | Calculation engine + enriched CRUD |
+| PORT-12 Lego Packs | 8 | Public views + snapshots + pricing |
+| PORT-13 Operations | 8 | Calendar + daily activities + monitor mgmt |
+| PORT-14 Cancellations | 15 | Full workflow with 12 mutation endpoints |
+| PORT-15 Ticketing | 10 | Multi-coupon + OCR + platform settlements |
+| PORT-16 TPV | 5 | Split payments + ticket email + backoffice |
 
-**Total endpoints nuevos estimados: ~145**
+**Total endpoints nuevos estimados: ~127** (145 originales − 18 de Hotel/Spa/Restaurant)
 
 ---
 
@@ -207,9 +199,9 @@ PORT-19: TPV ←── Split payments (usa Catalog, Finance, REAV, Document Numb
 |------|---------|-------------|-----|
 | Fase 0 | 01, 02, 03 | M + XL + L | 3 |
 | Fase 1 | 04, 05, 06, 07, 08 | M + M + L + S + S | 3-5 |
-| Fase 2 | 09, 10, 11, 12, 13, 14 | XL + L + L + L + M + M | 6 |
-| Fase 3 | 15, 16, 17, 18, 19 | M + L + L + L + L | 5 |
-| **Total** | **19 módulos** | | **17-19 PRs** |
+| Fase 2 | 09, 10, 11 | XL + M + M | 3 |
+| Fase 3 | 12, 13, 14, 15, 16 | M + L + L + L + L | 5 |
+| **Total** | **16 módulos** | | **14-16 PRs** |
 
 ---
 
@@ -243,13 +235,10 @@ Cada módulo tiene su spec detallado en `nayade-port/specs/`:
 | PORT-07 | `specs/PORT-07-discounts.md` |
 | PORT-08 | `specs/PORT-08-reviews.md` |
 | PORT-09 | `specs/PORT-09-crm.md` |
-| PORT-10 | `specs/PORT-10-hotel.md` |
-| PORT-11 | `specs/PORT-11-spa.md` |
-| PORT-12 | `specs/PORT-12-restaurant.md` |
-| PORT-13 | `specs/PORT-13-suppliers.md` |
-| PORT-14 | `specs/PORT-14-reav.md` |
-| PORT-15 | `specs/PORT-15-lego-packs.md` |
-| PORT-16 | `specs/PORT-16-operations.md` |
-| PORT-17 | `specs/PORT-17-cancellations.md` |
-| PORT-18 | `specs/PORT-18-ticketing.md` |
-| PORT-19 | `specs/PORT-19-tpv.md` |
+| PORT-10 | `specs/PORT-10-suppliers.md` |
+| PORT-11 | `specs/PORT-11-reav.md` |
+| PORT-12 | `specs/PORT-12-lego-packs.md` |
+| PORT-13 | `specs/PORT-13-operations.md` |
+| PORT-14 | `specs/PORT-14-cancellations.md` |
+| PORT-15 | `specs/PORT-15-ticketing.md` |
+| PORT-16 | `specs/PORT-16-tpv.md` |
