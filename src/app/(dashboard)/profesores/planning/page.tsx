@@ -18,8 +18,12 @@ export default function PlanningPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
 
+  // Board: station-filtered instructors for rows display
   const { data: instructorsData } = useInstructors({ isActive: "true", station });
   const instructors = instructorsData?.instructors ?? [];
+  // All active instructors for assignment dropdowns (no station filter)
+  const { data: allInstructorsData } = useInstructors({ isActive: "true" });
+  const allInstructors = allInstructorsData?.instructors ?? [];
   const { data: groupsData, isLoading } = useGroupCells({ date, station });
   const groups = groupsData?.groups ?? [];
   const { data: unitsData } = useOperationalUnits({ date, status: "pending" });
@@ -147,7 +151,7 @@ export default function PlanningPage() {
         <GroupDetailDrawer
           groupId={selectedGroupId}
           onClose={() => setSelectedGroupId(null)}
-          instructors={instructors}
+          instructors={allInstructors}
         />
       )}
 
@@ -156,7 +160,7 @@ export default function PlanningPage() {
         <CreateGroupModal
           date={date}
           station={station}
-          instructors={instructors}
+          instructors={allInstructors}
           onClose={() => setShowCreateGroup(false)}
         />
       )}
