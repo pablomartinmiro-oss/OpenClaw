@@ -3,7 +3,7 @@ import { z } from "zod";
 // ==================== PARTICIPANTS ====================
 
 export const createParticipantSchema = z.object({
-  reservationId: z.string().min(1, "La reserva es obligatoria"),
+  reservationId: z.string().min(1).optional().nullable(),
   firstName: z.string().min(1, "El nombre es obligatorio"),
   lastName: z.string().optional().nullable(),
   birthDate: z.coerce.date().optional().nullable(),
@@ -14,6 +14,9 @@ export const createParticipantSchema = z.object({
   language: z.string().default("es"),
   specialNeeds: z.string().max(500).optional().nullable(),
   relationship: z.string().max(50).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  groupCellId: z.string().optional().nullable(),
+  activityDate: z.coerce.date().optional().nullable(),
 });
 
 export const updateParticipantSchema = createParticipantSchema.partial().omit({ reservationId: true });

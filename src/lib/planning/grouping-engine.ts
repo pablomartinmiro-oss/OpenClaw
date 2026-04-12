@@ -73,8 +73,8 @@ export async function autoGroupUnits(
     },
   });
 
-  // Filter by station via reservation
-  const stationUnits = units.filter((u) => u.reservation.station === station);
+  // Filter by station via reservation (walk-ins without reservation are excluded)
+  const stationUnits = units.filter((u) => u.reservation?.station === station);
 
   // Separate by planning mode
   const fixedSlot = stationUnits.filter(

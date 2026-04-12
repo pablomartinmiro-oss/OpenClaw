@@ -10,11 +10,13 @@ import PlanningBoard from "./_components/PlanningBoard";
 import PendingPanel from "./_components/PendingPanel";
 import GroupDetailDrawer from "./_components/GroupDetailDrawer";
 import WorkloadBar from "./_components/WorkloadBar";
+import CreateGroupModal from "./_components/CreateGroupModal";
 
 export default function PlanningPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [station, setStation] = useState("baqueira");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
 
   const { data: instructorsData } = useInstructors({ isActive: "true", station });
   const instructors = instructorsData?.instructors ?? [];
@@ -74,6 +76,11 @@ export default function PlanningPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button onClick={() => setShowCreateGroup(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-[#E8E4DE] px-3 py-1.5 text-xs font-medium text-[#2D2A26] hover:bg-[#FAF9F7]">
+            <Plus className="h-3.5 w-3.5" />
+            Crear grupo
+          </button>
           <button onClick={handleAutoGroup} disabled={autoGroupMutation.isPending || pendingUnits.length === 0}
             className="flex items-center gap-1.5 rounded-lg bg-[#E87B5A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#D56E4F] disabled:opacity-40">
             <Wand2 className="h-3.5 w-3.5" />
@@ -141,6 +148,16 @@ export default function PlanningPage() {
           groupId={selectedGroupId}
           onClose={() => setSelectedGroupId(null)}
           instructors={instructors}
+        />
+      )}
+
+      {/* Create group modal */}
+      {showCreateGroup && (
+        <CreateGroupModal
+          date={date}
+          station={station}
+          instructors={instructors}
+          onClose={() => setShowCreateGroup(false)}
         />
       )}
     </div>

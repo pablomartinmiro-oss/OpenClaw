@@ -45,7 +45,7 @@ export default function UnassignedPanel({ units }: Props) {
                       {unit.participant.firstName} {unit.participant.lastName ?? ""}
                     </p>
                     <p className="text-[10px] text-[#8A8580]">
-                      {unit.reservation.clientName}
+                      {unit.reservation?.clientName ?? "Walk-in"}
                     </p>
                   </div>
                 </div>

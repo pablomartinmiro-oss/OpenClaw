@@ -243,6 +243,7 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "operaciones",
     navItems: [
+      { label: "Resumen", href: "/profesores/overview", icon: "LayoutDashboard", permission: null, roles: ["Owner / Manager"] },
       { label: "Profesores", href: "/profesores", icon: "GraduationCap", permission: null, roles: ["Owner / Manager"] },
       { label: "Planning", href: "/profesores/planning", icon: "CalendarCog", permission: null, roles: ["Owner / Manager"] },
       { label: "Horario", href: "/profesores/horario", icon: "Calendar", permission: null, roles: ["Owner / Manager"] },

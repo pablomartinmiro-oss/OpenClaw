@@ -2219,22 +2219,23 @@ model CustomerSizingProfile {
 model Participant {
   id              String    @id @default(cuid())
   tenantId        String
-  reservationId   String
+  reservationId   String?   // null for walk-in / manual participants
   firstName       String
   lastName        String?
   birthDate       DateTime?
   age             Int?
-  ageBracket      String?   // "baby" | "infantil" | "adolescente" | "adulto"
+  ageBracket      String?   // "baby" | "infantil" | "adolescente" | "juvenil" | "adulto"
   discipline      String    // "esqui" | "snow" | "telemark" | "freestyle"
   level           String    // "A" | "B" | "C" | "D"
   language        String    @default("es")
   specialNeeds    String?
   relationship    String?   // "titular" | "hijo" | "pareja" | "amigo"
+  phone           String?   // contact phone for walk-in participants
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  reservation     Reservation     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation     Reservation?    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   operationalUnits OperationalUnit[]
   checkIns        ClassCheckIn[]
 
@@ -2245,7 +2246,7 @@ model OperationalUnit {
   id              String    @id @default(cuid())
   tenantId        String
   participantId   String
-  reservationId   String
+  reservationId   String?   // null for walk-in / manual participants
   productId       String?
   activityDate    DateTime
   planningMode    String    // "fixed_slot" | "dynamic_grouping"
@@ -2256,7 +2257,7 @@ model OperationalUnit {
 
   tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   participant     Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  reservation     Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservation     Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   product         Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
   groupCell       GroupCell?   @relation(fields: [groupCellId], references: [id], onDelete: SetNull)
 

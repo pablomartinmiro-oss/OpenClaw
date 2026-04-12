@@ -1,8 +1,9 @@
 "use client";
 
-import { X, User, Phone, Trash2, GraduationCap } from "lucide-react";
+import { useState } from "react";
+import { X, User, Phone, Trash2, Plus, UserPlus } from "lucide-react";
 import type { Instructor } from "@/hooks/useInstructors";
-import { useGroupCell, useUpdateGroupCell, useDeleteGroupCell } from "@/hooks/usePlanning";
+import { useGroupCell, useUpdateGroupCell, useDeleteGroupCell, useAddWalkInParticipant } from "@/hooks/usePlanning";
 import { toast } from "sonner";
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -30,10 +31,13 @@ export default function GroupDetailDrawer({ groupId, onClose, instructors }: Pro
   const deleteMutation = useDeleteGroupCell();
   const group = data?.group;
 
+  const [showAddParticipant, setShowAddParticipant] = useState(false);
+
   if (!group) return null;
 
   const statusInfo = STATUS_LABELS[group.status] ?? STATUS_LABELS.draft;
   const participants = group.units ?? [];
+  const isFull = participants.length >= group.maxParticipants;
 
   const handleInstructorChange = async (instructorId: string) => {
     try {
@@ -123,10 +127,24 @@ export default function GroupDetailDrawer({ groupId, onClose, instructors }: Pro
               <label className="text-xs font-semibold text-[#8A8580] uppercase tracking-wide">
                 Participantes ({participants.length})
               </label>
+              {!isFull && (
+                <button onClick={() => setShowAddParticipant(true)}
+                  className="flex items-center gap-1 rounded-lg bg-[#E87B5A]/10 px-2 py-1 text-[10px] font-medium text-[#E87B5A] hover:bg-[#E87B5A]/20 transition-colors">
+                  <UserPlus className="h-3 w-3" />
+                  Anadir alumno
+                </button>
+              )}
             </div>
 
             {participants.length === 0 ? (
-              <p className="text-xs text-[#8A8580] py-4 text-center">Sin participantes en este grupo</p>
+              <div className="text-center py-6">
+                <User className="mx-auto h-8 w-8 text-[#E8E4DE] mb-2" />
+                <p className="text-xs text-[#8A8580] mb-2">Sin participantes en este grupo</p>
+                <button onClick={() => setShowAddParticipant(true)}
+                  className="rounded-lg bg-[#E87B5A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#D56E4F]">
+                  <Plus className="inline h-3 w-3 mr-1" />Anadir primer alumno
+                </button>
+              </div>
             ) : (
               <div className="space-y-1.5">
                 {participants.map((u) => (
@@ -149,9 +167,9 @@ export default function GroupDetailDrawer({ groupId, onClose, instructors }: Pro
                         </div>
                       </div>
                     </div>
-                    {/* Contact titular */}
-                    {u.reservation?.clientPhone && (
-                      <a href={`https://wa.me/${u.reservation.clientPhone.replace(/\D/g, "")}`}
+                    {/* Contact: reservation titular phone or walk-in phone */}
+                    {(u.reservation?.clientPhone || u.participant.phone) && (
+                      <a href={`https://wa.me/${(u.reservation?.clientPhone ?? u.participant.phone ?? "").replace(/\D/g, "")}`}
                         target="_blank" rel="noopener noreferrer"
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#5B8C6D]/10 text-[#5B8C6D] hover:bg-[#5B8C6D]/20">
                         <Phone className="h-3.5 w-3.5" />
@@ -187,6 +205,17 @@ export default function GroupDetailDrawer({ groupId, onClose, instructors }: Pro
             Disolver grupo
           </button>
         </div>
+
+        {/* Add participant inline form */}
+        {showAddParticipant && (
+          <AddParticipantForm
+            groupId={groupId}
+            discipline={group.discipline}
+            level={group.level}
+            language={group.language}
+            onClose={() => setShowAddParticipant(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -197,6 +226,91 @@ function InfoBox({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg bg-[#FAF9F7] border border-[#E8E4DE] p-2.5">
       <p className="text-[10px] text-[#8A8580]">{label}</p>
       <p className="text-sm font-medium text-[#2D2A26] capitalize">{value}</p>
+    </div>
+  );
+}
+
+function AddParticipantForm({ groupId, discipline, level, language, onClose }: {
+  groupId: string; discipline: string; level: string; language: string; onClose: () => void;
+}) {
+  const addMutation = useAddWalkInParticipant();
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    age: "",
+    phone: "",
+    discipline,
+    level,
+    language,
+  });
+
+  const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const inputClass = "w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#2D2A26] focus:border-[#E87B5A] focus:outline-none";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.firstName.trim()) { toast.error("El nombre es obligatorio"); return; }
+    try {
+      await addMutation.mutateAsync({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim() || null,
+        age: form.age ? Number(form.age) : null,
+        phone: form.phone.trim() || null,
+        discipline: form.discipline,
+        level: form.level,
+        language: form.language,
+        groupCellId: groupId,
+      });
+      toast.success("Alumno anadido al grupo");
+      onClose();
+    } catch {
+      toast.error("Error al anadir alumno");
+    }
+  };
+
+  return (
+    <div className="border-t-2 border-[#E87B5A] bg-[#FAF9F7] p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-[#2D2A26]">Anadir alumno (walk-in)</h3>
+        <button onClick={onClose} className="text-xs text-[#8A8580] hover:text-[#2D2A26]">Cancelar</button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex gap-2">
+          <input value={form.firstName} onChange={(e) => set("firstName", e.target.value)}
+            placeholder="Nombre *" className={inputClass} autoFocus />
+          <input value={form.lastName} onChange={(e) => set("lastName", e.target.value)}
+            placeholder="Apellido" className={inputClass} />
+        </div>
+        <div className="flex gap-2">
+          <input type="number" value={form.age} onChange={(e) => set("age", e.target.value)}
+            placeholder="Edad" min={3} max={99} className={`w-20 ${inputClass}`} />
+          <input value={form.phone} onChange={(e) => set("phone", e.target.value)}
+            placeholder="Telefono contacto" className={inputClass} />
+        </div>
+        <div className="flex gap-2">
+          <select value={form.discipline} onChange={(e) => set("discipline", e.target.value)} className={inputClass}>
+            <option value="esqui">Esqui</option>
+            <option value="snow">Snow</option>
+            <option value="telemark">Telemark</option>
+            <option value="freestyle">Freestyle</option>
+          </select>
+          <select value={form.level} onChange={(e) => set("level", e.target.value)} className={inputClass}>
+            <option value="A">Nivel A</option>
+            <option value="B">Nivel B</option>
+            <option value="C">Nivel C</option>
+            <option value="D">Nivel D</option>
+          </select>
+          <select value={form.language} onChange={(e) => set("language", e.target.value)} className={inputClass}>
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+            <option value="fr">FR</option>
+          </select>
+        </div>
+        <button type="submit" disabled={addMutation.isPending}
+          className="w-full rounded-lg bg-[#E87B5A] py-2 text-sm font-medium text-white hover:bg-[#D56E4F] disabled:opacity-50">
+          {addMutation.isPending ? "Anadiendo..." : "Anadir al grupo"}
+        </button>
+      </form>
     </div>
   );
 }

@@ -13,7 +13,7 @@ function fetchJSON<T>(url: string): Promise<T> {
 
 export interface ParticipantRecord {
   id: string;
-  reservationId: string;
+  reservationId: string | null;
   firstName: string;
   lastName: string | null;
   birthDate: string | null;
@@ -24,18 +24,19 @@ export interface ParticipantRecord {
   language: string;
   specialNeeds: string | null;
   relationship: string | null;
+  phone: string | null;
 }
 
 export interface OperationalUnitRecord {
   id: string;
   participantId: string;
-  reservationId: string;
+  reservationId: string | null;
   activityDate: string;
   planningMode: string;
   status: string;
   groupCellId: string | null;
   participant: ParticipantRecord;
-  reservation: { clientName: string; station: string };
+  reservation: { clientName: string; station: string } | null;
   groupCell: { id: string; discipline: string; level: string; timeSlotStart: string } | null;
 }
 
@@ -59,7 +60,7 @@ export interface GroupCellRecord {
   units: Array<{
     id: string;
     participant: ParticipantRecord;
-    reservation: { clientName: string; clientPhone: string };
+    reservation: { clientName: string; clientPhone: string } | null;
   }>;
   checkIns: Array<{ id: string; participantId: string; status: string }>;
   incidents: Array<{ id: string; type: string; severity: string; resolved: boolean }>;
@@ -395,5 +396,93 @@ export function useReviewFreeDay() {
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["free-days"] }),
+  });
+}
+
+// ==================== CREATE GROUP CELL (MANUAL) ====================
+
+export function useCreateGroupCell() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      activityDate: string;
+      station: string;
+      timeSlotStart: string;
+      timeSlotEnd: string;
+      discipline: string;
+      level: string;
+      ageBracket?: string | null;
+      language?: string;
+      maxParticipants?: number;
+      instructorId?: string | null;
+      notes?: string | null;
+    }) => {
+      const res = await fetch("/api/planning/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["group-cells"] }),
+  });
+}
+
+// ==================== ADD WALK-IN PARTICIPANT TO GROUP ====================
+
+export function useAddWalkInParticipant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      firstName: string;
+      lastName?: string | null;
+      age?: number | null;
+      discipline: string;
+      level: string;
+      language?: string;
+      phone?: string | null;
+      groupCellId: string;
+      activityDate?: string;
+    }) => {
+      const res = await fetch("/api/planning/participants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["group-cells"] });
+      qc.invalidateQueries({ queryKey: ["operational-units"] });
+      qc.invalidateQueries({ queryKey: ["participants"] });
+    },
+  });
+}
+
+// ==================== OVERVIEW STATS ====================
+
+export interface OverviewStats {
+  todayGroups: number;
+  todayStudents: number;
+  todayInstructors: number;
+  pendingUnits: number;
+  unassignedGroups: number;
+  openIncidents: number;
+  pendingFreeDays: number;
+  occupancy: number;
+  morningGroups: number;
+  afternoonGroups: number;
+  byDiscipline: Array<{ discipline: string; count: number }>;
+  recentIncidents: Array<{ id: string; type: string; severity: string; description: string; createdAt: string }>;
+}
+
+export function useOverviewStats(date: string, station?: string) {
+  const params = new URLSearchParams({ date });
+  if (station) params.set("station", station);
+  return useQuery<OverviewStats>({
+    queryKey: ["planning-overview", date, station],
+    queryFn: () => fetchJSON(`/api/planning/overview?${params.toString()}`),
   });
 }

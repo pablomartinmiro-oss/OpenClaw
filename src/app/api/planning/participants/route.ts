@@ -18,10 +18,21 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const reservationId = searchParams.get("reservationId");
+  const groupCellId = searchParams.get("groupCellId");
 
   try {
     const where: Record<string, unknown> = { tenantId };
     if (reservationId) where.reservationId = reservationId;
+
+    // If groupCellId provided, get participants via their operational units
+    if (groupCellId) {
+      const units = await prisma.operationalUnit.findMany({
+        where: { tenantId, groupCellId },
+        include: { participant: true },
+      });
+      const participants = units.map((u) => u.participant);
+      return NextResponse.json({ participants });
+    }
 
     const participants = await prisma.participant.findMany({
       where,
@@ -56,12 +67,24 @@ export async function POST(request: NextRequest) {
     }
     const data = validated.data;
 
-    // Verify reservation belongs to tenant
-    const reservation = await prisma.reservation.findFirst({
-      where: { id: data.reservationId, tenantId },
-    });
-    if (!reservation) {
-      return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
+    // Verify reservation belongs to tenant (only if provided)
+    if (data.reservationId) {
+      const reservation = await prisma.reservation.findFirst({
+        where: { id: data.reservationId, tenantId },
+      });
+      if (!reservation) {
+        return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
+      }
+    }
+
+    // Verify group cell belongs to tenant (if adding directly to group)
+    if (data.groupCellId) {
+      const group = await prisma.groupCell.findFirst({
+        where: { id: data.groupCellId, tenantId },
+      });
+      if (!group) {
+        return NextResponse.json({ error: "Grupo no encontrado" }, { status: 404 });
+      }
     }
 
     // Auto-compute age bracket from birthDate or age
@@ -78,7 +101,7 @@ export async function POST(request: NextRequest) {
     const participant = await prisma.participant.create({
       data: {
         tenantId,
-        reservationId: data.reservationId,
+        reservationId: data.reservationId ?? null,
         firstName: data.firstName,
         lastName: data.lastName ?? null,
         birthDate: data.birthDate ?? null,
@@ -89,10 +112,30 @@ export async function POST(request: NextRequest) {
         language: data.language,
         specialNeeds: data.specialNeeds ?? null,
         relationship: data.relationship ?? null,
+        phone: data.phone ?? null,
       },
     });
 
-    log.info({ participantId: participant.id }, "Participant created");
+    // If groupCellId provided, create an OperationalUnit and link to group
+    if (data.groupCellId) {
+      const group = await prisma.groupCell.findFirstOrThrow({
+        where: { id: data.groupCellId, tenantId },
+      });
+
+      await prisma.operationalUnit.create({
+        data: {
+          tenantId,
+          participantId: participant.id,
+          reservationId: data.reservationId ?? null,
+          activityDate: data.activityDate ?? group.activityDate,
+          planningMode: "dynamic_grouping",
+          status: "grouped",
+          groupCellId: data.groupCellId,
+        },
+      });
+    }
+
+    log.info({ participantId: participant.id, walkIn: !data.reservationId }, "Participant created");
     return NextResponse.json({ participant }, { status: 201 });
   } catch (error) {
     return apiError(error, {
