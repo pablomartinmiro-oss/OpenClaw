@@ -10,6 +10,7 @@ import {
   LogOut,
   CalendarOff,
   Wallet,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -18,6 +19,7 @@ import { useMyInstructorProfile } from "@/hooks/useInstructors";
 const NAV_ITEMS = [
   { label: "Mi Dia", href: "/profesores/mi-portal", icon: CalendarDays },
   { label: "Fichaje", href: "/profesores/fichaje", icon: Clock },
+  { label: "Diplomas", href: "/profesores/mis-diplomas", icon: Award },
   { label: "Dias libres", href: "/profesores/dias-libres", icon: CalendarOff },
   { label: "Liquidaciones", href: "/profesores/liquidaciones", icon: Wallet },
   { label: "Mi Perfil", href: "/profesores/mi-perfil", icon: User },

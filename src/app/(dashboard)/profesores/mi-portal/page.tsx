@@ -7,6 +7,7 @@ import { useGroupCells } from "@/hooks/usePlanning";
 import ClockWidget from "./_components/ClockWidget";
 import MiClasesHoy from "./_components/MiClasesHoy";
 import MiSemana from "./_components/MiSemana";
+import MiMes from "./_components/MiMes";
 import MiStats from "./_components/MiStats";
 
 export default function MiPortalPage() {
@@ -106,6 +107,9 @@ export default function MiPortalPage() {
 
       {/* Week calendar */}
       <MiSemana groups={weekClasses} weekStartStr={weekStart} />
+
+      {/* Monthly calendar */}
+      <MiMes instructorId={myProfile.id} />
     </div>
   );
 }

@@ -25,7 +25,7 @@ export function InstructorRedirect() {
     if (!isInstructor) return;
 
     // Allowed paths for instructors
-    const allowed = ["/profesores/mi-portal", "/profesores/fichaje", "/profesores/mi-perfil", "/profesores/dias-libres", "/profesores/liquidaciones"];
+    const allowed = ["/profesores/mi-portal", "/profesores/fichaje", "/profesores/mi-perfil", "/profesores/dias-libres", "/profesores/liquidaciones", "/profesores/mis-diplomas"];
     const isAllowed = allowed.some((p) => pathname.startsWith(p));
 
     if (!isAllowed) {
