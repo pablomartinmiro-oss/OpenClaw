@@ -117,7 +117,7 @@ export default function PlanningPage() {
             <>
               <button onClick={() => setShowCreateGroup(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-[#E8E4DE] px-3 py-1.5 text-xs font-medium text-[#2D2A26] hover:bg-[#FAF9F7]">
-                <Plus className="h-3.5 w-3.5" /> Crear grupo
+                <Plus className="h-3.5 w-3.5" /> Crear clase
               </button>
               <button onClick={handleAutoGroup} disabled={autoGroupMutation.isPending || pendingUnits.length === 0}
                 className="flex items-center gap-1.5 rounded-lg bg-[#E87B5A] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#D56E4F] disabled:opacity-40">
