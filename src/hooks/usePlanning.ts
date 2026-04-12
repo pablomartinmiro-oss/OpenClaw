@@ -180,9 +180,11 @@ export function useGenerateUnits() {
 
 // ==================== GROUP CELLS ====================
 
-export function useGroupCells(filters?: { date?: string; station?: string; instructorId?: string }) {
+export function useGroupCells(filters?: { date?: string; startDate?: string; endDate?: string; station?: string; instructorId?: string }) {
   const params = new URLSearchParams();
   if (filters?.date) params.set("date", filters.date);
+  if (filters?.startDate) params.set("startDate", filters.startDate);
+  if (filters?.endDate) params.set("endDate", filters.endDate);
   if (filters?.station) params.set("station", filters.station);
   if (filters?.instructorId) params.set("instructorId", filters.instructorId);
   const qs = params.toString();

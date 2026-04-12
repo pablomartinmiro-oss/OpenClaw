@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
   const station = searchParams.get("station");
   const instructorId = searchParams.get("instructorId");
 
@@ -28,6 +30,10 @@ export async function GET(request: NextRequest) {
       const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
       where.activityDate = { gte: dayStart, lte: dayEnd };
+    } else if (startDate && endDate) {
+      const s = new Date(startDate); s.setHours(0, 0, 0, 0);
+      const e = new Date(endDate); e.setHours(23, 59, 59, 999);
+      where.activityDate = { gte: s, lte: e };
     }
 
     const groups = await prisma.groupCell.findMany({
