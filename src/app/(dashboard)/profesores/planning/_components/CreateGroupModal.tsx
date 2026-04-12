@@ -1,26 +1,82 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus, Trash2, Users, User } from "lucide-react";
+import { useState, useMemo } from "react";
+import { X, Plus, Trash2, Users, User, Baby } from "lucide-react";
 import type { Instructor } from "@/hooks/useInstructors";
 import { useCreateGroupCell, useAddWalkInParticipant } from "@/hooks/usePlanning";
 import { toast } from "sonner";
 
-const CLASS_TYPES = [
-  { value: "colectivo", label: "Cursillo colectivo", desc: "Grupo de hasta 10 alumnos", maxDefault: 10, icon: Users },
-  { value: "particular", label: "Clase particular", desc: "1-2 alumnos con profesor dedicado", maxDefault: 2, icon: User },
-  { value: "escuelita", label: "Escuelita", desc: "Ninos 3-6 anos, max 8", maxDefault: 8, icon: Users },
-];
+// ==================== BUSINESS RULES ====================
 
-const TIME_SLOTS = [
-  { label: "Manana (9:00–13:00)", start: "09:00", end: "13:00" },
-  { label: "Tarde (13:00–17:00)", start: "13:00", end: "17:00" },
-  { label: "Manana corto (9:00–11:00)", start: "09:00", end: "11:00" },
-  { label: "Manana largo (11:00–13:00)", start: "11:00", end: "13:00" },
-  { label: "Tarde corto (13:00–15:00)", start: "13:00", end: "15:00" },
-  { label: "Tarde largo (15:00–17:00)", start: "15:00", end: "17:00" },
-  { label: "1 hora (personalizado)", start: "", end: "" },
-];
+const CLASS_TYPES = [
+  {
+    value: "cursillo",
+    label: "Cursillo colectivo",
+    desc: "3h, agrupados por edad y nivel, max 10",
+    icon: Users,
+    maxDefault: 10,
+    disciplines: ["esqui", "snow"],
+    timeSlots: [
+      { label: "Manana (10:00–13:00)", start: "10:00", end: "13:00" },
+      { label: "Tarde (13:00–16:00)", start: "13:00", end: "16:00" },
+    ],
+    requiresAgeBracket: true,
+    ageBrackets: [
+      { value: "3-5", label: "3–5 anos" },
+      { value: "6-9", label: "6–9 anos" },
+      { value: "9-13", label: "9–13 anos" },
+      { value: "13-17", label: "13–17 anos" },
+      { value: "adulto", label: "Adultos (18+)" },
+    ],
+    customTime: false,
+  },
+  {
+    value: "particular",
+    label: "Clase particular",
+    desc: "Por horas (9–16h), participantes que se conocen",
+    icon: User,
+    maxDefault: 4,
+    disciplines: ["esqui", "snow"],
+    timeSlots: [
+      { label: "1 hora (9:00–10:00)", start: "09:00", end: "10:00" },
+      { label: "1 hora (10:00–11:00)", start: "10:00", end: "11:00" },
+      { label: "1 hora (11:00–12:00)", start: "11:00", end: "12:00" },
+      { label: "1 hora (12:00–13:00)", start: "12:00", end: "13:00" },
+      { label: "1 hora (13:00–14:00)", start: "13:00", end: "14:00" },
+      { label: "1 hora (14:00–15:00)", start: "14:00", end: "15:00" },
+      { label: "1 hora (15:00–16:00)", start: "15:00", end: "16:00" },
+      { label: "2 horas (9:00–11:00)", start: "09:00", end: "11:00" },
+      { label: "2 horas (10:00–12:00)", start: "10:00", end: "12:00" },
+      { label: "2 horas (11:00–13:00)", start: "11:00", end: "13:00" },
+      { label: "2 horas (13:00–15:00)", start: "13:00", end: "15:00" },
+      { label: "2 horas (14:00–16:00)", start: "14:00", end: "16:00" },
+      { label: "3 horas (9:00–12:00)", start: "09:00", end: "12:00" },
+      { label: "3 horas (10:00–13:00)", start: "10:00", end: "13:00" },
+      { label: "3 horas (13:00–16:00)", start: "13:00", end: "16:00" },
+    ],
+    requiresAgeBracket: false,
+    ageBrackets: [],
+    customTime: true,
+  },
+  {
+    value: "escuelita",
+    label: "Escuelita infantil",
+    desc: "Esqui, 3–7 anos, 10:00–15:00",
+    icon: Baby,
+    maxDefault: 8,
+    disciplines: ["esqui"],
+    timeSlots: [
+      { label: "Jornada completa (10:00–15:00)", start: "10:00", end: "15:00" },
+    ],
+    requiresAgeBracket: false,
+    ageBrackets: [],
+    customTime: false,
+  },
+] as const;
+
+type ClassTypeValue = (typeof CLASS_TYPES)[number]["value"];
+
+// ==================== TYPES ====================
 
 interface StudentRow {
   firstName: string;
@@ -42,7 +98,9 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
   const createMutation = useCreateGroupCell();
   const addParticipantMutation = useAddWalkInParticipant();
 
-  const [classType, setClassType] = useState("colectivo");
+  const [classType, setClassType] = useState<ClassTypeValue>("cursillo");
+  const typeConfig = CLASS_TYPES.find((c) => c.value === classType)!;
+
   const [form, setForm] = useState({
     timeSlotIdx: 0,
     customStart: "09:00",
@@ -60,34 +118,52 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
 
   const set = (key: string, value: string | number) => setForm((f) => ({ ...f, [key]: value }));
 
-  const handleTypeChange = (type: string) => {
+  const handleTypeChange = (type: ClassTypeValue) => {
     setClassType(type);
-    const t = CLASS_TYPES.find((c) => c.value === type);
-    if (t) set("maxParticipants", t.maxDefault);
-    if (type === "escuelita") {
-      set("ageBracket", "baby");
-    }
+    const t = CLASS_TYPES.find((c) => c.value === type)!;
+    setForm((f) => ({
+      ...f,
+      maxParticipants: t.maxDefault,
+      timeSlotIdx: 0,
+      discipline: t.disciplines[0],
+      ageBracket: type === "escuelita" ? "3-7" : "",
+    }));
   };
+
+  // Filter instructors by discipline compatibility
+  const allowedDisc = typeConfig.disciplines as readonly string[];
+  const filteredInstructors = useMemo(() =>
+    instructors.filter((i) => {
+      const instDisc = i.disciplines as string[];
+      return instDisc.some((d) => allowedDisc.includes(d));
+    }),
+  [instructors, allowedDisc]);
 
   const updateStudent = (idx: number, field: keyof StudentRow, value: string) => {
     setStudents((prev) => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   };
-
   const addStudentRow = () => setStudents((prev) => [...prev, emptyStudent()]);
   const removeStudentRow = (idx: number) => setStudents((prev) => prev.filter((_, i) => i !== idx));
-
   const validStudents = students.filter((s) => s.firstName.trim());
+
+  const useCustomTime = typeConfig.customTime && form.timeSlotIdx === typeConfig.timeSlots.length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (classType === "cursillo" && !form.ageBracket) {
+      toast.error("Selecciona el rango de edad para el cursillo");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const slot = TIME_SLOTS[form.timeSlotIdx];
-    const startTime = slot.start || form.customStart;
-    const endTime = slot.end || form.customEnd;
+    const slot = typeConfig.timeSlots[form.timeSlotIdx];
+    const startTime = slot ? slot.start : form.customStart;
+    const endTime = slot ? slot.end : form.customEnd;
 
     try {
-      // 1. Create the group (class)
       const result = await createMutation.mutateAsync({
         activityDate: date,
         station,
@@ -99,12 +175,12 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
         language: form.language,
         maxParticipants: form.maxParticipants,
         instructorId: form.instructorId || null,
-        notes: form.notes || null,
+        notes: form.notes ? `[${typeConfig.label}] ${form.notes}` : `[${typeConfig.label}]`,
       });
 
       const groupId = result.group.id;
 
-      // 2. Add students to the group
+      // Add students
       let added = 0;
       for (const s of validStudents) {
         try {
@@ -120,13 +196,10 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
             activityDate: date,
           });
           added++;
-        } catch {
-          // Continue with other students if one fails
-        }
+        } catch { /* continue */ }
       }
 
-      const typeLabel = CLASS_TYPES.find((c) => c.value === classType)?.label ?? "Clase";
-      toast.success(`${typeLabel} creada${added > 0 ? ` con ${added} alumno${added !== 1 ? "s" : ""}` : ""}`);
+      toast.success(`${typeConfig.label} creada${added > 0 ? ` con ${added} alumno${added !== 1 ? "s" : ""}` : ""}`);
       onClose();
     } catch {
       toast.error("Error al crear la clase");
@@ -137,7 +210,6 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
 
   const inputClass = "w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#2D2A26] focus:border-[#E87B5A] focus:outline-none";
   const labelClass = "block text-xs font-semibold text-[#8A8580] uppercase tracking-wide mb-1";
-  const isCustomTime = form.timeSlotIdx === TIME_SLOTS.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -166,7 +238,7 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
                     }`}>
                     <Icon className={`h-4 w-4 mb-1 ${classType === t.value ? "text-[#E87B5A]" : "text-[#8A8580]"}`} />
                     <p className="text-xs font-semibold text-[#2D2A26]">{t.label}</p>
-                    <p className="text-[10px] text-[#8A8580]">{t.desc}</p>
+                    <p className="text-[10px] text-[#8A8580] leading-tight">{t.desc}</p>
                   </button>
                 );
               })}
@@ -186,23 +258,28 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
             </div>
           </div>
 
-          {/* Time slot */}
+          {/* Time slot — changes per type */}
           <div>
             <label className={labelClass}>Horario</label>
             <select value={form.timeSlotIdx} onChange={(e) => set("timeSlotIdx", Number(e.target.value))} className={inputClass}>
-              {TIME_SLOTS.map((slot, idx) => (
+              {typeConfig.timeSlots.map((slot, idx) => (
                 <option key={idx} value={idx}>{slot.label}</option>
               ))}
+              {typeConfig.customTime && (
+                <option value={typeConfig.timeSlots.length}>Horario personalizado</option>
+              )}
             </select>
-            {isCustomTime && (
+            {useCustomTime && (
               <div className="flex gap-2 mt-2">
                 <div className="flex-1">
                   <label className="text-[10px] text-[#8A8580]">Inicio</label>
-                  <input type="time" value={form.customStart} onChange={(e) => set("customStart", e.target.value)} className={inputClass} />
+                  <input type="time" min="09:00" max="16:00" value={form.customStart}
+                    onChange={(e) => set("customStart", e.target.value)} className={inputClass} />
                 </div>
                 <div className="flex-1">
                   <label className="text-[10px] text-[#8A8580]">Fin</label>
-                  <input type="time" value={form.customEnd} onChange={(e) => set("customEnd", e.target.value)} className={inputClass} />
+                  <input type="time" min="09:00" max="16:00" value={form.customEnd}
+                    onChange={(e) => set("customEnd", e.target.value)} className={inputClass} />
                 </div>
               </div>
             )}
@@ -212,12 +289,16 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
           <div className="flex gap-3">
             <div className="flex-1">
               <label className={labelClass}>Disciplina</label>
-              <select value={form.discipline} onChange={(e) => set("discipline", e.target.value)} className={inputClass}>
-                <option value="esqui">Esqui</option>
-                <option value="snow">Snow</option>
-                <option value="telemark">Telemark</option>
-                <option value="freestyle">Freestyle</option>
-              </select>
+              {typeConfig.disciplines.length === 1 ? (
+                <input value={typeConfig.disciplines[0] === "esqui" ? "Esqui alpino" : "Snowboard"}
+                  disabled className={`${inputClass} bg-[#FAF9F7] capitalize`} />
+              ) : (
+                <select value={form.discipline} onChange={(e) => set("discipline", e.target.value)} className={inputClass}>
+                  {typeConfig.disciplines.map((d) => (
+                    <option key={d} value={d}>{d === "esqui" ? "Esqui alpino" : "Snowboard"}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="flex-1">
               <label className={labelClass}>Nivel</label>
@@ -230,59 +311,86 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
             </div>
           </div>
 
-          {/* Age bracket + Language + Max */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className={labelClass}>Grupo de edad</label>
-              <select value={form.ageBracket} onChange={(e) => set("ageBracket", e.target.value)} className={inputClass}>
-                <option value="">Cualquiera</option>
-                <option value="baby">Baby (3-4)</option>
-                <option value="infantil">Infantil (5-9)</option>
-                <option value="adolescente">Adolescente (10-14)</option>
-                <option value="juvenil">Juvenil (15-17)</option>
-                <option value="adulto">Adulto (18+)</option>
-              </select>
+          {/* Age bracket — required for cursillos, shown for context on escuelita */}
+          {(typeConfig.requiresAgeBracket || classType === "escuelita") && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className={labelClass}>
+                  Rango de edad {typeConfig.requiresAgeBracket && <span className="text-[#C75D4A]">*</span>}
+                </label>
+                {classType === "escuelita" ? (
+                  <input value="3–7 anos" disabled className={`${inputClass} bg-[#FAF9F7]`} />
+                ) : (
+                  <select value={form.ageBracket} onChange={(e) => set("ageBracket", e.target.value)} className={inputClass}>
+                    <option value="">Seleccionar...</option>
+                    {typeConfig.ageBrackets.map((ab) => (
+                      <option key={ab.value} value={ab.value}>{ab.label}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className={labelClass}>Idioma</label>
+                <select value={form.language} onChange={(e) => set("language", e.target.value)} className={inputClass}>
+                  <option value="es">Espanol</option>
+                  <option value="en">Ingles</option>
+                  <option value="fr">Frances</option>
+                  <option value="pt">Portugues</option>
+                  <option value="de">Aleman</option>
+                </select>
+              </div>
             </div>
-            <div className="flex-1">
-              <label className={labelClass}>Idioma</label>
-              <select value={form.language} onChange={(e) => set("language", e.target.value)} className={inputClass}>
-                <option value="es">Espanol</option>
-                <option value="en">Ingles</option>
-                <option value="fr">Frances</option>
-                <option value="pt">Portugues</option>
-                <option value="de">Aleman</option>
-              </select>
+          )}
+
+          {/* Language (if age bracket section not shown) */}
+          {!typeConfig.requiresAgeBracket && classType !== "escuelita" && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className={labelClass}>Idioma</label>
+                <select value={form.language} onChange={(e) => set("language", e.target.value)} className={inputClass}>
+                  <option value="es">Espanol</option>
+                  <option value="en">Ingles</option>
+                  <option value="fr">Frances</option>
+                  <option value="pt">Portugues</option>
+                  <option value="de">Aleman</option>
+                </select>
+              </div>
+              <div className="w-28">
+                <label className={labelClass}>Max alumnos</label>
+                <input type="number" min={1} max={10} value={form.maxParticipants}
+                  onChange={(e) => set("maxParticipants", Number(e.target.value))} className={inputClass} />
+              </div>
             </div>
-            <div className="w-24">
-              <label className={labelClass}>Max</label>
-              <input type="number" min={1} max={15} value={form.maxParticipants}
-                onChange={(e) => set("maxParticipants", Number(e.target.value))} className={inputClass} />
-            </div>
-          </div>
+          )}
 
           {/* Instructor */}
           <div>
             <label className={labelClass}>Profesor</label>
             <select value={form.instructorId} onChange={(e) => set("instructorId", e.target.value)} className={inputClass}>
               <option value="">Sin asignar</option>
-              {instructors.map((i) => (
+              {filteredInstructors.map((i) => (
                 <option key={i.id} value={i.id}>
                   {i.user.name} ({i.tdLevel}) — {(i.disciplines as string[]).join(", ")}
                 </option>
               ))}
             </select>
+            {filteredInstructors.length === 0 && instructors.length > 0 && (
+              <p className="text-[10px] text-[#D4A853] mt-1">No hay profesores con la disciplina seleccionada</p>
+            )}
           </div>
 
           {/* Students section */}
           <div className="rounded-xl border border-[#E8E4DE] overflow-hidden">
             <div className="flex items-center justify-between bg-[#FAF9F7] px-4 py-2.5 border-b border-[#E8E4DE]">
               <span className="text-xs font-semibold text-[#2D2A26]">
-                Alumnos ({validStudents.length})
+                Alumnos ({validStudents.length}/{form.maxParticipants})
               </span>
-              <button type="button" onClick={addStudentRow}
-                className="flex items-center gap-1 rounded-lg bg-[#E87B5A]/10 px-2 py-1 text-[10px] font-medium text-[#E87B5A] hover:bg-[#E87B5A]/20">
-                <Plus className="h-3 w-3" /> Anadir
-              </button>
+              {validStudents.length < form.maxParticipants && (
+                <button type="button" onClick={addStudentRow}
+                  className="flex items-center gap-1 rounded-lg bg-[#E87B5A]/10 px-2 py-1 text-[10px] font-medium text-[#E87B5A] hover:bg-[#E87B5A]/20">
+                  <Plus className="h-3 w-3" /> Anadir
+                </button>
+              )}
             </div>
             <div className="p-3 space-y-2">
               {students.map((s, idx) => (
@@ -309,7 +417,11 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
                 </div>
               ))}
               <p className="text-[10px] text-[#8A8580] px-9">
-                Puedes dejar alumnos en blanco — solo se anadiran los que tengan nombre.
+                {classType === "particular"
+                  ? "Participantes que se conocen entre si (familia, amigos...)"
+                  : classType === "escuelita"
+                    ? "Ninos de 3 a 7 anos"
+                    : "Participantes del mismo rango de edad y nivel"}
               </p>
             </div>
           </div>
@@ -324,10 +436,11 @@ export default function CreateGroupModal({ date, station, instructors, onClose }
 
         {/* Footer */}
         <div className="border-t border-[#E8E4DE] px-5 py-3 flex justify-between items-center shrink-0 bg-white">
-          <p className="text-xs text-[#8A8580]">
-            {CLASS_TYPES.find((c) => c.value === classType)?.label}
-            {validStudents.length > 0 && ` · ${validStudents.length} alumno${validStudents.length !== 1 ? "s" : ""}`}
-          </p>
+          <div className="text-xs text-[#8A8580]">
+            <span className="font-medium text-[#2D2A26]">{typeConfig.label}</span>
+            {form.ageBracket && <span> · {typeConfig.ageBrackets.find((a) => a.value === form.ageBracket)?.label ?? form.ageBracket}</span>}
+            {validStudents.length > 0 && <span> · {validStudents.length} alumno{validStudents.length !== 1 ? "s" : ""}</span>}
+          </div>
           <div className="flex gap-3">
             <button type="button" onClick={onClose}
               className="rounded-lg border border-[#E8E4DE] px-4 py-2 text-sm font-medium text-[#8A8580] hover:bg-[#FAF9F7]">
