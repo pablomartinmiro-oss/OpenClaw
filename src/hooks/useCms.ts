@@ -97,6 +97,14 @@ export interface SlideshowItem {
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
+  // PORT-05 enrichment
+  badge: string | null;
+  title: string | null;
+  subtitle: string | null;
+  description: string | null;
+  ctaText: string | null;
+  ctaUrl: string | null;
+  reserveUrl: string | null;
 }
 
 export function useSlideshowItems() {
