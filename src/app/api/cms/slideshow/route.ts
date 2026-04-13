@@ -55,9 +55,17 @@ export async function POST(request: NextRequest) {
         tenantId,
         imageUrl: data.imageUrl,
         caption: data.caption ?? null,
-        linkUrl: data.linkUrl ?? null,
+        linkUrl: data.linkUrl || null,
         sortOrder: data.sortOrder,
         isActive: data.isActive,
+        // PORT-05 enrichment
+        badge: data.badge ?? null,
+        title: data.title ?? null,
+        subtitle: data.subtitle ?? null,
+        description: data.description ?? null,
+        ctaText: data.ctaText ?? null,
+        ctaUrl: data.ctaUrl || null,
+        reserveUrl: data.reserveUrl || null,
       },
     });
 
