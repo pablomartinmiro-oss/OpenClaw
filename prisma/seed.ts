@@ -678,8 +678,13 @@ async function seedNewModules(tenantId: string) {
     });
   }
   console.log(`Seeded ${SIZING_PROFILES_SEED.length} sizing profiles`);
-  } catch (e) {
-    console.warn("⚠ Rental seed skipped — tables do not exist yet (migration pending)");
+  } catch (e: unknown) {
+    if (e && typeof e === "object" && "code" in e && e.code === "P2021") {
+      const model = "meta" in e && e.meta && typeof e.meta === "object" && "modelName" in e.meta ? (e.meta as { modelName: string }).modelName : "unknown";
+      console.warn(`⚠ Skipping Rental seed: table for ${model} does not exist yet (P2021)`);
+    } else {
+      throw e;
+    }
   }
 
   // Enable additional modules
