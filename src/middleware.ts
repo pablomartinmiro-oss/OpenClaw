@@ -19,6 +19,7 @@ const PUBLIC_ROUTES = [
   "/api/crm/webhooks",
   "/api/crm/oauth",
   "/api/crm/redsys",
+  "/api/payments/redsys/notification",
   "/api/cron/sync",
   "/api/cron/quote-reminders",
   "/api/cron/lock-time-entries",
