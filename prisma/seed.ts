@@ -699,6 +699,37 @@ async function seedNewModules(tenantId: string) {
   console.log("Enabled new modules for demo tenant");
 }
 
+async function seedCatalogEnrichment() {
+  // PORT-04: Add slugs and enrichment fields to a few global products for storefront demo
+  const slugMap = [
+    { namePrefix: "Forfait Baqueira", slug: "forfait-baqueira-adulto", productType: "experiencia", isFeatured: true },
+    { namePrefix: "Clases Esquí Grupo", slug: "clase-esqui-grupo", productType: "actividad", fiscalRegime: "reav" },
+    { namePrefix: "Equipo Esquí Adulto Media", slug: "alquiler-esqui-adulto-media", productType: "alquiler" },
+    { namePrefix: "SnowCamp Full Day", slug: "snowcamp-full-day", productType: "actividad", isFeatured: true },
+    { namePrefix: "Transfer Aeropuerto", slug: "transfer-aeropuerto", productType: "transporte" },
+  ];
+  let updated = 0;
+  for (const entry of slugMap) {
+    const product = await prisma.product.findFirst({
+      where: { tenantId: null, name: { startsWith: entry.namePrefix } },
+    });
+    if (product) {
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          slug: entry.slug,
+          productType: entry.productType ?? null,
+          fiscalRegime: entry.fiscalRegime ?? "general",
+          isFeatured: entry.isFeatured ?? false,
+          isPublished: true,
+        },
+      });
+      updated++;
+    }
+  }
+  if (updated > 0) console.log(`Enriched ${updated} global products with slugs`);
+}
+
 async function seedDemoContent(tenantId: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -943,6 +974,8 @@ async function main() {
   // Seed products + season calendar + curated demo data
   const productCount = await seedProducts();
   console.log(`Seeded ${productCount} global products`);
+
+  await seedCatalogEnrichment();
 
   const calendarCount = await seedSeasonCalendar(demoTenant.id);
   console.log(`Seeded ${calendarCount} season calendar entries for demo tenant`);
