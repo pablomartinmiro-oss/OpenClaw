@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Sparkles } from "lucide-react";
 import type { Product } from "@/hooks/useProducts";
 import { CATEGORY_LABELS, PRICE_TYPE_LABELS, STATION_LABELS } from "./ProductTable";
-import { hasNonDefaultValues } from "./CollapsibleSection";
+import { hasNonDefaultValues } from "@/components/shared/CollapsibleSection";
 import { slugify } from "./slugify";
 import { PublicationSection, FiscalSection, DiscountSection, SeoSection } from "./ProductFormSections";
 import type { SectionFormState } from "./ProductFormSections";
