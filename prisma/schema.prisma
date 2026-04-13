@@ -185,6 +185,10 @@ model Tenant {
   // Document Numbering
   documentCounters         DocumentCounter[]
   documentNumberLogs       DocumentNumberLog[]
+
+  // Email & PDF Templates
+  emailTemplates           EmailTemplate[]
+  pdfTemplates             PdfTemplate[]
 }
 
 // ==================== USER ====================
@@ -2471,4 +2475,66 @@ model DocumentNumberLog {
 
   @@index([tenantId, documentType])
   @@index([tenantId, generatedAt])
+}
+
+// ==================== EMAIL TEMPLATES ====================
+model EmailTemplate {
+  id              String   @id @default(cuid())
+  tenantId        String
+  templateKey     String   // "reservation_confirm" | "quote_send" | "payment_failed" | etc.
+  name            String
+  description     String?
+  category        String?  // "reservations" | "quotes" | "cancellations" | "tpv" | "crm"
+  recipient       String?  // "client" | "admin" | "both"
+  subject         String
+  headerImageUrl  String?
+  headerTitle     String?
+  headerSubtitle  String?
+  bodyHtml        String   @db.Text
+  footerText      String?
+  ctaLabel        String?
+  ctaUrl          String?
+  variables       String?  // JSON string of available variables
+  isCustom        Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, templateKey])
+  @@index([tenantId])
+}
+
+// ==================== PDF TEMPLATES ====================
+model PdfTemplate {
+  id              String   @id @default(cuid())
+  tenantId        String
+  templateKey     String   // "quote" | "invoice" | "settlement" | "ticket"
+  name            String
+  description     String?
+  category        String?
+  logoUrl         String?
+  headerColor     String?  @default("#E87B5A")
+  accentColor     String?  @default("#5B8C6D")
+  companyName     String?
+  companyAddress  String?
+  companyPhone    String?
+  companyEmail    String?
+  companyNif      String?
+  footerText      String?
+  legalText       String?
+  showLogo        Boolean  @default(true)
+  showWatermark   Boolean  @default(false)
+  bodyHtml        String   @db.Text
+  variables       String?
+  isCustom        Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, templateKey])
+  @@index([tenantId])
 }
