@@ -18,7 +18,8 @@ import { SurveyUrlCard } from "./_components/SurveyUrlCard";
 import { ModulesCard } from "./_components/ModulesCard";
 import { EmailTemplatesCard } from "./_components/EmailTemplatesCard";
 import { DocumentNumbersCard } from "./_components/DocumentNumbersCard";
-import { Building2, RefreshCw, Package, Plug, Users, Blocks, Mail, Hash } from "lucide-react";
+import { StorageCard } from "./_components/StorageCard";
+import { Building2, RefreshCw, Package, Plug, Users, Blocks, Mail, Hash, HardDrive } from "lucide-react";
 import { toast } from "sonner";
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
@@ -198,6 +199,16 @@ export default function SettingsPage() {
         <section>
           <SectionHeader icon={Hash} title="Numeración de Documentos" />
           <DocumentNumbersCard />
+        </section>
+      </RoleGate>
+
+      <SectionDivider />
+
+      {/* Almacenamiento */}
+      <RoleGate permission="settings:tenant">
+        <section>
+          <SectionHeader icon={HardDrive} title="Almacenamiento" />
+          <StorageCard />
         </section>
       </RoleGate>
 

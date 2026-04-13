@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { slugify } from "@/app/(dashboard)/catalogo/_components/slugify";
-import { hasNonDefaultValues } from "@/app/(dashboard)/catalogo/_components/CollapsibleSection";
+import { hasNonDefaultValues } from "@/components/shared/CollapsibleSection";
 import { buildSubmitData } from "@/app/(dashboard)/catalogo/_components/buildSubmitData";
 
 // ═══════════════════════════════════════════════════════════════════════

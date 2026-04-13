@@ -1,7 +1,7 @@
 "use client";
 
-import { CollapsibleSection } from "./CollapsibleSection";
-import { EditableList } from "./EditableList";
+import { CollapsibleSection } from "@/components/shared/CollapsibleSection";
+import { EditableList } from "@/components/shared/EditableList";
 
 const inputCls = "w-full rounded-lg border border-[#E8E4DE] px-3 py-2 text-sm focus:border-[#E87B5A] focus:outline-none focus:ring-1 focus:ring-[#E87B5A]";
 const smallLabelCls = "block text-xs font-medium text-[#8A8580] mb-1";
