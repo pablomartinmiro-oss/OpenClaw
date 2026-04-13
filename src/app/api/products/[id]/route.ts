@@ -33,22 +33,29 @@ export async function PATCH(
     if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
     const data = validated.data;
 
+    // Build update payload — only include fields that were explicitly sent
+    const updateData: Record<string, unknown> = {};
+    const fields = [
+      "category", "name", "description", "station", "personType", "tier",
+      "includesHelmet", "price", "priceType", "sortOrder", "isActive",
+      "slug", "fiscalRegime", "productType", "providerPercent",
+      "agencyMarginPercent", "supplierCommissionPercent", "supplierCostType",
+      "settlementFrequency", "isSettlable", "isFeatured", "isPublished",
+      "isPresentialSale", "discountPercent", "discountExpiresAt",
+      "coverImageUrl", "metaTitle", "metaDescription", "difficulty",
+    ] as const;
+    for (const f of fields) {
+      if (data[f] !== undefined) updateData[f] = data[f];
+    }
+    // JSON fields need serialization
+    if (data.pricingMatrix !== undefined) updateData.pricingMatrix = data.pricingMatrix ? JSON.parse(JSON.stringify(data.pricingMatrix)) : null;
+    if (data.images !== undefined) updateData.images = JSON.parse(JSON.stringify(data.images));
+    if (data.includes !== undefined) updateData.includes = data.includes ? JSON.parse(JSON.stringify(data.includes)) : null;
+    if (data.excludes !== undefined) updateData.excludes = data.excludes ? JSON.parse(JSON.stringify(data.excludes)) : null;
+
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        ...(data.category !== undefined && { category: data.category }),
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.station !== undefined && { station: data.station || "all" }),
-        ...(data.personType !== undefined && { personType: data.personType || null }),
-        ...(data.tier !== undefined && { tier: data.tier || null }),
-        ...(data.includesHelmet !== undefined && { includesHelmet: data.includesHelmet }),
-        ...(data.price !== undefined && { price: data.price }),
-        ...(data.priceType !== undefined && { priceType: data.priceType }),
-        ...(data.pricingMatrix !== undefined && { pricingMatrix: data.pricingMatrix ? JSON.parse(JSON.stringify(data.pricingMatrix)) : null }),
-        ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
-      },
+      data: updateData,
     });
 
     log.info({ productId: id }, "Product updated");
