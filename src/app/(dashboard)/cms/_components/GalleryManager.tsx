@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useGalleryItems, useCreateGalleryItem, useUpdateGalleryItem, useDeleteGalleryItem, useReorder } from "@/hooks/useCmsExtended";
 import type { GalleryItem } from "@/hooks/useCmsExtended";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
-import { ImagePlaceholder } from "@/components/shared/ImagePlaceholder";
 import GalleryItemModal from "./GalleryItemModal";
 
 const inputCls = "w-full rounded-[10px] border border-[#E8E4DE] px-3 py-2 text-sm text-[#2D2A26] placeholder:text-[#8A8580] focus:border-[#E87B5A] focus:outline-none focus:ring-1 focus:ring-[#E87B5A]";

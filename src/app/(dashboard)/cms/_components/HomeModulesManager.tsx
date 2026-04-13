@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X, Star, Flame, Snowflake, Search } from "lucide-react";
+import { Plus, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useHomeModuleItems, useCreateHomeModuleItem, useDeleteHomeModuleItem } from "@/hooks/useCmsExtended";
 import { useProducts } from "@/hooks/useProducts";
 import type { HomeModuleItem } from "@/hooks/useCmsExtended";
-import type { Product } from "@/hooks/useProducts";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
 import { CollapsibleSection } from "@/components/shared/CollapsibleSection";
 import { ComingSoonBadge } from "@/components/shared/ComingSoonBadge";
 import { ImagePlaceholder } from "@/components/shared/ImagePlaceholder";
 
 const MODULES = [
-  { key: "featured", label: "Destacados", icon: Star, emoji: "⭐" },
-  { key: "popular", label: "Populares", icon: Flame, emoji: "🔥" },
-  { key: "seasonal", label: "Temporada", icon: Snowflake, emoji: "❄" },
+  { key: "featured", label: "Destacados", emoji: "⭐" },
+  { key: "popular", label: "Populares", emoji: "🔥" },
+  { key: "seasonal", label: "Temporada", emoji: "❄" },
 ] as const;
 
 export default function HomeModulesManager() {
