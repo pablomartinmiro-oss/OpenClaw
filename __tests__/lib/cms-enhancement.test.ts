@@ -25,15 +25,20 @@ const TENANT_B_ID = "tenant-bbb-222";
 const mockGalleryFindMany = vi.fn();
 const mockGalleryFindFirst = vi.fn();
 const mockGalleryCreate = vi.fn();
+const mockGalleryUpdate = vi.fn();
 const mockGalleryDelete = vi.fn();
 const mockGalleryUpdateMany = vi.fn();
+const mockMediaFindMany = vi.fn();
 const mockMediaFindFirst = vi.fn();
 const mockMediaCreate = vi.fn();
 const mockMediaDelete = vi.fn();
+const mockHomeModuleFindMany = vi.fn();
 const mockHomeModuleFindFirst = vi.fn();
+const mockHomeModuleCreate = vi.fn();
 const mockHomeModuleDelete = vi.fn();
 const mockSlideshowFindMany = vi.fn();
 const mockSlideshowUpdateMany = vi.fn();
+const mockMenuItemUpdateMany = vi.fn();
 const mockTenantFindUnique = vi.fn();
 const mockTransaction = vi.fn();
 
@@ -43,21 +48,28 @@ vi.mock("@/lib/db", () => ({
       findMany: (...args: unknown[]) => mockGalleryFindMany(...args),
       findFirst: (...args: unknown[]) => mockGalleryFindFirst(...args),
       create: (...args: unknown[]) => mockGalleryCreate(...args),
+      update: (...args: unknown[]) => mockGalleryUpdate(...args),
       delete: (...args: unknown[]) => mockGalleryDelete(...args),
       updateMany: (...args: unknown[]) => mockGalleryUpdateMany(...args),
     },
     mediaFile: {
+      findMany: (...args: unknown[]) => mockMediaFindMany(...args),
       findFirst: (...args: unknown[]) => mockMediaFindFirst(...args),
       create: (...args: unknown[]) => mockMediaCreate(...args),
       delete: (...args: unknown[]) => mockMediaDelete(...args),
     },
     homeModuleItem: {
+      findMany: (...args: unknown[]) => mockHomeModuleFindMany(...args),
       findFirst: (...args: unknown[]) => mockHomeModuleFindFirst(...args),
+      create: (...args: unknown[]) => mockHomeModuleCreate(...args),
       delete: (...args: unknown[]) => mockHomeModuleDelete(...args),
     },
     slideshowItem: {
       findMany: (...args: unknown[]) => mockSlideshowFindMany(...args),
       updateMany: (...args: unknown[]) => mockSlideshowUpdateMany(...args),
+    },
+    cmsMenuItem: {
+      updateMany: (...args: unknown[]) => mockMenuItemUpdateMany(...args),
     },
     tenant: {
       findUnique: (...args: unknown[]) => mockTenantFindUnique(...args),
@@ -122,6 +134,135 @@ describe("PORT-05: CMS tenant isolation", () => {
 
     expect(res.status).toBe(404);
     expect(mockHomeModuleDelete).not.toHaveBeenCalled();
+  });
+
+  // ─── Gallery GET cross-tenant ──────────────────────────────
+
+  it("GET /api/cms/gallery — scopes findMany to session tenantId", async () => {
+    mockGalleryFindMany.mockResolvedValue([]);
+    const { GET } = await import("@/app/api/cms/gallery/route");
+    const req = new NextRequest("http://localhost/api/cms/gallery");
+    await GET(req);
+
+    const where = mockGalleryFindMany.mock.calls[0][0].where;
+    expect(where.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── Gallery PATCH cross-tenant ──────────────────────────────
+
+  it("PATCH /api/cms/gallery/[id] — cross-tenant returns 404", async () => {
+    mockGalleryFindFirst.mockResolvedValue(null);
+    const { PATCH } = await import("@/app/api/cms/gallery/[id]/route");
+    const req = new NextRequest("http://localhost/api/cms/gallery/gal-b-1", {
+      method: "PATCH",
+      body: JSON.stringify({ title: "Hacked" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await PATCH(req, { params: Promise.resolve({ id: "gal-b-1" }) });
+
+    expect(res.status).toBe(404);
+    expect(mockGalleryUpdate).not.toHaveBeenCalled();
+    expect(mockGalleryFindFirst.mock.calls[0][0].where.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── Gallery POST stamps tenantId ──────────────────────────────
+
+  it("POST /api/cms/gallery — stamps session tenantId on new item", async () => {
+    mockGalleryCreate.mockResolvedValue({ id: "gal-new", tenantId: TENANT_A });
+    const { POST } = await import("@/app/api/cms/gallery/route");
+    const req = new NextRequest("http://localhost/api/cms/gallery", {
+      method: "POST",
+      body: JSON.stringify({ imageUrl: "https://img.jpg" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    await POST(req);
+
+    const data = mockGalleryCreate.mock.calls[0][0].data;
+    expect(data.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── Media GET cross-tenant ──────────────────────────────
+
+  it("GET /api/cms/media — scopes to session tenantId", async () => {
+    mockMediaFindMany.mockResolvedValue([]);
+    const { GET } = await import("@/app/api/cms/media/route");
+    const req = new NextRequest("http://localhost/api/cms/media");
+    await GET(req);
+
+    const where = mockMediaFindMany.mock.calls[0][0].where;
+    expect(where.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── Media POST stamps tenantId ──────────────────────────────
+
+  it("POST /api/cms/media — stamps session tenantId", async () => {
+    mockMediaCreate.mockResolvedValue({ id: "med-new", tenantId: TENANT_A });
+    const { POST } = await import("@/app/api/cms/media/route");
+    const req = new NextRequest("http://localhost/api/cms/media", {
+      method: "POST",
+      body: JSON.stringify({ filename: "photo.jpg", originalName: "photo.jpg", url: "https://img.jpg", mimeType: "image/jpeg" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    await POST(req);
+
+    const data = mockMediaCreate.mock.calls[0][0].data;
+    expect(data.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── HomeModule GET cross-tenant ──────────────────────────────
+
+  it("GET /api/cms/home-modules — scopes to session tenantId", async () => {
+    mockHomeModuleFindMany.mockResolvedValue([]);
+    const { GET } = await import("@/app/api/cms/home-modules/route");
+    const req = new NextRequest("http://localhost/api/cms/home-modules");
+    await GET(req);
+
+    const where = mockHomeModuleFindMany.mock.calls[0][0].where;
+    expect(where.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── HomeModule POST stamps tenantId ──────────────────────────────
+
+  it("POST /api/cms/home-modules — stamps session tenantId", async () => {
+    mockHomeModuleCreate.mockResolvedValue({ id: "hm-new", tenantId: TENANT_A });
+    const { POST } = await import("@/app/api/cms/home-modules/route");
+    const req = new NextRequest("http://localhost/api/cms/home-modules", {
+      method: "POST",
+      body: JSON.stringify({ moduleKey: "featured", productId: "prod-1" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    await POST(req);
+
+    const data = mockHomeModuleCreate.mock.calls[0][0].data;
+    expect(data.tenantId).toBe(TENANT_A);
+  });
+
+  // ─── Slideshow reorder cross-tenant ──────────────────────────────
+
+  it("PATCH /api/cms/slideshow/reorder — updateMany scoped to tenantId", async () => {
+    mockTransaction.mockResolvedValue([]);
+    const { PATCH } = await import("@/app/api/cms/slideshow/reorder/route");
+    const req = new NextRequest("http://localhost/api/cms/slideshow/reorder", {
+      method: "PATCH",
+      body: JSON.stringify({ ids: ["s1", "s2"] }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(200);
+  });
+
+  // ─── Menu-items reorder cross-tenant ──────────────────────────────
+
+  it("PATCH /api/cms/menu-items/reorder — updateMany scoped to tenantId", async () => {
+    mockTransaction.mockResolvedValue([]);
+    const { PATCH } = await import("@/app/api/cms/menu-items/reorder/route");
+    const req = new NextRequest("http://localhost/api/cms/menu-items/reorder", {
+      method: "PATCH",
+      body: JSON.stringify({ ids: ["m1", "m2", "m3"] }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(200);
   });
 
   // ─── Gallery reorder scoped by tenant ──────────────────────────────
