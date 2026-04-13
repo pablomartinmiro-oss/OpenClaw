@@ -295,6 +295,29 @@ model Product {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  // PORT-04: Catalog enrichment (ported from Nayade experiences)
+  slug                      String?   // Unique per tenant for public URLs
+  fiscalRegime              String    @default("general") // "general" | "reav" | "mixed"
+  productType               String?   // "experiencia" | "actividad" | "transporte" | "alojamiento" | "restauracion" | "pack" | "alquiler" | "otro"
+  providerPercent           Float?    // Provider margin percentage (0-100)
+  agencyMarginPercent       Float?    // Agency margin percentage (0-100)
+  supplierCommissionPercent Float?    // Supplier commission percentage (0-100)
+  supplierCostType          String?   // "percentage" | "fixed" | "margin" | "hybrid"
+  settlementFrequency       String?   // "biweekly" | "monthly" | "quarterly"
+  isSettlable               Boolean   @default(false)
+  isFeatured                Boolean   @default(false)
+  isPublished               Boolean   @default(true)
+  isPresentialSale          Boolean   @default(false)
+  discountPercent           Float?    // Discount percentage (0-100)
+  discountExpiresAt         DateTime?
+  coverImageUrl             String?
+  images                    Json      @default("[]") // Gallery array of image URLs
+  includes                  Json?     // ["Seguro", "Material"] — what's included
+  excludes                  Json?     // ["Transporte"] — what's not included
+  metaTitle                 String?   // SEO title
+  metaDescription           String?   // SEO description
+  difficulty                String?   // "facil" | "intermedio" | "avanzado" | "experto"
+
   // Planning fields
   discipline          String?  // "esqui" | "snow" | "telemark" | "freestyle"
   minAge              Int?
@@ -312,8 +335,10 @@ model Product {
   platformProducts PlatformProduct[]
   operationalUnits OperationalUnit[]
 
+  @@unique([tenantId, slug])
   @@index([station, category])
   @@index([category])
+  @@index([tenantId, isPublished])
 }
 
 // ==================== SEASON CALENDAR ====================
