@@ -19,6 +19,28 @@ interface Product {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  // PORT-04a catalog enrichment
+  slug: string | null;
+  fiscalRegime: string;
+  productType: string | null;
+  providerPercent: number | null;
+  agencyMarginPercent: number | null;
+  supplierCommissionPercent: number | null;
+  supplierCostType: string | null;
+  settlementFrequency: string | null;
+  isSettlable: boolean;
+  isFeatured: boolean;
+  isPublished: boolean;
+  isPresentialSale: boolean;
+  discountPercent: number | null;
+  discountExpiresAt: string | null;
+  coverImageUrl: string | null;
+  images: string[];
+  includes: string[] | null;
+  excludes: string[] | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  difficulty: string | null;
 }
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
