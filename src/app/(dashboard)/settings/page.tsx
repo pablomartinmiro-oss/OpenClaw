@@ -17,7 +17,8 @@ import { SeedCatalogCard } from "./_components/SeedCatalogCard";
 import { SurveyUrlCard } from "./_components/SurveyUrlCard";
 import { ModulesCard } from "./_components/ModulesCard";
 import { EmailTemplatesCard } from "./_components/EmailTemplatesCard";
-import { Building2, RefreshCw, Package, Plug, Users, Blocks, Mail } from "lucide-react";
+import { DocumentNumbersCard } from "./_components/DocumentNumbersCard";
+import { Building2, RefreshCw, Package, Plug, Users, Blocks, Mail, Hash } from "lucide-react";
 import { toast } from "sonner";
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
@@ -187,6 +188,16 @@ export default function SettingsPage() {
         <section>
           <SectionHeader icon={Mail} title="Plantillas de Email" />
           <EmailTemplatesCard />
+        </section>
+      </RoleGate>
+
+      <SectionDivider />
+
+      {/* Numeracion de Documentos */}
+      <RoleGate permission="settings:tenant">
+        <section>
+          <SectionHeader icon={Hash} title="Numeración de Documentos" />
+          <DocumentNumbersCard />
         </section>
       </RoleGate>
 
