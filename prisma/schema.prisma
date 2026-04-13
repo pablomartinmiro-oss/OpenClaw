@@ -135,6 +135,9 @@ model Tenant {
   cmsMenuItems          CmsMenuItem[]
   staticPages           StaticPage[]
   pageBlocks            PageBlock[]
+  galleryItems          GalleryItem[]
+  mediaFiles            MediaFile[]
+  homeModuleItems       HomeModuleItem[]
 
   // Ticketing & Platforms
   externalPlatforms     ExternalPlatform[]
@@ -1733,15 +1736,23 @@ model SiteSetting {
 }
 
 model SlideshowItem {
-  id        String   @id @default(cuid())
-  tenantId  String
-  imageUrl  String
-  caption   String?
-  linkUrl   String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  tenantId    String
+  imageUrl    String
+  caption     String?
+  linkUrl     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // PORT-05: enriched slideshow fields
+  badge       String?
+  title       String?
+  subtitle    String?
+  description String?
+  ctaText     String?
+  ctaUrl      String?
+  reserveUrl  String?
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -1789,7 +1800,7 @@ model PageBlock {
   id        String   @id @default(cuid())
   tenantId  String
   pageId    String
-  type      String   // "text" | "image" | "gallery" | "video" | "html"
+  type      String   // "text" | "image" | "gallery" | "video" | "html" | "hero" | "cta" | "faq"
   content   Json     @default("{}")
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -1799,6 +1810,61 @@ model PageBlock {
   page   StaticPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, pageId])
+}
+
+// ==================== CMS: GALLERY ====================
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  imageUrl  String
+  fileKey   String?  // S3 key if uploaded, null if external URL
+  title     String?
+  category  String?  // free-form category for filtering
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isActive])
+}
+
+// ==================== CMS: MEDIA LIBRARY ====================
+
+model MediaFile {
+  id           String   @id @default(cuid())
+  tenantId     String
+  filename     String
+  originalName String
+  url          String
+  fileKey      String?  // S3 key if uploaded, null if external URL
+  mimeType     String
+  size         Int?     // bytes, null if external URL
+  type         String   @default("image") // "image" | "video" | "document"
+  altText      String?
+  uploadedBy   String?  // userId
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, type])
+}
+
+// ==================== CMS: HOME MODULES ====================
+
+model HomeModuleItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  moduleKey String   // "featured" | "popular" | "seasonal"
+  productId String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, moduleKey])
 }
 
 // ==================== TICKETING & PLATFORMS ====================
