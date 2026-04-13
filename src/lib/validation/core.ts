@@ -27,6 +27,22 @@ export const inviteTeamMemberSchema = z.object({
   roleId: z.string().min(1),
 });
 
+// ==================== DOCUMENT NUMBERING ====================
+export const updateDocNumberPrefixSchema = z.object({
+  prefix: z
+    .string()
+    .min(1, "El prefijo no puede estar vacío")
+    .max(10, "El prefijo no puede superar 10 caracteres")
+    .regex(/^[A-Z0-9-]+$/, "Solo mayúsculas, números y guiones"),
+});
+
+export const resetDocCounterSchema = z.object({
+  newValue: z
+    .number()
+    .int("Debe ser un número entero")
+    .min(0, "El valor no puede ser negativo"),
+});
+
 // ==================== CONTACT FORM ====================
 export const contactFormSchema = z.object({
   nombre: z.string().min(1).max(200),

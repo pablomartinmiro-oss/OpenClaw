@@ -181,6 +181,10 @@ model Tenant {
   disciplinaryRecords      DisciplinaryRecord[]
   notificationTemplates    NotificationTemplate[]
   notificationLogs         NotificationLog[]
+
+  // Document Numbering
+  documentCounters         DocumentCounter[]
+  documentNumberLogs       DocumentNumberLog[]
 }
 
 // ==================== USER ====================
@@ -2434,4 +2438,37 @@ model NotificationLog {
   tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, sentAt])
+}
+
+// ==================== DOCUMENT NUMBERING ====================
+model DocumentCounter {
+  id            String   @id @default(cuid())
+  tenantId      String
+  documentType  String   // "invoice" | "quote" | "reservation" | "tpv" | "coupon" | "settlement" | "cancellation" | "credit_note"
+  year          Int
+  currentNumber Int      @default(0)
+  prefix        String   // "FAC-" | "PRE-" | "RES-" | "TPV-" | "CUP-" | "LIQ-" | "ANU-" | "ABN-"
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, documentType, year])
+  @@index([tenantId])
+}
+
+model DocumentNumberLog {
+  id             String   @id @default(cuid())
+  tenantId       String
+  documentType   String
+  documentNumber String   // "FAC-2026-0001"
+  year           Int
+  sequence       Int
+  generatedAt    DateTime @default(now())
+  generatedBy    String?  // userId or "system"
+  context        String?  // "auto" | "manual" | "admin:resetCounter"
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, documentType])
+  @@index([tenantId, generatedAt])
 }
