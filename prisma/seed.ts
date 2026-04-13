@@ -730,6 +730,47 @@ async function seedCatalogEnrichment() {
   if (updated > 0) console.log(`Enriched ${updated} global products with slugs`);
 }
 
+async function seedCmsEnhancement(tenantId: string) {
+  // PORT-05: Gallery items
+  await prisma.galleryItem.deleteMany({ where: { tenantId } });
+  const galleryItems = [
+    { imageUrl: "https://images.unsplash.com/photo-1551524559-8af4e6624178?w=800", title: "Pistas de Baqueira", category: "estacion", sortOrder: 0 },
+    { imageUrl: "https://images.unsplash.com/photo-1565992441121-4367c2967103?w=800", title: "Clases de esquí", category: "actividades", sortOrder: 1 },
+    { imageUrl: "https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?w=800", title: "Snowboard freestyle", category: "actividades", sortOrder: 2 },
+    { imageUrl: "https://images.unsplash.com/photo-1517483000871-1dbf64a6e1c6?w=800", title: "Après-ski", category: "experiencias", sortOrder: 3 },
+    { imageUrl: "https://images.unsplash.com/photo-1520962922320-2038eebab146?w=800", title: "Paisaje invernal", category: "estacion", sortOrder: 4 },
+  ];
+  for (const g of galleryItems) {
+    await prisma.galleryItem.create({ data: { tenantId, isActive: true, ...g } });
+  }
+  console.log(`Seeded ${galleryItems.length} gallery items`);
+
+  // PORT-05: Enrich existing slideshow items
+  const slides = await prisma.slideshowItem.findMany({ where: { tenantId }, orderBy: { sortOrder: "asc" }, take: 3 });
+  const slideEnrichments = [
+    { badge: "Temporada 2026", title: "Vive la montaña", subtitle: "Esquí, snowboard y más", ctaText: "Reservar ahora", ctaUrl: "/reservas" },
+    { badge: "Nuevo", title: "SnowCamp infantil", subtitle: "Diversión garantizada", ctaText: "Ver precios", ctaUrl: "/catalogo" },
+    { title: "Clases particulares", subtitle: "Aprende con los mejores monitores", ctaText: "Más info", ctaUrl: "/catalogo" },
+  ];
+  for (let i = 0; i < Math.min(slides.length, slideEnrichments.length); i++) {
+    await prisma.slideshowItem.update({ where: { id: slides[i].id }, data: slideEnrichments[i] });
+  }
+  if (slides.length > 0) console.log(`Enriched ${Math.min(slides.length, slideEnrichments.length)} slideshow items`);
+
+  // PORT-05: Home module items (link to first few products)
+  await prisma.homeModuleItem.deleteMany({ where: { tenantId } });
+  const products = await prisma.product.findMany({ where: { OR: [{ tenantId }, { tenantId: null }] }, take: 6, orderBy: { sortOrder: "asc" } });
+  const moduleKeys = ["featured", "popular", "seasonal"] as const;
+  let moduleCount = 0;
+  for (let i = 0; i < Math.min(products.length, 6); i++) {
+    await prisma.homeModuleItem.create({
+      data: { tenantId, moduleKey: moduleKeys[i % 3], productId: products[i].id, sortOrder: Math.floor(i / 3) },
+    });
+    moduleCount++;
+  }
+  console.log(`Seeded ${moduleCount} home module items`);
+}
+
 async function seedDemoContent(tenantId: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -985,6 +1026,8 @@ async function main() {
   await seedNewModules(demoTenant.id);
 
   await seedDemoContent(demoTenant.id);
+
+  await seedCmsEnhancement(demoTenant.id);
 
   console.log("Demo tenant seed complete");
 }
