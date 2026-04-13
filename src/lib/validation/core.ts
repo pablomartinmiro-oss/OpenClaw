@@ -43,6 +43,50 @@ export const resetDocCounterSchema = z.object({
     .min(0, "El valor no puede ser negativo"),
 });
 
+// ==================== EMAIL TEMPLATES ====================
+export const createEmailTemplateSchema = z.object({
+  templateKey: z.string().min(1).max(100),
+  name: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  category: z.string().max(50).optional(),
+  recipient: z.enum(["client", "admin", "both"]).optional(),
+  subject: z.string().min(1).max(500),
+  headerImageUrl: z.string().url().optional().or(z.literal("")),
+  headerTitle: z.string().max(200).optional(),
+  headerSubtitle: z.string().max(200).optional(),
+  bodyHtml: z.string().min(1),
+  footerText: z.string().max(500).optional(),
+  ctaLabel: z.string().max(100).optional(),
+  ctaUrl: z.string().url().optional().or(z.literal("")),
+  variables: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateEmailTemplateSchema = createEmailTemplateSchema.partial();
+
+export const createPdfTemplateSchema = z.object({
+  templateKey: z.string().min(1).max(100),
+  name: z.string().min(1).max(200),
+  description: z.string().max(500).optional(),
+  category: z.string().max(50).optional(),
+  logoUrl: z.string().url().optional().or(z.literal("")),
+  headerColor: z.string().max(20).optional(),
+  accentColor: z.string().max(20).optional(),
+  companyName: z.string().max(200).optional(),
+  companyAddress: z.string().max(500).optional(),
+  companyPhone: z.string().max(30).optional(),
+  companyEmail: z.string().email().optional().or(z.literal("")),
+  companyNif: z.string().max(20).optional(),
+  footerText: z.string().max(500).optional(),
+  legalText: z.string().max(2000).optional(),
+  showLogo: z.boolean().optional(),
+  showWatermark: z.boolean().optional(),
+  bodyHtml: z.string().min(1),
+  variables: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updatePdfTemplateSchema = createPdfTemplateSchema.partial();
 // ==================== CONTACT FORM ====================
 export const contactFormSchema = z.object({
   nombre: z.string().min(1).max(200),
