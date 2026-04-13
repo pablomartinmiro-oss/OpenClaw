@@ -160,17 +160,17 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 p-6">
           {/* ═══ BÁSICOS ═══ */}
           <div>
-            <label className={labelCls}>Nombre</label>
-            <input type="text" value={form.name} onChange={(e) => update({ name: e.target.value })} className={inputCls} required />
+            <label htmlFor="product-name" className={labelCls}>Nombre</label>
+            <input id="product-name" type="text" value={form.name} onChange={(e) => update({ name: e.target.value })} className={inputCls} required />
           </div>
           <div>
-            <label className={labelCls}>
+            <label htmlFor="product-slug" className={labelCls}>
               Slug (URL pública)
               {!isEditMode && !slugManuallyEdited && form.slug && (
                 <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-[#E87B5A]" title="Auto-generado desde el nombre"><Sparkles className="h-3 w-3" /> auto</span>
               )}
             </label>
-            <input type="text" value={form.slug} onChange={(e) => { setSlugManuallyEdited(true); update({ slug: e.target.value }); }} placeholder="ej: forfait-baqueira-adulto" className={`${inputCls} ${slugError ? "border-[#C75D4A] focus:border-[#C75D4A] focus:ring-[#C75D4A]" : ""}`} />
+            <input id="product-slug" type="text" value={form.slug} onChange={(e) => { setSlugManuallyEdited(true); update({ slug: e.target.value }); }} placeholder="ej: forfait-baqueira-adulto" className={`${inputCls} ${slugError ? "border-[#C75D4A] focus:border-[#C75D4A] focus:ring-[#C75D4A]" : ""}`} />
             {slugError && <p className="mt-1 text-xs text-[#C75D4A]">{slugError}</p>}
             {isEditMode && <p className="mt-1 text-xs text-[#8A8580]">Cambiar el slug puede romper enlaces existentes.</p>}
           </div>
@@ -219,8 +219,8 @@ export function ProductModal({ product, isOpen, onClose, onSave }: ProductModalP
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Precio base (€)</label>
-              <input type="number" step="0.01" min="0" value={form.price} onChange={(e) => update({ price: e.target.value })} className={inputCls} required />
+              <label htmlFor="product-price" className={labelCls}>Precio base (€)</label>
+              <input id="product-price" type="number" step="0.01" min="0" value={form.price} onChange={(e) => update({ price: e.target.value })} className={inputCls} required />
             </div>
             <div>
               <label className={labelCls}>Tipo de Precio</label>
