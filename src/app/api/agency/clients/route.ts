@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -7,23 +7,14 @@ import { apiError } from "@/lib/api-response";
 
 const log = logger.child({ route: "/api/agency/clients" });
 
-/**
- * Agency-level route — restricted to:
- * 1. Requests with valid AGENCY_SECRET header, OR
- * 2. Authenticated users with "owner" role
- */
-function verifyAgencyAccess(req: NextRequest, roleName?: string): boolean {
-  const secret = process.env.AGENCY_SECRET;
-  if (secret) {
-    const headerSecret = req.headers.get("x-agency-secret");
-    if (headerSecret === secret) return true;
-  }
+/** Agency-level route — owner session required. */
+function verifyAgencyAccess(roleName?: string): boolean {
   return roleName === "owner";
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await auth();
-  if (!verifyAgencyAccess(req, session?.user?.roleName)) {
+  if (!verifyAgencyAccess(session?.user?.roleName)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -73,9 +64,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   const session = await auth();
-  if (!verifyAgencyAccess(req, session?.user?.roleName)) {
+  if (!verifyAgencyAccess(session?.user?.roleName)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
