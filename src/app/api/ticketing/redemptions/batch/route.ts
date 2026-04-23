@@ -101,13 +101,12 @@ export async function POST(request: NextRequest) {
           softDuplicate: dupCheck.softDuplicate,
         });
       } catch (error) {
-        const msg = error instanceof Error ? error.message : "Unknown error";
         log.error({ index: i, code: coupon.code, err: error }, "Batch item failed");
         results.push({
           index: i,
           code: coupon.code,
           status: "error",
-          error: msg,
+          error: "Error al procesar cupón",
         });
       }
     }

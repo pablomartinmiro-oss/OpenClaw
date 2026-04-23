@@ -84,7 +84,7 @@ describe("Validation schemas", () => {
   describe("registerSchema", () => {
     it("accepts valid registration", () => {
       const { data } = validateBody(
-        { email: "test@example.com", password: "securepass123", name: "Pablo" },
+        { email: "test@example.com", password: "Securepass1", name: "Pablo" },
         registerSchema
       );
       expect(data?.email).toBe("test@example.com");
