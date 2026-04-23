@@ -2,13 +2,21 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
-/**
- * Cron endpoint: auto-lock time entries older than 24h.
- * Should be called by an external cron scheduler (e.g., Railway cron).
- * Public route — no auth required.
- */
-export async function POST() {
+export async function POST(req: Request) {
+  const rl = await rateLimit(getClientIP(req), "cron");
+  if (rl) return rl;
+
+  // Verify cron secret if configured
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = req.headers.get("authorization");
+    if (auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const log = logger.child({ path: "/api/cron/lock-time-entries" });
 
   try {
