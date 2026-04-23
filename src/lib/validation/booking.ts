@@ -71,20 +71,79 @@ export const quoteItemSchema = z.object({
 });
 
 // ==================== RESERVATIONS ====================
+const participantSchema = z.object({
+  name: z.string().min(1).max(200),
+  type: z.enum(["bebe", "infantil", "adulto"]),
+  service: z.string().max(200).optional().nullable(),
+  level: z.string().max(100).optional().nullable(),
+  material: z.boolean().optional().nullable(),
+});
+
+const serviceItemSchema = z.object({
+  type: z.string().min(1).max(100),
+  quantity: z.number().int().min(1).max(100),
+  modality: z.string().max(100).optional().nullable(),
+  level: z.string().max(100).optional().nullable(),
+  days: z.number().int().min(1).max(30).optional().nullable(),
+});
+
 export const createReservationSchema = z.object({
   clientName: z.string().min(1).max(200),
   clientEmail: z.string().email().optional().nullable(),
   clientPhone: z.string().max(30).optional().nullable(),
+  couponCode: z.string().max(100).optional().nullable(),
+  source: z.string().min(1).max(100),
   station: z.string().min(1).max(100),
-  date: z.coerce.date(),
-  endDate: z.coerce.date().optional().nullable(),
-  adultos: z.number().int().min(0).max(50).default(0),
-  infantil: z.number().int().min(0).max(50).default(0),
-  baby: z.number().int().min(0).max(50).default(0),
+  activityDate: z.coerce.date(),
+  schedule: z.string().max(100).optional().nullable(),
+  language: z.string().max(10).optional().default("es"),
+  participants: z.array(participantSchema).max(100).optional().nullable(),
+  services: z.array(serviceItemSchema).max(50).optional().nullable(),
+  totalPrice: z.coerce.number().min(0).optional().default(0),
+  discount: z.coerce.number().min(0).optional().default(0),
+  paymentMethod: z.string().max(50).optional().nullable(),
+  paymentRef: z.string().max(200).optional().nullable(),
+  status: z
+    .enum(["pendiente", "confirmada", "sin_disponibilidad", "cancelada"])
+    .optional()
+    .default("pendiente"),
   notes: z.string().max(5000).optional().nullable(),
-  source: z.string().max(100).optional().nullable(),
+  internalNotes: z.string().max(5000).optional().nullable(),
+  notificationType: z.string().max(50).optional().nullable(),
+  quoteId: z.string().max(50).optional().nullable(),
+  // Groupon voucher fields
+  voucherSecurityCode: z.string().max(100).optional().nullable(),
+  voucherCouponCode: z.string().max(100).optional().nullable(),
+  voucherProduct: z.string().max(200).optional().nullable(),
+  voucherPricePaid: z.coerce.number().min(0).optional().nullable(),
+  voucherExpiry: z.coerce.date().optional().nullable(),
+  voucherRedeemed: z.boolean().optional().default(false),
+  voucherRedeemedAt: z.coerce.date().optional().nullable(),
+});
+
+export const updateReservationSchema = z.object({
+  status: z
+    .enum(["pendiente", "confirmada", "sin_disponibilidad", "cancelada"])
+    .optional(),
+  clientName: z.string().min(1).max(200).optional(),
+  clientEmail: z.string().email().optional().nullable(),
+  clientPhone: z.string().max(30).optional().nullable(),
+  couponCode: z.string().max(100).optional().nullable(),
+  station: z.string().min(1).max(100).optional(),
+  activityDate: z.coerce.date().optional(),
+  schedule: z.string().max(100).optional().nullable(),
+  language: z.string().max(10).optional(),
   totalPrice: z.coerce.number().min(0).optional(),
-  status: z.enum(["pendiente", "confirmada", "cancelada", "no_disponible"]).default("pendiente"),
+  discount: z.coerce.number().min(0).optional(),
+  paymentMethod: z.string().max(50).optional().nullable(),
+  paymentRef: z.string().max(200).optional().nullable(),
+  notes: z.string().max(5000).optional().nullable(),
+  internalNotes: z.string().max(5000).optional().nullable(),
+  notificationType: z.string().max(50).optional().nullable(),
+  participants: z.array(participantSchema).max(100).optional().nullable(),
+  services: z.array(serviceItemSchema).max(50).optional().nullable(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update",
 });
 
 // ==================== SEASON CALENDAR ====================
