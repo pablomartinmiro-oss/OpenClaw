@@ -63,15 +63,14 @@ export async function GET(req: Request) {
           created: count,
         });
       } catch (error) {
-        const msg = error instanceof Error ? error.message : "Unknown error";
         log.error(
-          { tenantId: tenant.id, error: msg },
+          { tenantId: tenant.id, err: error },
           "Failed to process recurring expenses for tenant"
         );
         results.push({
           tenantId: tenant.id,
           tenantName: tenant.name,
-          error: msg,
+          error: "Processing failed",
         });
       }
     }
