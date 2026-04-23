@@ -3,12 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
-/**
- * Public route — NO AUTH required.
- * Returns only approved reviews for a given tenant + entity.
- */
 export async function GET(request: NextRequest) {
+  const rl = await rateLimit(getClientIP(request), "public");
+  if (rl) return rl;
   const log = logger.child({ path: "/api/reviews/public" });
   const { searchParams } = request.nextUrl;
   const tenantId = searchParams.get("tenantId");

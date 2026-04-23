@@ -14,6 +14,7 @@ const DEFAULTS: Record<string, RateLimitConfig> = {
   api: { max: 100, windowSec: 60 }, // 100 API calls per minute
   cron: { max: 2, windowSec: 60 }, // 2 cron hits per minute
   public: { max: 20, windowSec: 60 }, // 20 public hits per minute
+  submit: { max: 5, windowSec: 3600 }, // 5 form submissions per hour
 };
 
 /**

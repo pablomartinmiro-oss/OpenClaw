@@ -2,13 +2,11 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
-/**
- * Cron endpoint: auto-lock time entries older than 24h.
- * Should be called by an external cron scheduler (e.g., Railway cron).
- * Public route — no auth required.
- */
-export async function POST() {
+export async function POST(req: Request) {
+  const rl = await rateLimit(getClientIP(req), "cron");
+  if (rl) return rl;
   const log = logger.child({ path: "/api/cron/lock-time-entries" });
 
   try {

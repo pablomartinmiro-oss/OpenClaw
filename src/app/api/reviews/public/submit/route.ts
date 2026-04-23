@@ -7,34 +7,14 @@ import {
   validateBody,
   publicSubmitReviewSchema,
 } from "@/lib/validation";
-import { redis } from "@/lib/cache/redis";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
-/**
- * Public route — NO AUTH required.
- * Rate limited: 5 submissions per IP per hour.
- */
 export async function POST(request: NextRequest) {
   const log = logger.child({ path: "/api/reviews/public/submit" });
 
   try {
-    // Rate limit by IP
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      "unknown";
-    const rateLimitKey = `review-submit:${ip}`;
-
-    if (redis) {
-      const count = await redis.incr(rateLimitKey);
-      if (count === 1) {
-        await redis.expire(rateLimitKey, 3600); // 1 hour
-      }
-      if (count > 5) {
-        return NextResponse.json(
-          { error: "Demasiados envios. Intenta de nuevo mas tarde." },
-          { status: 429 }
-        );
-      }
-    }
+    const rl = await rateLimit(getClientIP(request), "submit");
+    if (rl) return rl;
 
     const body = await request.json();
     const validated = validateBody(body, publicSubmitReviewSchema);

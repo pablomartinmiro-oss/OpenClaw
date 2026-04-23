@@ -2,11 +2,15 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string; productSlug: string }> }
 ) {
+  const rl = await rateLimit(getClientIP(request), "public");
+  if (rl) return rl;
+
   const { slug, productSlug } = await params;
   const log = logger.child({ slug, productSlug, path: "/api/storefront/public/products/[productSlug]" });
 
