@@ -4,7 +4,7 @@ import { requireTenant } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
-import { validateBody, bulkImportProductSchema } from "@/lib/validation";
+import { bulkImportProductSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
   const [session, authError] = await requireTenant();
@@ -15,9 +15,26 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const validated = validateBody(body, bulkImportProductSchema);
-    if (!validated.ok) return NextResponse.json({ error: validated.error }, { status: 400 });
-    const data = validated.data;
+    const parsed = bulkImportProductSchema.safeParse(body);
+    if (!parsed.success) {
+      const details = parsed.error.issues.map((issue) => {
+        const rowIndex =
+          issue.path.length > 1 && typeof issue.path[1] === "number"
+            ? issue.path[1]
+            : null;
+        const field = issue.path.slice(rowIndex !== null ? 2 : 0).join(".");
+        return {
+          ...(rowIndex !== null ? { row: rowIndex } : {}),
+          ...(field ? { field } : {}),
+          message: issue.message,
+        };
+      });
+      return NextResponse.json(
+        { error: "Datos de importación inválidos", details },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     let imported = 0;
     let updated = 0;
