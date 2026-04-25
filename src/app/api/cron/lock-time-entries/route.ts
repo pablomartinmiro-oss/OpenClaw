@@ -7,6 +7,16 @@ import { rateLimit, getClientIP } from "@/lib/rate-limit";
 export async function POST(req: Request) {
   const rl = await rateLimit(getClientIP(req), "cron");
   if (rl) return rl;
+
+  // Verify cron secret if configured
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = req.headers.get("authorization");
+    if (auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const log = logger.child({ path: "/api/cron/lock-time-entries" });
 
   try {
