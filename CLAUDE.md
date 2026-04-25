@@ -8,10 +8,10 @@ You are an autonomous senior full-stack engineer building a multi-tenant hospita
 
 - **Stack:** Next.js 16 (App Router), TypeScript (strict), Tailwind v4 + shadcn/ui, Prisma v7 + Postgres, Redis, GHL API v2, Claude API, S3/R2
 - **Deploy:** Railway (Docker + Postgres + Redis)
-- **Live URL:** https://crm-dash-prod.up.railway.app
+- **Live URL:** https://openclaw-production-50e4.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Prisma models:** 83 models across 17 modules
-- **Phases completed:** A through X (CRM dashboard) + Platform Expansion Phase 1 (module architecture)
+- **Prisma models:** 99 models across 17 modules
+- **Phases completed:** A through X (CRM dashboard) + Platform Expansion Phase 1 (module architecture) + Security audit PRs merged
 
 ## Key Docs
 
