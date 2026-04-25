@@ -23,9 +23,14 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: true,
-  sourcemaps: { disable: true },
-});
+// Only wrap with Sentry when DSN is configured to avoid build failures
+const config = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG ?? "",
+      project: process.env.SENTRY_PROJECT ?? "",
+      silent: true,
+      sourcemaps: { disable: true },
+    })
+  : nextConfig;
+
+export default config;
