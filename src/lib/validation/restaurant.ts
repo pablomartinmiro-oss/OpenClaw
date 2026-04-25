@@ -64,3 +64,31 @@ export const assignStaffSchema = z.object({
   userId: z.string().min(1),
   role: z.enum(["staff", "manager", "chef"]).default("staff"),
 });
+
+// ==================== DAILY MENU ====================
+export const createDailyMenuSchema = z.object({
+  date: z.coerce.date(),
+  firstCourse: z.string().max(2000).default(""),
+  secondCourse: z.string().max(2000).default(""),
+  dessert: z.string().max(2000).default(""),
+  price: z.coerce.number().min(0).default(0),
+  active: z.boolean().default(true),
+  notes: z.string().max(2000).optional().nullable(),
+});
+export const updateDailyMenuSchema = createDailyMenuSchema.partial();
+
+// ==================== SIMPLE RESTAURANT RESERVATION ====================
+export const createRestaurantReservationSchema = z.object({
+  date: z.coerce.date(),
+  time: z.string().min(1).max(10),
+  guestCount: z.number().int().min(1).max(50),
+  guestName: z.string().min(1).max(200),
+  guestPhone: z.string().max(50).optional().nullable(),
+  guestEmail: z.string().email().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  status: z
+    .enum(["confirmada", "cancelada", "no_show"])
+    .default("confirmada"),
+});
+export const updateRestaurantReservationSchema =
+  createRestaurantReservationSchema.partial();

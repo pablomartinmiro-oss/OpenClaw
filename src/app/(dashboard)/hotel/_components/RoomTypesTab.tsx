@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, BedDouble } from "lucide-react";
+import { Plus, Pencil, Trash2, Home, BedDouble } from "lucide-react";
 import { toast } from "sonner";
 import {
   useRoomTypes,
@@ -32,12 +32,12 @@ export default function RoomTypesTab() {
   const handleEdit = (room: RoomType) => { setEditing(room); setModalOpen(true); };
 
   const handleDelete = async (room: RoomType) => {
-    if (!confirm(`Eliminar la habitacion "${room.title}"?`)) return;
+    if (!confirm(`Eliminar el alojamiento "${room.title}"?`)) return;
     try {
       await deleteRoom.mutateAsync(room.id);
-      toast.success("Habitacion eliminada");
+      toast.success("Alojamiento eliminado");
     } catch {
-      toast.error("Error al eliminar habitacion");
+      toast.error("Error al eliminar alojamiento");
     }
   };
 
@@ -45,14 +45,14 @@ export default function RoomTypesTab() {
     try {
       if (data.id) {
         await updateRoom.mutateAsync({ id: data.id, ...data });
-        toast.success("Habitacion actualizada");
+        toast.success("Alojamiento actualizado");
       } else {
         await createRoom.mutateAsync(data);
-        toast.success("Habitacion creada");
+        toast.success("Alojamiento creado");
       }
       setModalOpen(false);
     } catch {
-      toast.error("Error al guardar habitacion");
+      toast.error("Error al guardar alojamiento");
     }
   };
 

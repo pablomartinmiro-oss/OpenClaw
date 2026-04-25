@@ -241,3 +241,67 @@ type AssignStaffInput = { restaurantId: string; userId: string; role: string };
 const staffKeys = [["restaurantStaff"]];
 export const useAssignStaff = () => useMut<AssignStaffInput>("/api/restaurant/staff", "POST", staffKeys);
 export const useUnassignStaff = () => useDelById("/api/restaurant/staff", staffKeys);
+
+// ==================== DAILY MENU ====================
+export interface DailyMenu {
+  id: string;
+  date: string;
+  firstCourse: string;
+  secondCourse: string;
+  dessert: string;
+  price: number;
+  active: boolean;
+  notes: string | null;
+  createdAt: string;
+}
+
+export function useDailyMenus(params: { from?: string; to?: string } = {}) {
+  const url = buildUrl("/api/restaurant/daily-menu", params);
+  return useQuery<{ menus: DailyMenu[] }>({
+    queryKey: ["dailyMenus", params],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateMenu = {
+  date: string; firstCourse: string; secondCourse: string; dessert: string;
+  price?: number; active?: boolean; notes?: string | null;
+};
+type UpdateMenu = Partial<CreateMenu> & { id: string };
+const menuKeys = [["dailyMenus"]];
+export const useUpsertDailyMenu = () => useMut<CreateMenu>("/api/restaurant/daily-menu", "POST", menuKeys);
+export const useUpdateDailyMenu = () => useMutWithId<UpdateMenu>("/api/restaurant/daily-menu", "PATCH", menuKeys);
+export const useDeleteDailyMenu = () => useDelById("/api/restaurant/daily-menu", menuKeys);
+
+// ==================== SIMPLE RESERVATIONS ====================
+export interface SimpleRestaurantReservation {
+  id: string;
+  date: string;
+  time: string;
+  guestCount: number;
+  guestName: string;
+  guestPhone: string | null;
+  guestEmail: string | null;
+  notes: string | null;
+  status: "confirmada" | "cancelada" | "no_show";
+  createdAt: string;
+}
+
+export function useSimpleReservations(params: { date?: string; status?: string } = {}) {
+  const url = buildUrl("/api/restaurant/reservations", params);
+  return useQuery<{ reservations: SimpleRestaurantReservation[] }>({
+    queryKey: ["restaurantReservations", params],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateRes = {
+  date: string; time: string; guestCount: number; guestName: string;
+  guestPhone?: string | null; guestEmail?: string | null; notes?: string | null;
+  status?: "confirmada" | "cancelada" | "no_show";
+};
+type UpdateRes = Partial<CreateRes> & { id: string };
+const resKeys = [["restaurantReservations"]];
+export const useCreateSimpleReservation = () => useMut<CreateRes>("/api/restaurant/reservations", "POST", resKeys);
+export const useUpdateSimpleReservation = () => useMutWithId<UpdateRes>("/api/restaurant/reservations", "PATCH", resKeys);
+export const useDeleteSimpleReservation = () => useDelById("/api/restaurant/reservations", resKeys);

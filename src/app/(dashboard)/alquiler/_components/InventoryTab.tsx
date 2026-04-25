@@ -35,6 +35,19 @@ const TIERS = [
   { value: "alta", label: "Alta" },
 ];
 
+const CONDITIONS = [
+  { value: "bueno", label: "Bueno", color: "#5B8C6D" },
+  { value: "dañado", label: "Dañado", color: "#C75D4A" },
+  { value: "mantenimiento", label: "Mantenimiento", color: "#D4A853" },
+  { value: "baja", label: "Baja", color: "#8A8580" },
+];
+
+const dateFmt = new Intl.DateTimeFormat("es-ES", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+});
+
 interface InvForm {
   stationSlug: string;
   equipmentType: string;
@@ -43,6 +56,8 @@ interface InvForm {
   totalQuantity: number;
   availableQuantity: number;
   minStockAlert: number;
+  condition: string;
+  lastMaintenanceAt: string;
   notes: string;
 }
 
@@ -50,6 +65,7 @@ export default function InventoryTab() {
   const [filterStation, setFilterStation] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("");
   const [filterTier, setFilterTier] = useState<string>("");
+  const [filterCondition, setFilterCondition] = useState<string>("");
   const [editing, setEditing] = useState<RentalInventoryItem | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -64,7 +80,10 @@ export default function InventoryTab() {
 
   if (isLoading) return <PageSkeleton />;
 
-  const inventory = data?.inventory ?? [];
+  const allInventory = data?.inventory ?? [];
+  const inventory = filterCondition
+    ? allInventory.filter((i) => i.condition === filterCondition)
+    : allInventory;
 
   const handleSave = async (form: InvForm & { id?: string }) => {
     try {
@@ -74,6 +93,8 @@ export default function InventoryTab() {
           totalQuantity: form.totalQuantity,
           availableQuantity: form.availableQuantity,
           minStockAlert: form.minStockAlert,
+          condition: form.condition,
+          lastMaintenanceAt: form.lastMaintenanceAt || null,
           notes: form.notes || null,
         });
         toast.success("Inventario actualizado");
@@ -86,6 +107,8 @@ export default function InventoryTab() {
           totalQuantity: form.totalQuantity,
           availableQuantity: form.availableQuantity,
           minStockAlert: form.minStockAlert,
+          condition: form.condition,
+          lastMaintenanceAt: form.lastMaintenanceAt || null,
           notes: form.notes || null,
         });
         toast.success("Inventario creado");
@@ -94,6 +117,21 @@ export default function InventoryTab() {
       setEditing(null);
     } catch {
       toast.error("Error al guardar inventario");
+    }
+  };
+
+  const handleQuickCondition = async (id: string, condition: string) => {
+    try {
+      await updateMut.mutateAsync({
+        id,
+        condition,
+        ...(condition === "mantenimiento" && {
+          lastMaintenanceAt: new Date().toISOString(),
+        }),
+      });
+      toast.success("Estado actualizado");
+    } catch {
+      toast.error("Error al actualizar estado");
     }
   };
 
@@ -141,6 +179,16 @@ export default function InventoryTab() {
             <option key={t.value} value={t.value}>{t.label}</option>
           ))}
         </select>
+        <select
+          value={filterCondition}
+          onChange={(e) => setFilterCondition(e.target.value)}
+          className={`${inputCls} w-auto`}
+        >
+          <option value="">Todas las condiciones</option>
+          {CONDITIONS.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
         <div className="flex-1" />
         <button
           onClick={() => {
@@ -164,21 +212,24 @@ export default function InventoryTab() {
               <th className="px-4 py-3 font-medium">Calidad</th>
               <th className="px-4 py-3 font-medium text-right">Total</th>
               <th className="px-4 py-3 font-medium text-right">Disponible</th>
-              <th className="px-4 py-3 font-medium text-right">Alquilado</th>
+              <th className="px-4 py-3 font-medium">Estado</th>
+              <th className="px-4 py-3 font-medium">Mantenim.</th>
               <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
           <tbody>
             {inventory.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-[#8A8580]">
+                <td colSpan={9} className="px-4 py-8 text-center text-[#8A8580]">
                   Sin datos de inventario
                 </td>
               </tr>
             )}
             {inventory.map((item) => {
-              const rented = item.totalQuantity - item.availableQuantity;
               const isLow = item.availableQuantity <= item.minStockAlert;
+              const condDef =
+                CONDITIONS.find((c) => c.value === item.condition) ??
+                CONDITIONS[0];
               return (
                 <tr
                   key={item.id}
@@ -196,7 +247,26 @@ export default function InventoryTab() {
                   <td className={`px-4 py-3 text-right font-medium ${isLow ? "text-[#C75D4A]" : "text-[#5B8C6D]"}`}>
                     {item.availableQuantity}
                   </td>
-                  <td className="px-4 py-3 text-right">{rented}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={item.condition}
+                      onChange={(e) => handleQuickCondition(item.id, e.target.value)}
+                      className="rounded-[6px] border-0 bg-transparent px-2 py-0.5 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#E87B5A]"
+                      style={{
+                        backgroundColor: `${condDef.color}26`,
+                        color: condDef.color,
+                      }}
+                    >
+                      {CONDITIONS.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-[#8A8580]">
+                    {item.lastMaintenanceAt
+                      ? dateFmt.format(new Date(item.lastMaintenanceAt))
+                      : "—"}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -251,6 +321,10 @@ function InventoryModal({
           totalQuantity: item.totalQuantity,
           availableQuantity: item.availableQuantity,
           minStockAlert: item.minStockAlert,
+          condition: item.condition ?? "bueno",
+          lastMaintenanceAt: item.lastMaintenanceAt
+            ? item.lastMaintenanceAt.slice(0, 10)
+            : "",
           notes: item.notes ?? "",
         }
       : {
@@ -261,6 +335,8 @@ function InventoryModal({
           totalQuantity: 0,
           availableQuantity: 0,
           minStockAlert: 5,
+          condition: "bueno",
+          lastMaintenanceAt: "",
           notes: "",
         }
   );
@@ -320,6 +396,18 @@ function InventoryModal({
             <div>
               <label className="block text-sm font-medium text-[#2D2A26] mb-1">Alerta min.</label>
               <input type="number" min="0" value={form.minStockAlert} onChange={(e) => setForm((p) => ({ ...p, minStockAlert: parseInt(e.target.value) || 0 }))} className={inputCls} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#2D2A26] mb-1">Estado</label>
+              <select value={form.condition} onChange={(e) => setForm((p) => ({ ...p, condition: e.target.value }))} className={inputCls}>
+                {CONDITIONS.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#2D2A26] mb-1">Último mantenimiento</label>
+              <input type="date" value={form.lastMaintenanceAt} onChange={(e) => setForm((p) => ({ ...p, lastMaintenanceAt: e.target.value }))} className={inputCls} />
             </div>
           </div>
           <div>

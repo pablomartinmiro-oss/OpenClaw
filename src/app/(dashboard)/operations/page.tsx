@@ -139,6 +139,8 @@ export default function OperationsPage() {
       ) : viewMode === "calendar" && calendarData ? (
         <>
           <UnifiedCalendar
+            date={selectedDate}
+            onSelectDate={setSelectedDate}
             activities={calendarData.activities}
             restaurantBookings={calendarData.restaurantBookings}
             spaSlots={calendarData.spaSlots}

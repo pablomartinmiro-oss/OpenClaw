@@ -215,6 +215,51 @@ export function useUnifiedCalendar(date?: string) {
   });
 }
 
+// ==================== OPERATIONS — RENTALS BY DAY ====================
+
+export interface RentalLite {
+  id: string;
+  clientName: string;
+  stationSlug: string;
+  pickupDate: string;
+  returnDate: string;
+  status: string;
+  itemCount: number;
+}
+
+export interface OperationsRentals {
+  pickups: RentalLite[];
+  returns: RentalLite[];
+  summary: { pickupCount: number; returnCount: number; totalUnits: number };
+}
+
+export function useOperationsRentals(date?: string) {
+  return useQuery<OperationsRentals>({
+    queryKey: ["operationsRentals", date],
+    queryFn: () => fetchJSON(`/api/booking/operations/rentals?date=${date}`),
+    enabled: !!date,
+  });
+}
+
+// ==================== OPERATIONS — WEEK SUMMARY ====================
+
+export interface WeekDaySummary {
+  date: string;
+  totalActivities: number;
+  totalStudents: number;
+  totalInstructors: number;
+  totalRentals: number;
+}
+
+export function useOperationsWeekSummary(weekStart?: string) {
+  return useQuery<{ days: WeekDaySummary[] }>({
+    queryKey: ["operationsWeekSummary", weekStart],
+    queryFn: () =>
+      fetchJSON(`/api/booking/operations/week-summary?weekStart=${weekStart}`),
+    enabled: !!weekStart,
+  });
+}
+
 export function useUpdateDailyOrder() {
   const qc = useQueryClient();
   return useMutation({

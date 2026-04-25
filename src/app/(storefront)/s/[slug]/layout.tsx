@@ -2,6 +2,17 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { StorefrontShell } from "./_components/StorefrontShell";
 
+const CONTACT_KEYS = ["contact_email", "contact_phone"];
+
+function readString(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "value" in value) {
+    const inner = (value as { value: unknown }).value;
+    if (typeof inner === "string") return inner;
+  }
+  return null;
+}
+
 export default async function StorefrontLayout({
   children,
   params,
@@ -20,8 +31,22 @@ export default async function StorefrontLayout({
     notFound();
   }
 
+  const contactSettings = await prisma.siteSetting.findMany({
+    where: { tenantId: tenant.id, key: { in: CONTACT_KEYS } },
+    select: { key: true, value: true },
+  });
+
+  const settingMap = new Map(contactSettings.map((s) => [s.key, s.value]));
+  const contactEmail = readString(settingMap.get("contact_email"));
+  const contactPhone = readString(settingMap.get("contact_phone"));
+
   return (
-    <StorefrontShell tenantName={tenant.name} slug={tenant.slug}>
+    <StorefrontShell
+      tenantName={tenant.name}
+      slug={tenant.slug}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+    >
       {children}
     </StorefrontShell>
   );

@@ -151,3 +151,45 @@ export function useAvailability(roomTypeId?: string, from?: string, to?: string)
     queryKey: ["hotelAvailability", roomTypeId, from, to], queryFn: () => fetchJSON(url), enabled: !!roomTypeId && !!from && !!to,
   });
 }
+
+// ==================== LODGE STAYS ====================
+export type LodgeStayStatus = "reservada" | "checkin" | "checkout" | "cancelada";
+
+export interface LodgeStay {
+  id: string;
+  tenantId: string;
+  roomTypeId: string | null;
+  guestName: string;
+  guestEmail: string | null;
+  guestPhone: string | null;
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  children: number;
+  totalAmount: number;
+  status: LodgeStayStatus;
+  notes: string | null;
+  roomType?: { id: string; title: string } | null;
+  createdAt: string;
+}
+
+export function useLodgeStays(params: { from?: string; to?: string; status?: string; roomTypeId?: string } = {}) {
+  const url = buildUrl("/api/hotel/stays", params);
+  return useQuery<{ stays: LodgeStay[] }>({
+    queryKey: ["lodgeStays", params],
+    queryFn: () => fetchJSON(url),
+  });
+}
+
+type CreateStay = {
+  guestName: string; guestEmail?: string | null; guestPhone?: string | null;
+  roomTypeId?: string | null;
+  checkIn: string; checkOut: string;
+  adults: number; children: number;
+  totalAmount?: number; status?: LodgeStayStatus; notes?: string | null;
+};
+type UpdateStay = Partial<CreateStay> & { id: string };
+const stayKeys = [["lodgeStays"]];
+export const useCreateLodgeStay = () => useMut<CreateStay>("/api/hotel/stays", "POST", stayKeys);
+export const useUpdateLodgeStay = () => useMutWithId<UpdateStay>("/api/hotel/stays", "PATCH", stayKeys);
+export const useDeleteLodgeStay = () => useDelById("/api/hotel/stays", stayKeys);

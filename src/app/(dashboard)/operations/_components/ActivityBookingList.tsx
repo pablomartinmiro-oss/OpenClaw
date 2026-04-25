@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
@@ -13,6 +13,8 @@ import {
   X,
   AlertTriangle,
   Clock,
+  PlayCircle,
+  CheckCircle2,
 } from "lucide-react";
 import type { ActivityBooking } from "@/hooks/useBookingOps";
 import {
@@ -23,11 +25,17 @@ import {
 } from "@/hooks/useBookingOps";
 import { useTeam } from "@/hooks/useSettings";
 import { ActivityIncidentModal } from "./ActivityIncidentModal";
+import ActivityBookingFilters, {
+  EMPTY_FILTERS,
+  type ActivityFilters,
+} from "./ActivityBookingFilters";
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "Programada" },
   { value: "pending", label: "Pendiente" },
   { value: "confirmed", label: "Confirmada" },
+  { value: "in_progress", label: "En curso" },
+  { value: "completed", label: "Completada" },
   { value: "cancelled", label: "Cancelada" },
   { value: "incident", label: "Incidencia" },
 ];
@@ -36,9 +44,20 @@ const STATUS_COLORS: Record<string, string> = {
   scheduled: "bg-[#8A8580]/15 text-[#8A8580]",
   pending: "bg-[#D4A853]/15 text-[#D4A853]",
   confirmed: "bg-[#5B8C6D]/15 text-[#5B8C6D]",
+  in_progress: "bg-blue-500/15 text-blue-700",
+  completed: "bg-[#5B8C6D]/25 text-[#5B8C6D]",
   cancelled: "bg-[#C75D4A]/15 text-[#C75D4A]",
   incident: "bg-red-100 text-red-700",
 };
+
+function inferActivityType(booking: ActivityBooking): string {
+  // Best-effort: try to infer from the optional `service`/`activityType` field on the
+  // reservation. Falls back to empty string so filters never miss data.
+  const r = booking.reservation as
+    | { activityType?: string; services?: string }
+    | undefined;
+  return (r?.activityType ?? r?.services ?? "").toString().toLowerCase();
+}
 
 interface Props {
   bookings: ActivityBooking[];
@@ -49,6 +68,7 @@ export default function ActivityBookingList({ bookings }: Props) {
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [incidentId, setIncidentId] = useState<string | null>(null);
   const [incidentNotes, setIncidentNotes] = useState("");
+  const [filters, setFilters] = useState<ActivityFilters>(EMPTY_FILTERS);
   const updateBooking = useUpdateActivityBooking();
   const assignMonitor = useAssignMonitor();
   const unassignMonitor = useUnassignMonitor();
@@ -56,6 +76,34 @@ export default function ActivityBookingList({ bookings }: Props) {
   const { data: teamData } = useTeam();
 
   const teamUsers = teamData?.users ?? [];
+
+  const filtered = useMemo(() => {
+    return bookings.filter((b) => {
+      if (filters.status && b.status !== filters.status) return false;
+      if (
+        filters.station &&
+        b.reservation?.station !== filters.station
+      )
+        return false;
+      if (filters.instructorId) {
+        const has = (b.monitors ?? []).some(
+          (m) => m.user.id === filters.instructorId
+        );
+        if (!has) return false;
+      }
+      if (filters.activityType) {
+        const t = inferActivityType(b);
+        if (!t.includes(filters.activityType)) return false;
+      }
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        const name = (b.reservation?.clientName ?? "").toLowerCase();
+        const phone = (b.reservation?.clientPhone ?? "").toLowerCase();
+        if (!name.includes(q) && !phone.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [bookings, filters]);
 
   const handleArrivalToggle = async (booking: ActivityBooking) => {
     try {
@@ -114,20 +162,68 @@ export default function ActivityBookingList({ bookings }: Props) {
     }
   };
 
+  const checkInGroup = async (booking: ActivityBooking) => {
+    try {
+      await updateBooking.mutateAsync({
+        id: booking.id,
+        status: "in_progress",
+        arrivedClient: true,
+      });
+      toast.success("Grupo dado de alta");
+    } catch {
+      toast.error("Error al dar de alta el grupo");
+    }
+  };
+
+  const markCompleted = async (booking: ActivityBooking) => {
+    try {
+      await updateBooking.mutateAsync({ id: booking.id, status: "completed" });
+      toast.success("Actividad completada");
+    } catch {
+      toast.error("Error al completar actividad");
+    }
+  };
+
+  const filterUI = (
+    <ActivityBookingFilters
+      filters={filters}
+      onChange={setFilters}
+      instructors={teamUsers
+        .filter((u) => u.isActive)
+        .map((u) => ({ id: u.id, name: u.name, email: u.email }))}
+    />
+  );
+
   if (bookings.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-12 text-center">
-        <p className="text-[#8A8580] text-sm">
-          No hay actividades programadas para este dia.
-        </p>
+      <div className="space-y-3">
+        {filterUI}
+        <div className="rounded-2xl border border-[#E8E4DE] bg-white p-12 text-center">
+          <p className="text-[#8A8580] text-sm">
+            No hay actividades programadas para este dia.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <>
+      {filterUI}
+      <div className="flex items-center justify-between text-xs text-[#8A8580] px-1 mt-3 mb-2">
+        <span>
+          Mostrando {filtered.length} de {bookings.length}
+        </span>
+      </div>
       <div className="space-y-3">
-        {bookings.map((booking) => {
+        {filtered.length === 0 && (
+          <div className="rounded-2xl border border-[#E8E4DE] bg-white p-8 text-center">
+            <p className="text-xs text-[#8A8580]">
+              Ninguna actividad coincide con los filtros aplicados.
+            </p>
+          </div>
+        )}
+        {filtered.map((booking) => {
           const isExpanded = expandedId === booking.id;
           const isAssigning = assigningId === booking.id;
           const monitors = booking.monitors ?? [];

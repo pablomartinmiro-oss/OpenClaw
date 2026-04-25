@@ -70,3 +70,26 @@ export const updateRoomBlockSchema = z.object({
     .enum(["closure", "reduced_capacity", "maintenance"])
     .optional(),
 });
+
+// ==================== LODGE STAYS ====================
+export const lodgeStayStatus = z.enum([
+  "reservada",
+  "checkin",
+  "checkout",
+  "cancelada",
+]);
+
+export const createLodgeStaySchema = z.object({
+  guestName: z.string().min(1).max(200),
+  guestEmail: z.string().email().optional().nullable(),
+  guestPhone: z.string().max(50).optional().nullable(),
+  roomTypeId: z.string().optional().nullable(),
+  checkIn: z.coerce.date(),
+  checkOut: z.coerce.date(),
+  adults: z.number().int().min(1).max(20).default(1),
+  children: z.number().int().min(0).max(20).default(0),
+  totalAmount: z.coerce.number().min(0).default(0),
+  status: lodgeStayStatus.default("reservada"),
+  notes: z.string().max(2000).optional().nullable(),
+});
+export const updateLodgeStaySchema = createLodgeStaySchema.partial();

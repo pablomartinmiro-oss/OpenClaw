@@ -212,6 +212,8 @@ type CreateInv = {
   totalQuantity: number;
   availableQuantity: number;
   minStockAlert?: number;
+  condition?: string;
+  lastMaintenanceAt?: string | null;
   notes?: string | null;
 };
 type UpdateInv = { id: string } & Partial<CreateInv>;
@@ -367,6 +369,8 @@ export function useDeleteRentalOrderItem(orderId: string) {
 type PickupPayload = {
   items: { itemId: string; size: string; dinSetting?: number | null }[];
   notes?: string;
+  depositCents?: number;
+  signatureUrl?: string | null;
 };
 
 type ReturnPayload = {
@@ -376,6 +380,8 @@ type ReturnPayload = {
     damageNotes?: string | null;
   }[];
   notes?: string;
+  damageNotes?: string | null;
+  depositReturned?: boolean;
 };
 
 export function usePickupRentalOrder() {
