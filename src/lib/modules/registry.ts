@@ -152,7 +152,8 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     isCore: false,
     section: "gestion",
     navItems: [
-      { label: "TPV", href: "/tpv", icon: "CreditCard", permission: null },
+      { label: "Punto de Venta", href: "/tpv/venta", icon: "CreditCard", permission: null },
+      { label: "Backoffice TPV", href: "/tpv", icon: "ClipboardList", permission: null, roles: ["Owner / Manager"] },
     ],
     permissions: ["tpv:view", "tpv:operate", "tpv:manage"],
   },

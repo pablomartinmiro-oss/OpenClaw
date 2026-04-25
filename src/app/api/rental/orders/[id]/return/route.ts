@@ -32,7 +32,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
         { status: 400 }
       );
     }
-    const { items, notes } = validated.data;
+    const { items, notes, damageNotes, depositReturned } = validated.data;
 
     // Verify order exists and is in valid status
     const order = await prisma.rentalOrder.findFirst({
@@ -114,6 +114,8 @@ export async function POST(request: NextRequest, ctx: Ctx) {
           returnedAt: new Date(),
           returnedBy: session.userId,
           notes: notes ? notes : order.notes,
+          ...(damageNotes !== undefined && { damageNotes }),
+          ...(depositReturned !== undefined && { depositReturned }),
         },
         include: { items: true },
       });

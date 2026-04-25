@@ -22,6 +22,13 @@ export async function GET() {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
+    const tomorrowEnd = new Date(todayEnd);
+    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+
+    // 7 days ago (rolling window for chart)
+    const weekAgo = new Date(todayStart);
+    weekAgo.setDate(weekAgo.getDate() - 6);
+
     const [
       pickupsToday,
       returnsToday,
@@ -29,6 +36,10 @@ export async function GET() {
       completedToday,
       lowStockAlerts,
       revenueData,
+      maintenanceCount,
+      availableUnits,
+      pickedUpCountsRaw,
+      upcomingReturns,
     ] = await Promise.all([
       // Pickups pending today
       prisma.rentalOrder.count({
@@ -86,15 +97,76 @@ export async function GET() {
         },
         _sum: { totalPrice: true },
       }),
+      // Inventory under maintenance/baja
+      prisma.rentalInventory.count({
+        where: {
+          tenantId,
+          condition: { in: ["mantenimiento", "baja"] },
+        },
+      }),
+      // Total available units across all bueno-condition pools
+      prisma.rentalInventory.aggregate({
+        where: { tenantId, condition: "bueno" },
+        _sum: { availableQuantity: true },
+      }),
+      // Daily picked-up counts for last 7 days
+      prisma.$queryRaw<{ day: Date; count: bigint }[]>`
+        SELECT date_trunc('day', "pickedUpAt") AS day, COUNT(*)::bigint AS count
+        FROM "RentalOrder"
+        WHERE "tenantId" = ${tenantId}
+          AND "pickedUpAt" IS NOT NULL
+          AND "pickedUpAt" >= ${weekAgo}
+        GROUP BY day
+        ORDER BY day ASC
+      `,
+      // Upcoming returns (today + tomorrow)
+      prisma.rentalOrder.findMany({
+        where: {
+          tenantId,
+          returnDate: { gte: todayStart, lte: tomorrowEnd },
+          status: { in: ["PICKED_UP", "IN_USE", "RESERVED", "PREPARED"] },
+        },
+        select: {
+          id: true,
+          clientName: true,
+          stationSlug: true,
+          returnDate: true,
+          status: true,
+          depositCents: true,
+        },
+        orderBy: { returnDate: "asc" },
+        take: 20,
+      }),
     ]);
+
+    // Build 7-day chart data (fill missing days with 0)
+    const pickupCountByDay = new Map<string, number>();
+    for (const row of pickedUpCountsRaw) {
+      const key = new Date(row.day).toISOString().slice(0, 10);
+      pickupCountByDay.set(key, Number(row.count));
+    }
+    const last7Days: { date: string; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(todayStart);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      last7Days.push({ date: key, count: pickupCountByDay.get(key) ?? 0 });
+    }
 
     const dashboard = {
       pickupsToday,
       returnsToday,
       activeRentals,
       completedToday,
+      maintenanceCount,
+      availableUnits: availableUnits._sum.availableQuantity ?? 0,
       lowStockAlerts,
       revenueToday: revenueData._sum.totalPrice ?? 0,
+      last7Days,
+      upcomingReturns: upcomingReturns.map((r) => ({
+        ...r,
+        returnDate: r.returnDate.toISOString(),
+      })),
     };
 
     log.info("Rental dashboard fetched");

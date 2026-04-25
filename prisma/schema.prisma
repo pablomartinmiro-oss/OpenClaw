@@ -2228,24 +2228,27 @@ model InstructorAssignment {
 // ==================== RENTAL ====================
 
 model RentalInventory {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   tenantId          String
   stationSlug       String
-  equipmentType     String   // SKI | BOOT | POLE | HELMET | SNOWBOARD | SNOWBOARD_BOOT
-  size              String   // Flexible: "42" (EU shoe), "170" (ski cm), "M" (helmet)
-  qualityTier       String   // "media" | "alta"
-  totalQuantity     Int      @default(0)
-  availableQuantity Int      @default(0)
-  minStockAlert     Int      @default(5)
+  equipmentType     String    // SKI | BOOT | POLE | HELMET | SNOWBOARD | SNOWBOARD_BOOT
+  size              String    // Flexible: "42" (EU shoe), "170" (ski cm), "M" (helmet)
+  qualityTier       String    // "media" | "alta"
+  totalQuantity     Int       @default(0)
+  availableQuantity Int       @default(0)
+  minStockAlert     Int       @default(5)
+  condition         String    @default("bueno") // bueno | dañado | mantenimiento | baja
+  lastMaintenanceAt DateTime?
   notes             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, stationSlug, equipmentType, size, qualityTier])
   @@index([tenantId, stationSlug])
   @@index([tenantId, equipmentType])
+  @@index([tenantId, condition])
 }
 
 model RentalOrder {
@@ -2275,6 +2278,12 @@ model RentalOrder {
   totalPrice      Float     @default(0)
   discount        Float     @default(0)
   paymentStatus   String    @default("pending") // pending | paid | partial | refunded
+
+  // Deposit + signature
+  depositCents    Int       @default(0)
+  depositReturned Boolean   @default(false)
+  signatureUrl    String?
+  damageNotes     String?
 
   notes           String?
   internalNotes   String?

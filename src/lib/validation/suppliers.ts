@@ -25,16 +25,23 @@ export const updateSupplierSchema = createSupplierSchema.partial();
 
 // ==================== SETTLEMENT ====================
 
+export const SETTLEMENT_STATUSES = [
+  "draft",
+  "sent",
+  "accepted",
+  "paid",
+] as const;
+
 export const createSettlementSchema = z.object({
   supplierId: z.string().min(1),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  status: z.enum(["draft", "sent", "paid"]).default("draft"),
+  status: z.enum(SETTLEMENT_STATUSES).default("draft"),
   pdfUrl: z.string().url().optional().nullable(),
 });
 
 export const updateSettlementSchema = z.object({
-  status: z.enum(["draft", "sent", "paid"]).optional(),
+  status: z.enum(SETTLEMENT_STATUSES).optional(),
   pdfUrl: z.string().url().optional().nullable(),
   reason: z.string().max(500).optional().nullable(),
 });

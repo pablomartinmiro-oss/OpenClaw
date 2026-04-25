@@ -301,6 +301,20 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - Tables: horizontal scroll wrapper on mobile
 - All interactive elements meet 44px minimum touch target
 
+### TPV POS Screen (2026-04-24) ✅
+- **New POS screen** at `/tpv/venta` — full point-of-sale interface
+- **Product grid (left, 70%)**: 5 category tabs (Alquiler, Forfait, Clases, Comida, Otros) mapped from Product.category. Search bar. Click card to add to cart.
+- **Cart panel (right, 30%)**: line items with editable quantity (+/- and direct input), per-line subtotal, remove + clear, live total.
+- **Payment bar**: method selector (Efectivo, Tarjeta, Mixto). Mixto opens split UI with cash/card/Bizum amount inputs and a remaining badge that turns green when balanced.
+- **Receipt view**: prints with `window.print()` — clean monochrome ticket with header, lines, totals, payment breakdown.
+- **Active session guard**: shows "abrir caja" prompt when no open sessions exist; auto-selects when only one is open; selector when multiple.
+- **Sidebar**: TPV module now exposes "Punto de Venta" (`/tpv/venta`) and "Backoffice TPV" (`/tpv`).
+- **SessionsTab enhancement**: open/close labelled "Abrir Caja"/"Cerrar Caja". Close modal fetches session detail and shows full summary (sales count, totals per method, movements, expected cash) plus actual count input with green/amber/red difference badge.
+- **SalesTab enhancement**: payment method filter, totals stat cards (count, cash, card, Bizum), table footer with grand total.
+- **RegistersTab enhancement**: new "Sesion abierta" column showing pulsing green badge + opener + open time when a session is active for the register.
+- No schema change — existing TpvSale/TpvSaleItem models already cover description/quantity/unitPrice/lineTotal.
+- **Files**: `src/app/(dashboard)/tpv/venta/page.tsx`, `_components/{categories,ProductGrid,Cart,PaymentBar,PaymentModal,Receipt}.tsx`, `src/app/(dashboard)/tpv/_components/{SessionsTab,SalesTab,RegistersTab,OpenSessionModal,CloseSessionModal}.tsx`, registry update.
+
 ### Next: Phase Y — TBD
 
 ## DB Migrations

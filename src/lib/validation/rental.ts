@@ -14,6 +14,13 @@ export const abilityLevelEnum = z.enum([
 
 // ==================== RENTAL INVENTORY ====================
 
+export const inventoryConditionEnum = z.enum([
+  "bueno",
+  "dañado",
+  "mantenimiento",
+  "baja",
+]);
+
 export const createRentalInventorySchema = z.object({
   stationSlug: z.string().min(1),
   equipmentType: equipmentTypeEnum,
@@ -22,6 +29,8 @@ export const createRentalInventorySchema = z.object({
   totalQuantity: z.number().int().min(0),
   availableQuantity: z.number().int().min(0),
   minStockAlert: z.number().int().min(0).default(5),
+  condition: inventoryConditionEnum.optional(),
+  lastMaintenanceAt: z.coerce.date().optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
 });
 export const updateRentalInventorySchema =
@@ -124,6 +133,8 @@ export const pickupActionSchema = z.object({
     })
   ),
   notes: z.string().max(2000).optional(),
+  depositCents: z.coerce.number().int().min(0).optional(),
+  signatureUrl: z.string().max(2000).optional().nullable(),
 });
 
 export const returnActionSchema = z.object({
@@ -135,4 +146,6 @@ export const returnActionSchema = z.object({
     })
   ),
   notes: z.string().max(2000).optional(),
+  damageNotes: z.string().max(2000).optional().nullable(),
+  depositReturned: z.boolean().optional(),
 });

@@ -79,6 +79,8 @@ export interface RentalInventoryItem {
   totalQuantity: number;
   availableQuantity: number;
   minStockAlert: number;
+  condition: string;
+  lastMaintenanceAt: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -120,6 +122,10 @@ export interface RentalOrder {
   totalPrice: number;
   discount: number;
   paymentStatus: string;
+  depositCents: number;
+  depositReturned: boolean;
+  signatureUrl: string | null;
+  damageNotes: string | null;
   notes: string | null;
   internalNotes: string | null;
   createdAt: string;
@@ -156,6 +162,8 @@ export interface RentalDashboard {
   returnsToday: number;
   activeRentals: number;
   completedToday: number;
+  maintenanceCount: number;
+  availableUnits: number;
   lowStockAlerts: {
     stationSlug: string;
     equipmentType: string;
@@ -165,6 +173,15 @@ export interface RentalDashboard {
     minStockAlert: number;
   }[];
   revenueToday: number;
+  last7Days: { date: string; count: number }[];
+  upcomingReturns: {
+    id: string;
+    clientName: string;
+    stationSlug: string;
+    returnDate: string;
+    status: string;
+    depositCents: number;
+  }[];
 }
 
 // ==================== INVENTORY ====================

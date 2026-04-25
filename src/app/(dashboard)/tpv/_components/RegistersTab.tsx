@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Pencil, Trash2, Monitor, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   useRegisters,
+  useSessions,
   useCreateRegister,
   useUpdateRegister,
   useDeleteRegister,
 } from "@/hooks/useTpv";
 import type { CashRegister } from "@/hooks/useTpv";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
+
+const dtf = new Intl.DateTimeFormat("es-ES", {
+  dateStyle: "short",
+  timeStyle: "short",
+});
 
 interface FormState {
   name: string;
@@ -22,6 +28,7 @@ const emptyForm: FormState = { name: "", location: "", active: true };
 
 export default function RegistersTab() {
   const { data, isLoading } = useRegisters();
+  const { data: sessData } = useSessions(undefined, "open");
   const createReg = useCreateRegister();
   const updateReg = useUpdateRegister();
   const deleteReg = useDeleteRegister();
@@ -29,6 +36,14 @@ export default function RegistersTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CashRegister | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+
+  const openByRegister = useMemo(() => {
+    const map = new Map<string, { openedAt: string; openedBy?: { name: string } }>();
+    for (const s of sessData?.sessions ?? []) {
+      map.set(s.registerId, { openedAt: s.openedAt, openedBy: s.openedBy });
+    }
+    return map;
+  }, [sessData]);
 
   if (isLoading) return <PageSkeleton />;
 
@@ -116,6 +131,7 @@ export default function RegistersTab() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#8A8580] uppercase tracking-wider">Nombre</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[#8A8580] uppercase tracking-wider">Ubicacion</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-[#8A8580] uppercase tracking-wider">Sesiones</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#8A8580] uppercase tracking-wider">Sesion abierta</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-[#8A8580] uppercase tracking-wider">Estado</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-[#8A8580] uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -131,6 +147,25 @@ export default function RegistersTab() {
                     </td>
                     <td className="px-6 py-4 text-sm text-[#8A8580]">{reg.location || "—"}</td>
                     <td className="px-6 py-4 text-center text-sm text-[#8A8580]">{reg._count?.sessions ?? 0}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {(() => {
+                        const open = openByRegister.get(reg.id);
+                        if (!open) {
+                          return <span className="text-xs text-[#8A8580]">Sin sesion abierta</span>;
+                        }
+                        return (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded-[6px] bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Abierta
+                            </span>
+                            <span className="text-xs text-[#8A8580]">
+                              {open.openedBy?.name ?? "—"} · {dtf.format(new Date(open.openedAt))}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex rounded-[6px] px-2 py-0.5 text-xs font-medium ${reg.active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
                         {reg.active ? "Activa" : "Inactiva"}

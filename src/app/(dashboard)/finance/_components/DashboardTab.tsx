@@ -8,46 +8,41 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { useFinanceDashboard } from "@/hooks/useFinance";
+import { useFinanceDashboard, useFinanceReports } from "@/hooks/useFinance";
 import { PageSkeleton } from "@/components/shared/LoadingSkeleton";
 
 const fmt = new Intl.NumberFormat("es-ES", {
   style: "currency",
   currency: "EUR",
+  maximumFractionDigits: 0,
 });
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Borrador",
-  sent: "Enviada",
-  paid: "Pagada",
-  cancelled: "Cancelada",
-};
+const MONTH_SHORT = [
+  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+];
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  sent: "bg-blue-50 text-blue-700",
-  paid: "bg-emerald-50 text-emerald-700",
-  cancelled: "bg-red-50 text-[#C75D4A]",
-};
+function monthLabelFromKey(ym: string): string {
+  const [, m] = ym.split("-");
+  const idx = Math.max(0, Math.min(11, parseInt(m, 10) - 1));
+  return MONTH_SHORT[idx];
+}
 
-const METHOD_LABELS: Record<string, string> = {
-  card: "Tarjeta",
-  transfer: "Transferencia",
-  cash: "Efectivo",
-  bizum: "Bizum",
-};
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
-const TX_STATUS_LABELS: Record<string, string> = {
-  pending: "Pendiente",
-  completed: "Completado",
-  failed: "Fallido",
-};
+function getMonthRange(): { from: string; to: string } {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  return { from: isoDate(first), to: isoDate(now) };
+}
 
-const TX_STATUS_COLORS: Record<string, string> = {
-  pending: "bg-[#D4A853]/15 text-[#D4A853]",
-  completed: "bg-[#5B8C6D]/15 text-[#5B8C6D]",
-  failed: "bg-[#C75D4A]/15 text-[#C75D4A]",
-};
+function getSixMonthRange(): { from: string; to: string } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  return { from: isoDate(start), to: isoDate(now) };
+}
 
 function SummaryCard({
   label,
@@ -74,18 +69,81 @@ function SummaryCard({
         </div>
       </div>
       <p className="mt-2 text-2xl font-bold text-[#2D2A26]">{value}</p>
-      {subtext && (
-        <p className="mt-1 text-xs text-[#8A8580]">{subtext}</p>
-      )}
+      {subtext && <p className="mt-1 text-xs text-[#8A8580]">{subtext}</p>}
+    </div>
+  );
+}
+
+interface TrendRow {
+  month: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+}
+
+function MiniBarChart({ rows }: { rows: TrendRow[] }) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-[#8A8580]">Sin datos suficientes</p>;
+  }
+  const max = Math.max(
+    1,
+    ...rows.map((r) => Math.max(r.revenue, r.expenses))
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex items-end gap-3 h-44">
+        {rows.map((r) => (
+          <div key={r.month} className="flex-1 flex flex-col items-center gap-1">
+            <div className="flex items-end gap-1 h-36 w-full">
+              <div
+                className="flex-1 rounded-t-md bg-[#5B8C6D]"
+                style={{ height: `${(r.revenue / max) * 100}%` }}
+                title={`Ingresos: ${fmt.format(r.revenue)}`}
+              />
+              <div
+                className="flex-1 rounded-t-md bg-[#C75D4A]"
+                style={{ height: `${(r.expenses / max) * 100}%` }}
+                title={`Gastos: ${fmt.format(r.expenses)}`}
+              />
+            </div>
+            <span className="text-xs text-[#8A8580]">
+              {monthLabelFromKey(r.month)}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-4 text-xs text-[#8A8580]">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#5B8C6D]" />
+          Ingresos
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-[#C75D4A]" />
+          Gastos
+        </span>
+      </div>
     </div>
   );
 }
 
 export default function DashboardTab() {
-  const { data, isLoading, error } = useFinanceDashboard();
+  const { data: dash, isLoading: dashLoading, error: dashErr } =
+    useFinanceDashboard();
+  const month = getMonthRange();
+  const six = getSixMonthRange();
+  const { data: monthRpt, isLoading: monthLoading } = useFinanceReports(
+    month.from,
+    month.to,
+    "category"
+  );
+  const { data: trendRpt, isLoading: trendLoading } = useFinanceReports(
+    six.from,
+    six.to,
+    "month"
+  );
 
-  if (isLoading) return <PageSkeleton />;
-  if (error || !data) {
+  if (dashLoading || monthLoading || trendLoading) return <PageSkeleton />;
+  if (dashErr || !dash) {
     return (
       <div className="rounded-2xl border border-[#E8E4DE] bg-white p-8 text-center text-[#8A8580]">
         Error al cargar el resumen financiero
@@ -93,96 +151,81 @@ export default function DashboardTab() {
     );
   }
 
-  const { summary, invoiceByStatus, expensesByCategory, recentTransactions } =
-    data;
+  const monthRevenue = monthRpt?.summary.totalRevenue ?? 0;
+  const monthExpenses = monthRpt?.summary.totalExpenses ?? 0;
+  const monthProfit = monthRpt?.summary.netProfit ?? 0;
+  const netIsPositive = monthProfit >= 0;
 
-  const netIsPositive = summary.netProfit >= 0;
+  const topCategories = (monthRpt?.expensesByGroup ?? []).slice(0, 5);
+  const trendRows = trendRpt?.monthlyTrend ?? [];
 
   return (
     <div className="space-y-6">
-      {/* Summary cards */}
+      {/* Month summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          label="Total facturado"
-          value={fmt.format(summary.totalInvoiced)}
+          label="Ingresos mes"
+          value={fmt.format(monthRevenue)}
           icon={TrendingUp}
           iconColor="#5B8C6D"
         />
         <SummaryCard
-          label="Total gastos"
-          value={fmt.format(summary.totalExpenses)}
+          label="Gastos mes"
+          value={fmt.format(monthExpenses)}
           icon={TrendingDown}
           iconColor="#C75D4A"
         />
         <SummaryCard
           label="Beneficio neto"
-          value={fmt.format(summary.netProfit)}
+          value={fmt.format(monthProfit)}
           icon={netIsPositive ? ArrowUpRight : ArrowDownRight}
           iconColor={netIsPositive ? "#5B8C6D" : "#C75D4A"}
+          subtext={
+            monthRevenue > 0
+              ? `Margen ${((monthProfit / monthRevenue) * 100).toFixed(1)}%`
+              : undefined
+          }
         />
         <SummaryCard
           label="Facturas pendientes"
-          value={String(summary.pendingInvoices)}
-          icon={summary.pendingInvoices > 0 ? AlertCircle : Receipt}
-          iconColor={summary.pendingInvoices > 0 ? "#D4A853" : "#8A8580"}
+          value={String(dash.summary.pendingInvoices)}
+          icon={dash.summary.pendingInvoices > 0 ? AlertCircle : Receipt}
+          iconColor={dash.summary.pendingInvoices > 0 ? "#D4A853" : "#8A8580"}
           subtext="Borrador + Enviada"
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Revenue by status */}
-        <div className="rounded-2xl border border-[#E8E4DE] bg-white p-5">
+      {/* Mini chart + top categories */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 rounded-2xl border border-[#E8E4DE] bg-white p-5">
           <h3 className="mb-4 text-sm font-semibold text-[#2D2A26]">
-            Facturacion por estado
+            Ingresos vs gastos · ultimos 6 meses
           </h3>
-          {invoiceByStatus.length === 0 ? (
-            <p className="text-sm text-[#8A8580]">Sin facturas</p>
-          ) : (
-            <div className="space-y-3">
-              {invoiceByStatus.map((s) => (
-                <div
-                  key={s.status}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[s.status] ?? "bg-gray-100 text-gray-700"}`}
-                    >
-                      {STATUS_LABELS[s.status] ?? s.status}
-                    </span>
-                    <span className="text-xs text-[#8A8580]">
-                      ({s.count})
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-[#2D2A26]">
-                    {fmt.format(s.total)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <MiniBarChart rows={trendRows} />
         </div>
 
-        {/* Expenses by category */}
         <div className="rounded-2xl border border-[#E8E4DE] bg-white p-5">
           <h3 className="mb-4 text-sm font-semibold text-[#2D2A26]">
-            Gastos por categoria
+            Top categorias de gasto · este mes
           </h3>
-          {expensesByCategory.length === 0 ? (
-            <p className="text-sm text-[#8A8580]">Sin gastos</p>
+          {topCategories.length === 0 ? (
+            <p className="text-sm text-[#8A8580]">Sin gastos este mes</p>
           ) : (
             <div className="space-y-3">
-              {expensesByCategory.map((e) => (
-                <div
-                  key={e.categoryId}
-                  className="flex items-center justify-between"
-                >
-                  <span className="text-sm text-[#2D2A26]">
-                    {e.categoryName}
-                  </span>
-                  <span className="text-sm font-semibold text-[#2D2A26]">
-                    {fmt.format(e.total)}
-                  </span>
+              {topCategories.map((c) => (
+                <div key={c.label}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[#2D2A26] truncate">{c.label}</span>
+                    <span className="font-semibold text-[#2D2A26]">
+                      {fmt.format(c.amount)}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full rounded-full bg-[#FAF9F7]">
+                    <div
+                      className="h-full rounded-full bg-[#E87B5A]"
+                      style={{ width: `${Math.min(100, c.percentage)}%` }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -195,10 +238,8 @@ export default function DashboardTab() {
         <h3 className="mb-4 text-sm font-semibold text-[#2D2A26]">
           Ultimas transacciones
         </h3>
-        {recentTransactions.length === 0 ? (
-          <p className="text-sm text-[#8A8580]">
-            Sin transacciones recientes
-          </p>
+        {dash.recentTransactions.length === 0 ? (
+          <p className="text-sm text-[#8A8580]">Sin transacciones recientes</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -207,12 +248,11 @@ export default function DashboardTab() {
                   <th className="pb-2 pr-4 font-medium">Fecha</th>
                   <th className="pb-2 pr-4 font-medium">Factura</th>
                   <th className="pb-2 pr-4 font-medium">Metodo</th>
-                  <th className="pb-2 pr-4 font-medium">Estado</th>
                   <th className="pb-2 text-right font-medium">Importe</th>
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((tx) => (
+                {dash.recentTransactions.map((tx) => (
                   <tr
                     key={tx.id}
                     className="border-b border-[#E8E4DE] last:border-0"
@@ -223,16 +263,7 @@ export default function DashboardTab() {
                     <td className="py-2.5 pr-4 text-[#8A8580]">
                       {tx.invoice?.number ?? "-"}
                     </td>
-                    <td className="py-2.5 pr-4 text-[#2D2A26]">
-                      {METHOD_LABELS[tx.method] ?? tx.method}
-                    </td>
-                    <td className="py-2.5 pr-4">
-                      <span
-                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${TX_STATUS_COLORS[tx.status] ?? "bg-gray-100 text-gray-700"}`}
-                      >
-                        {TX_STATUS_LABELS[tx.status] ?? tx.status}
-                      </span>
-                    </td>
+                    <td className="py-2.5 pr-4 text-[#2D2A26]">{tx.method}</td>
                     <td className="py-2.5 text-right font-semibold text-[#2D2A26]">
                       {fmt.format(tx.amount)}
                     </td>

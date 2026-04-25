@@ -98,6 +98,17 @@ export async function PATCH(
 
       // Status change creates a log entry
       if (data.status && data.status !== existing.status) {
+        const allowed: Record<string, string[]> = {
+          draft: ["sent"],
+          sent: ["accepted", "draft"],
+          accepted: ["paid", "sent"],
+          paid: [],
+        };
+        if (!allowed[existing.status]?.includes(data.status)) {
+          throw new Error(
+            `TRANSITION_INVALID:${existing.status}->${data.status}`
+          );
+        }
         updateData.status = data.status;
         if (data.status === "sent") updateData.sentAt = new Date();
         if (data.status === "paid") updateData.paidAt = new Date();
@@ -167,6 +178,12 @@ export async function PATCH(
 
     return NextResponse.json({ settlement });
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("TRANSITION_INVALID:")) {
+      return NextResponse.json(
+        { error: "Transicion de estado no permitida" },
+        { status: 400 }
+      );
+    }
     return apiError(error, {
       publicMessage: "Error al actualizar liquidacion",
       code: "SETTLEMENT_UPDATE_ERROR",
