@@ -1,4 +1,4 @@
-# GHL Dashboard — Build Progress
+# Skiinet (OpenClaw) — Build Progress
 
 ## Current Status
 - **Phase:** PHASE X complete — Public Contact Form + Full UI/UX Overhaul
@@ -315,7 +315,19 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - No schema change — existing TpvSale/TpvSaleItem models already cover description/quantity/unitPrice/lineTotal.
 - **Files**: `src/app/(dashboard)/tpv/venta/page.tsx`, `_components/{categories,ProductGrid,Cart,PaymentBar,PaymentModal,Receipt}.tsx`, `src/app/(dashboard)/tpv/_components/{SessionsTab,SalesTab,RegistersTab,OpenSessionModal,CloseSessionModal}.tsx`, registry update.
 
-### Next: Phase Y — TBD
+### Phase Y: Infrastructure — Sentry Error Tracking (2026-04-25) ✅
+- **`@sentry/nextjs` v10.50.0** wired into client, server, and edge runtimes
+- **Configs at project root**: `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` — all read DSN from `NEXT_PUBLIC_SENTRY_DSN`
+- **Sample rates**: `tracesSampleRate: 0.1` everywhere; `replaysSessionSampleRate: 0` (replays disabled to keep payloads minimal)
+- **Environment tag**: `NEXT_PUBLIC_VERCEL_ENV || 'development'` — Railway sets this per-deploy
+- **`next.config.ts`** wrapped with `withSentryConfig()`, silent mode on, `sourcemaps: { disable: true }` (no source map upload until Railway env vars are populated)
+- **`src/app/global-error.tsx`** now calls `Sentry.captureException(error)` in its `useEffect` (replaces the prior `console.error` placeholder)
+- **No top-level `src/app/error.tsx`** existed — only nested route segment errors. Skipped per spec ("if it exists").
+- **No `sentry.properties` file** — DSN + org/project supplied via Railway env vars
+- **CLAUDE.md env table** extended with `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_VERCEL_ENV`, `SENTRY_ORG`, `SENTRY_PROJECT`
+- **Audit**: `tsc --noEmit` clean; `next build` compiles successfully (page-data step fails only due to absent local `DATABASE_URL`, unrelated to this change)
+
+### Next: Phase Z — TBD
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)

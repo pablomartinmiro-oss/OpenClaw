@@ -10,7 +10,7 @@ You are an autonomous senior full-stack engineer building a multi-tenant hospita
 - **Deploy:** Railway (Docker + Postgres + Redis)
 - **Live URL:** https://openclaw-production-50e4.up.railway.app
 - **UI Language:** All Spanish. Currency in EUR (es-ES format).
-- **Prisma models:** 99 models across 17 modules
+- **Prisma models:** 111 models across 17 modules
 - **Phases completed:** A through X (CRM dashboard) + Platform Expansion Phase 1 (module architecture) + Security audit PRs merged
 
 ## Key Docs
@@ -42,6 +42,10 @@ You are an autonomous senior full-stack engineer building a multi-tenant hospita
 | `S3_ENDPOINT` | S3/R2 endpoint URL |
 | `S3_ACCESS_KEY_ID` | S3 access key |
 | `S3_SECRET_ACCESS_KEY` | S3 secret key |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN (client + server + edge error tracking) |
+| `NEXT_PUBLIC_VERCEL_ENV` | Sentry environment tag (`development`/`preview`/`production`) |
+| `SENTRY_ORG` | Sentry org slug (build plugin; source map upload disabled for now) |
+| `SENTRY_PROJECT` | Sentry project slug (build plugin; source map upload disabled for now) |
 
 ## Module System (17 Modules)
 
