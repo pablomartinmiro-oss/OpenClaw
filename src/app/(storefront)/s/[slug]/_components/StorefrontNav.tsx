@@ -11,92 +11,103 @@ interface StorefrontNavProps {
 }
 
 const NAV_ITEMS = [
-  { label: "Inicio", path: "" },
-  { label: "Experiencias", path: "/experiencias" },
-  { label: "Hotel", path: "/hotel" },
-  { label: "Spa", path: "/spa" },
-  { label: "Restaurante", path: "/restaurante" },
+  { label: "Destinos", path: "/experiencias" },
+  { label: "Servicios", path: "/#servicios" },
+  { label: "Packs", path: "/experiencias?category=pack" },
+  { label: "Contacto", path: "/#contacto" },
 ];
 
 export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
   const pathname = usePathname();
   const { itemCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const base = `/s/${slug}`;
 
-  const closeMobile = () => setMobileOpen(false);
+  const isHome = pathname === base || pathname === `${base}/`;
+  const transparent = isHome && !scrolled;
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
 
-  const isActivePath = (path: string) => {
-    const href = `${base}${path}`;
-    return path === ""
-      ? pathname === base || pathname === `${base}/`
-      : pathname.startsWith(href);
-  };
+  const closeMobile = () => setMobileOpen(false);
+
+  const headerCls = transparent
+    ? "bg-transparent border-transparent"
+    : "bg-white/95 backdrop-blur-md border-gray-200 shadow-sm";
+
+  const linkCls = transparent
+    ? "text-white/90 hover:text-white"
+    : "text-gray-700 hover:text-gray-950";
+
+  const logoCls = transparent ? "text-white" : "text-gray-950";
+
+  const iconBtnCls = transparent
+    ? "text-white hover:bg-white/10"
+    : "text-gray-700 hover:bg-gray-100";
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+    <header
+      className={`fixed top-0 inset-x-0 z-50 border-b transition-colors duration-300 ${headerCls}`}
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo / name */}
+        <div className="flex h-16 items-center justify-between gap-4">
           <Link
             href={base}
-            className="text-xl font-bold text-gray-900 truncate max-w-[200px]"
+            className={`flex items-center gap-2 font-bold tracking-tight truncate ${logoCls}`}
           >
-            {tenantName}
+            <LogoMark transparent={transparent} />
+            <span className="text-lg sm:text-xl truncate max-w-[180px]">
+              {tenantName}
+            </span>
           </Link>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
-              const href = `${base}${item.path}`;
-              const isActive = isActivePath(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  href={href}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? "text-[#E87B5A] bg-orange-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.path}
+                href={`${base}${item.path}`}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkCls}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href={`${base}/presupuesto`}
+              className="ml-2 inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-[#E87B5A] hover:bg-[#D56E4F] rounded-lg shadow-sm transition-colors"
+            >
+              Solicita Presupuesto
+            </Link>
           </nav>
 
-          {/* Cart + mobile toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Link
               href={`${base}/carrito`}
-              className="relative inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className={`relative inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${iconBtnCls}`}
               aria-label={`Carrito (${itemCount} articulos)`}
             >
               <CartIcon />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E87B5A] text-[11px] font-bold text-white shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#E87B5A] text-[11px] font-bold text-white shadow-sm">
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
             </Link>
 
-            {/* Mobile menu button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              className={`md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${iconBtnCls}`}
               aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
               aria-expanded={mobileOpen}
             >
@@ -106,43 +117,34 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
         </div>
       </div>
 
-      {/* Mobile nav overlay */}
       {mobileOpen && (
         <>
-          {/* Backdrop */}
           <div
-            className="md:hidden fixed inset-0 top-16 bg-black/20 z-40"
-            onClick={() => setMobileOpen(false)}
+            className="md:hidden fixed inset-0 top-16 bg-black/40 z-40"
+            onClick={closeMobile}
           />
-          {/* Menu */}
-          <nav className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-lg px-4 pb-4 pt-2">
-            {NAV_ITEMS.map((item) => {
-              const href = `${base}${item.path}`;
-              const isActive = isActivePath(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  href={href}
-                  onClick={closeMobile}
-                  className={`block px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? "text-[#E87B5A] bg-orange-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-            {/* Cart link in mobile menu */}
+          <nav className="md:hidden fixed top-16 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-lg px-4 py-4 space-y-1">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.path}
+                href={`${base}${item.path}`}
+                onClick={closeMobile}
+                className="block px-3 py-3 text-base font-medium rounded-lg text-gray-700 hover:text-gray-950 hover:bg-gray-50"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href={`${base}/presupuesto`}
+              onClick={closeMobile}
+              className="block text-center mt-2 px-4 py-3 text-base font-semibold text-white bg-[#E87B5A] hover:bg-[#D56E4F] rounded-lg shadow-sm"
+            >
+              Solicita Presupuesto
+            </Link>
             <Link
               href={`${base}/carrito`}
               onClick={closeMobile}
-              className={`flex items-center justify-between px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
-                pathname.startsWith(`${base}/carrito`)
-                  ? "text-[#E87B5A] bg-orange-50"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              }`}
+              className="flex items-center justify-between mt-1 px-3 py-3 text-base font-medium text-gray-700 rounded-lg hover:bg-gray-50"
             >
               <span>Carrito</span>
               {itemCount > 0 && (
@@ -155,6 +157,21 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
         </>
       )}
     </header>
+  );
+}
+
+function LogoMark({ transparent }: { transparent: boolean }) {
+  return (
+    <span
+      className={`flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ${
+        transparent ? "bg-white/15 backdrop-blur" : "bg-[#E87B5A]"
+      }`}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 20l4.5-7 3.5 4 5-8 5 11z" />
+        <circle cx="17" cy="6" r="1.5" />
+      </svg>
+    </span>
   );
 }
 

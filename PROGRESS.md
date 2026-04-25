@@ -327,7 +327,27 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **CLAUDE.md env table** extended with `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_VERCEL_ENV`, `SENTRY_ORG`, `SENTRY_PROJECT`
 - **Audit**: `tsc --noEmit` clean; `next build` compiles successfully (page-data step fails only due to absent local `DATABASE_URL`, unrelated to this change)
 
-### Next: Phase Z — TBD
+### Phase Z: Storefront Website Transformation (2026-04-25) ✅
+- **Goal**: transform the scaffold-quality `/s/[slug]` storefront into a production ski-travel website to replace skicenter.es.
+- **New nav (`StorefrontNav.tsx`)**: fixed positioning, transparent on home hero → solid white on scroll, logo mark + tenant name, links (Destinos, Servicios, Packs, Contacto), prominent coral "Solicita Presupuesto" CTA, mobile slide-out menu.
+- **New footer (`StorefrontFooter.tsx`)**: dark navy (#0F1A2B), 4-column layout (brand+social, Destinos x7, Servicios x6, Contacto with phone/WhatsApp/email + CTA), legal sub-row.
+- **Home page rewrite (`page.tsx`)**: now server-rendered, composes 8 sections via `_components/home/`:
+  - **Hero**: full-screen unsplash mountain bg + dark gradient overlay, headline "Tu viaje de esqui, en un solo clic", dual CTA, viajeros pill + bounce indicator.
+  - **TrustBar**: 4 stats on dark bg (4.000 viajeros, 7 estaciones, packs desde 89 EUR, 25% pago fraccionado).
+  - **Destinations**: 7 cards with unsplash bg images, "desde X EUR" pill, hover zoom + lift, station-filtered link to experiencias.
+  - **Services**: 7 cards with custom SVG icons (PackIcon, BedIcon, SchoolIcon, SkiIcon, TicketIcon, DrinkIcon, LockerIcon) — no more letter placeholders.
+  - **HowItWorks**: 3 numbered steps with large coral numerals.
+  - **Testimonials**: 3 reviews with star ratings + avatars.
+  - **Financing**: dark navy section with "25%" headline + 4 stat tiles + CTA.
+  - **ContactCTA**: phone/WhatsApp/presupuesto buttons + email link.
+- **Experiencias polish**: dark gradient hero, floating filter card with search + 2 dropdowns (estacion + categoria) + chip filters, polished empty state with mountain icon, station filter wired via `?station=` query.
+- **ProductCard polish**: gradient backgrounds per category (10 gradients), category-specific SVG glyphs, station pill overlay, "Desde X EUR" footer with bold price + Anadir button.
+- **Presupuesto polish**: dark hero, 2-col layout (form + trust sidebar), 4 numbered sections (Datos personales / Detalles del viaje / Servicios / Notas), trust signals card (Respuesta 24h, Sin compromiso, Pago fraccionado, Mejor precio), success state redesigned.
+- **New files**: `_components/home/Hero.tsx`, `_components/home/Destinations.tsx`, `_components/home/Services.tsx`, `_components/home/Testimonials.tsx`.
+- **No backend changes** — pure frontend/UI overhaul.
+- **Audit**: `tsc --noEmit` clean; `eslint src/app/(storefront)` clean; `next build` compiles successfully (page-data step fails only due to absent local DB env).
+
+### Next: TBD
 
 ## DB Migrations
 1. `init` — Core models (Tenant, User, Role, Reservation, etc.)
