@@ -70,9 +70,8 @@ export async function GET(req: Request) {
           });
         }
       } catch (error) {
-        const msg = error instanceof Error ? error.message : "Unknown error";
-        log.error({ tenantId: tenant.id, error: msg }, "Sync failed for tenant");
-        results.push({ tenantId: tenant.id, action: "error", error: msg });
+        log.error({ tenantId: tenant.id, err: error }, "Sync failed for tenant");
+        results.push({ tenantId: tenant.id, action: "error", error: "Sync failed" });
       }
     }
 
