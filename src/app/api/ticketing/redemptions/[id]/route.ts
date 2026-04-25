@@ -56,6 +56,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (data.reservationId !== undefined)
       updateData.reservationId = data.reservationId;
     if (data.redeemedAt !== undefined) updateData.redeemedAt = data.redeemedAt;
+    if (data.customerName !== undefined) updateData.customerName = data.customerName;
+    if (data.platformId !== undefined) {
+      updateData.platform = data.platformId
+        ? { connect: { id: data.platformId } }
+        : { disconnect: true };
+    }
+    if (data.productId !== undefined) {
+      updateData.product = data.productId
+        ? { connect: { id: data.productId } }
+        : { disconnect: true };
+    }
+    if (data.skiLevel !== undefined) updateData.skiLevel = data.skiLevel;
+    if (data.bootSize !== undefined) updateData.bootSize = data.bootSize;
+    if (data.height !== undefined) updateData.height = data.height;
+    if (data.numPeople !== undefined) updateData.numPeople = data.numPeople;
+    if (data.preferredDate !== undefined) updateData.preferredDate = data.preferredDate;
+    if (data.notes !== undefined) updateData.notes = data.notes;
 
     const redemption = await prisma.couponRedemption.update({
       where: { id },

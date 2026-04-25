@@ -26,6 +26,7 @@ const PUBLIC_ROUTES = [
   "/api/onboarding",
   "/api/storefront",
   "/api/reviews/public",
+  "/api/ticketing/redeem",
   "/api/survey",
   "/api/voucher",
   "/survey",

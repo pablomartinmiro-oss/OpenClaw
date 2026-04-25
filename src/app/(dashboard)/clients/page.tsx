@@ -24,7 +24,7 @@ export default function ClientsPage() {
   const [modalClient, setModalClient] = useState<Client | null | "new">(null);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
 
-  const { data, isLoading } = useClients(debouncedSearch, page, 25);
+  const { data, isLoading } = useClients({ search: debouncedSearch, page, limit: 25 });
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
   const deleteClient = useDeleteClient();

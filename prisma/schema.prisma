@@ -335,8 +335,9 @@ model Product {
   quoteItems       QuoteItem[]
   variants         ExperienceVariant[]
   timeSlots        ProductTimeSlot[]
-  platformProducts PlatformProduct[]
-  operationalUnits OperationalUnit[]
+  platformProducts  PlatformProduct[]
+  operationalUnits  OperationalUnit[]
+  couponRedemptions CouponRedemption[]
 
   @@unique([tenantId, slug])
   @@index([station, category])
@@ -1136,6 +1137,21 @@ model Client {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  // Ski-specific profile
+  skiLevel         String?   // principiante | intermedio | avanzado | experto
+  preferredStation String?
+  bootSize         String?   // EU sizing 36-48
+  height           Int?      // cm
+  weight           Int?      // kg
+  helmetSize       String?   // S | M | L | XL
+  language         String?   // es | en | fr | de | pt
+  dni              String?
+
+  // Lifetime metrics (kept in sync via reservations/quotes auto-link)
+  totalSpent       Int       @default(0) // cents
+  visitCount       Int       @default(0)
+  lastVisit        DateTime?
+
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   restaurantBookings RestaurantBooking[]
   invoices           Invoice[]
@@ -1144,6 +1160,8 @@ model Client {
   @@index([tenantId, email])
   @@index([tenantId, phone])
   @@index([tenantId, name])
+  @@index([tenantId, skiLevel])
+  @@index([tenantId, preferredStation])
 }
 
 model ActivityBooking {
@@ -1879,8 +1897,9 @@ model ExternalPlatform {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products PlatformProduct[]
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    PlatformProduct[]
+  redemptions CouponRedemption[]
 
   @@index([tenantId])
 }
@@ -1910,7 +1929,7 @@ model CouponRedemption {
   code            String
   email           String?
   phone           String?
-  status          String    @default("received") // "received" | "pending" | "reservation_generated"
+  status          String    @default("received") // "received" | "pendiente" | "confirmado" | "completado" | "cancelado" | legacy "pending" | "reservation_generated"
   financialStatus String    @default("pending") // "pending" | "redeemed" | "incident"
   ocrExtraction   Json?     // { code, securityCode, customerName, confidence }
   reservationId   String?
@@ -1918,10 +1937,25 @@ model CouponRedemption {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Ski-specific enrichment
+  customerName    String?
+  platformId      String?
+  productId       String?
+  skiLevel        String?   // "principiante" | "intermedio" | "avanzado" | "experto"
+  bootSize        String?
+  height          Int?      // cm
+  numPeople       Int       @default(1)
+  preferredDate   DateTime?
+  notes           String?
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  platform ExternalPlatform? @relation(fields: [platformId], references: [id], onDelete: SetNull)
+  product  Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, code])
   @@index([tenantId, status])
+  @@index([tenantId, platformId])
+  @@index([tenantId, redeemedAt])
 }
 
 model CouponEmailConfig {

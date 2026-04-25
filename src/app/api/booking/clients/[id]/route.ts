@@ -110,6 +110,18 @@ export async function PATCH(
         ...(data.conversionSource !== undefined && {
           conversionSource: data.conversionSource ?? null,
         }),
+        ...(data.skiLevel !== undefined && { skiLevel: data.skiLevel ?? null }),
+        ...(data.preferredStation !== undefined && {
+          preferredStation: data.preferredStation ?? null,
+        }),
+        ...(data.bootSize !== undefined && { bootSize: data.bootSize ?? null }),
+        ...(data.height !== undefined && { height: data.height ?? null }),
+        ...(data.weight !== undefined && { weight: data.weight ?? null }),
+        ...(data.helmetSize !== undefined && {
+          helmetSize: data.helmetSize ?? null,
+        }),
+        ...(data.language !== undefined && { language: data.language ?? null }),
+        ...(data.dni !== undefined && { dni: data.dni ?? null }),
       },
     });
 

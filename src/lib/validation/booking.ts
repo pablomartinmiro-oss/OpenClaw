@@ -194,6 +194,10 @@ export const flagActivityIncidentSchema = z.object({
 });
 
 // ==================== CLIENTS ====================
+export const skiLevelEnum = z.enum(["principiante", "intermedio", "avanzado", "experto"]);
+export const helmetSizeEnum = z.enum(["S", "M", "L", "XL"]);
+export const clientLanguageEnum = z.enum(["es", "en", "fr", "de", "pt"]);
+
 export const createClientSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.string().email().optional().nullable(),
@@ -202,5 +206,14 @@ export const createClientSchema = z.object({
   address: z.string().max(500).optional().nullable(),
   notes: z.string().max(5000).optional().nullable(),
   conversionSource: z.string().max(100).optional().nullable(),
+  // Ski profile
+  skiLevel: skiLevelEnum.optional().nullable(),
+  preferredStation: z.string().max(100).optional().nullable(),
+  bootSize: z.string().max(10).optional().nullable(),
+  height: z.coerce.number().int().min(50).max(250).optional().nullable(),
+  weight: z.coerce.number().int().min(10).max(300).optional().nullable(),
+  helmetSize: helmetSizeEnum.optional().nullable(),
+  language: clientLanguageEnum.optional().nullable(),
+  dni: z.string().max(30).optional().nullable(),
 });
 export const updateClientSchema = createClientSchema.partial();

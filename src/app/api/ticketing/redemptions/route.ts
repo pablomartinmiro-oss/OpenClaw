@@ -32,10 +32,25 @@ export async function GET(request: NextRequest) {
     if (financialStatus) where.financialStatus = financialStatus;
     if (code) where.code = { contains: code, mode: "insensitive" };
 
+    const platformId = searchParams.get("platformId");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    if (platformId) where.platformId = platformId;
+    if (dateFrom || dateTo) {
+      where.createdAt = {
+        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+        ...(dateTo ? { lte: new Date(dateTo) } : {}),
+      };
+    }
+
     const redemptions = await prisma.couponRedemption.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: 200,
+      include: {
+        platform: { select: { id: true, name: true } },
+        product: { select: { id: true, name: true, category: true } },
+      },
     });
 
     log.info({ count: redemptions.length }, "Redemptions fetched");
@@ -80,6 +95,15 @@ export async function POST(request: NextRequest) {
           : undefined,
         reservationId: data.reservationId ?? null,
         redeemedAt: data.redeemedAt ?? null,
+        customerName: data.customerName ?? null,
+        platformId: data.platformId ?? null,
+        productId: data.productId ?? null,
+        skiLevel: data.skiLevel ?? null,
+        bootSize: data.bootSize ?? null,
+        height: data.height ?? null,
+        numPeople: data.numPeople,
+        preferredDate: data.preferredDate ?? null,
+        notes: data.notes ?? null,
       },
     });
 

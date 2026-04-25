@@ -6,6 +6,16 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { validateBody, createClientSchema } from "@/lib/validation";
+import type { Prisma } from "@/generated/prisma/client";
+
+const SORTABLE_FIELDS = new Set([
+  "name",
+  "email",
+  "createdAt",
+  "totalSpent",
+  "visitCount",
+  "lastVisit",
+]);
 
 export async function GET(request: NextRequest) {
   const [session, authError] = await requireTenant();
@@ -18,12 +28,19 @@ export async function GET(request: NextRequest) {
   const log = logger.child({ tenantId, path: "/api/booking/clients" });
   const { searchParams } = request.nextUrl;
   const search = searchParams.get("search");
+  const skiLevel = searchParams.get("skiLevel");
+  const station = searchParams.get("station");
+  const source = searchParams.get("source");
+  const sortBy = searchParams.get("sortBy") || "createdAt";
+  const sortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
   const page = Math.max(1, Number(searchParams.get("page") || "1"));
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || "25")));
   const skip = (page - 1) * limit;
 
+  const orderField = SORTABLE_FIELDS.has(sortBy) ? sortBy : "createdAt";
+
   try {
-    const where: Record<string, unknown> = {
+    const where: Prisma.ClientWhereInput = {
       tenantId,
       ...(search
         ? {
@@ -31,19 +48,35 @@ export async function GET(request: NextRequest) {
               { name: { contains: search, mode: "insensitive" } },
               { email: { contains: search, mode: "insensitive" } },
               { phone: { contains: search } },
+              { dni: { contains: search, mode: "insensitive" } },
             ],
           }
         : {}),
+      ...(skiLevel ? { skiLevel } : {}),
+      ...(station ? { preferredStation: station } : {}),
+      ...(source ? { conversionSource: source } : {}),
     };
 
-    const [clients, total] = await Promise.all([
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [clients, total, statsRow, newThisMonth] = await Promise.all([
       prisma.client.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [orderField]: sortDir },
         skip,
         take: limit,
       }),
       prisma.client.count({ where }),
+      prisma.client.aggregate({
+        where: { tenantId },
+        _sum: { totalSpent: true, visitCount: true },
+        _avg: { totalSpent: true },
+        _count: { _all: true },
+      }),
+      prisma.client.count({
+        where: { tenantId, createdAt: { gte: startOfMonth } },
+      }),
     ]);
 
     log.info({ count: clients.length, total, page }, "Clients fetched");
@@ -54,6 +87,12 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      stats: {
+        totalClients: statsRow._count._all,
+        avgSpent: Math.round(statsRow._avg.totalSpent ?? 0),
+        totalVisits: statsRow._sum.visitCount ?? 0,
+        newThisMonth,
       },
     });
   } catch (error) {
@@ -93,6 +132,14 @@ export async function POST(request: NextRequest) {
         address: data.address ?? null,
         notes: data.notes ?? null,
         conversionSource: data.conversionSource ?? null,
+        skiLevel: data.skiLevel ?? null,
+        preferredStation: data.preferredStation ?? null,
+        bootSize: data.bootSize ?? null,
+        height: data.height ?? null,
+        weight: data.weight ?? null,
+        helmetSize: data.helmetSize ?? null,
+        language: data.language ?? null,
+        dni: data.dni ?? null,
       },
     });
 
