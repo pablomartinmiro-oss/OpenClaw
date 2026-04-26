@@ -26,9 +26,15 @@ export function StorefrontShell({
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-[#FAF9F7] flex flex-col font-sans">
+      <div
+        className="min-h-screen bg-white flex flex-col"
+        style={{ fontFamily: "var(--font-raleway, 'Raleway', sans-serif)" }}
+      >
         <StorefrontNav tenantName={tenantName} slug={slug} />
-        <main className={`flex-1 ${isHome ? "" : "pt-16"}`}>{children}</main>
+        {/* top bar 36px + main nav 64px = 100px offset for non-home pages */}
+        <main className={`flex-1 ${isHome ? "" : "pt-[100px]"}`}>
+          {children}
+        </main>
         <StorefrontFooter
           tenantName={tenantName}
           slug={slug}

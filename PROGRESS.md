@@ -347,6 +347,28 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **No backend changes** — pure frontend/UI overhaul.
 - **Audit**: `tsc --noEmit` clean; `eslint src/app/(storefront)` clean; `next build` compiles successfully (page-data step fails only due to absent local DB env).
 
+### Phase AA: Storefront Redesign — skicenter.es Style (2026-04-26) ✅
+- **Goal**: complete visual overhaul of `/s/[slug]` storefront to match skicenter.es — Bebas Neue + Raleway fonts, navy/blue palette, European travel agency feel.
+- **Fonts**: `Bebas_Neue` (400) + `Raleway` (400/500/600/700) via `next/font/google` in `layout.tsx`, applied as CSS variables (`--font-bebas-neue`, `--font-raleway`) to all components.
+- **Color system**: primary navy `#001D3D`, CTA blue `#42A5F5`, WhatsApp green `#2DB742`, price orange `#F27A0B`, dark footer `#2E2E32`, light gray bg `#F5F7F9`, text gray `#757575`. All coral `#E87B5A` removed.
+- **CTA buttons**: squared (no border-radius), Bebas Neue font, blue `#42A5F5` background.
+- **StorefrontNav**: top bar (navy `#001D3D`) with phone + hours + WhatsApp; main nav (white) with Destinos dropdown (all 7 stations), squared blue CTA; mobile hamburger with full-height slide-out menu.
+- **StorefrontFooter**: dark charcoal `#2E2E32`, 4 columns (brand+social, Destinos, Servicios, Contacto with green WhatsApp), blue CTA, legal sub-row.
+- **Hero**: full-screen mountain bg, Bebas Neue headline "Skicenter. Todo tu viaje de esquí en un solo clic.", two squared CTAs (blue + green WhatsApp), 100px offset for nav height.
+- **TrustBar**: navy `#001D3D`, Bebas Neue numbers (+4.000, 7, Desde 89€, 25%).
+- **Destinations**: horizontal carousel with arrow buttons, Bebas Neue station names as overlay, "Encuentra lo que necesitas…" heading.
+- **Services**: horizontal scrollable row of 7 circular icons on `#F5F7F9` bg; HowItWorks with blue left-border steps.
+- **Testimonials**: white cards on `#F5F7F9`, italic quotes, orange stars, Bebas Neue headings.
+- **Financing**: navy bg, "Reserva con solo el 25%" in Bebas Neue, blue CTA, squared stat tiles.
+- **ContactCTA**: navy box, Bebas Neue heading "¿Necesitas ayuda?", blue + green + phone buttons.
+- **Offers** (NEW `home/Offers.tsx`): 4 hardcoded offer cards with photo, station badge, price in orange Bebas Neue, blue "VER OFERTA" CTA.
+- **WhatsAppButton** (NEW `home/WhatsAppButton.tsx`): fixed bottom-right green circle with pulse animation, links to wa.me/34919041947.
+- **ProductCard**: updated to navy/blue palette, orange price in Bebas Neue, squared "AÑADIR" button.
+- **Experiencias page**: Bebas Neue navy hero, blue filter pills (active = `#42A5F5`), `#F5F7F9` background.
+- **Presupuesto page**: Bebas Neue navy hero, blue squared submit button, blue checkboxes, phone+WhatsApp in trust sidebar.
+- **`page.tsx`**: Offers + WhatsAppButton added to home section composition.
+- **Audit**: `tsc --noEmit` → 0 errors.
+
 ### Next: TBD
 
 ## DB Migrations

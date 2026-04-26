@@ -1,4 +1,5 @@
 import Link from "next/link";
+import React from "react";
 
 interface StorefrontFooterProps {
   tenantName: string;
@@ -7,13 +8,17 @@ interface StorefrontFooterProps {
   contactPhone?: string | null;
 }
 
+const BEBAS: React.CSSProperties = {
+  fontFamily: "var(--font-bebas-neue, 'Bebas Neue', cursive)",
+};
+
 const DESTINOS = [
   "Baqueira Beret",
   "Sierra Nevada",
   "Formigal",
   "Alto Campoo",
-  "Candanchu",
-  "Astun",
+  "Candanchú",
+  "Astún",
   "La Pinilla",
 ];
 
@@ -21,10 +26,12 @@ const SERVICIOS = [
   { label: "Packs todo incluido", path: "/experiencias?category=pack" },
   { label: "Forfaits", path: "/experiencias?category=forfait" },
   { label: "Alquiler de material", path: "/experiencias?category=alquiler" },
-  { label: "Escuela de esqui", path: "/experiencias?category=escuela" },
-  { label: "Apres-ski", path: "/experiencias?category=apreski" },
+  { label: "Escuela de esquí", path: "/experiencias?category=escuela" },
+  { label: "Après-ski", path: "/experiencias?category=apreski" },
   { label: "Taquillas", path: "/experiencias?category=locker" },
 ];
+
+const DEFAULT_PHONE = "+34 91 904 19 47";
 
 export function StorefrontFooter({
   tenantName,
@@ -33,28 +40,42 @@ export function StorefrontFooter({
   contactPhone,
 }: StorefrontFooterProps) {
   const base = `/s/${slug}`;
-  const phoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : null;
-  const waHref = contactPhone
-    ? `https://wa.me/${contactPhone.replace(/[^0-9]/g, "")}`
-    : null;
+  const phone = contactPhone ?? DEFAULT_PHONE;
+  const phoneHref = `tel:${phone.replace(/\s+/g, "")}`;
+  const waHref = `https://wa.me/${phone.replace(/[^0-9]/g, "")}`;
 
   return (
-    <footer id="contacto" className="bg-[#0F1A2B] text-gray-300">
+    <footer className="bg-[#2E2E32] text-gray-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-12">
+          {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <h3 className="text-white text-base font-bold mb-3 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E87B5A]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Link href={base} className="flex items-center gap-2.5 mb-4">
+              <span className="flex h-9 w-9 items-center justify-center bg-[#42A5F5]">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M3 20l4.5-7 3.5 4 5-8 5 11z" />
                   <circle cx="17" cy="6" r="1.5" />
                 </svg>
               </span>
-              {tenantName}
-            </h3>
-            <p className="text-sm text-gray-400 leading-relaxed mb-4">
-              Tu agencia de viajes de esqui de confianza. Mas de 4.000
-              viajeros han disfrutado con nosotros.
+              <span
+                className="text-white tracking-wider"
+                style={{ ...BEBAS, fontSize: "1.4rem" }}
+              >
+                {tenantName}
+              </span>
+            </Link>
+            <p className="text-sm text-gray-400 leading-relaxed mb-5">
+              Tu agencia de viajes de esquí de confianza. Más de 4.000 viajeros
+              han disfrutado con nosotros.
             </p>
             <div className="flex gap-2">
               <SocialIcon
@@ -75,8 +96,12 @@ export function StorefrontFooter({
             </div>
           </div>
 
+          {/* Destinos */}
           <div>
-            <h3 className="text-white text-sm font-semibold mb-4 uppercase tracking-wide">
+            <h3
+              className="text-white mb-4 tracking-wider"
+              style={{ ...BEBAS, fontSize: "1.1rem" }}
+            >
               Destinos
             </h3>
             <ul className="space-y-2 text-sm">
@@ -93,8 +118,12 @@ export function StorefrontFooter({
             </ul>
           </div>
 
+          {/* Servicios */}
           <div>
-            <h3 className="text-white text-sm font-semibold mb-4 uppercase tracking-wide">
+            <h3
+              className="text-white mb-4 tracking-wider"
+              style={{ ...BEBAS, fontSize: "1.1rem" }}
+            >
               Servicios
             </h3>
             <ul className="space-y-2 text-sm">
@@ -111,35 +140,35 @@ export function StorefrontFooter({
             </ul>
           </div>
 
+          {/* Contacto */}
           <div>
-            <h3 className="text-white text-sm font-semibold mb-4 uppercase tracking-wide">
+            <h3
+              className="text-white mb-4 tracking-wider"
+              style={{ ...BEBAS, fontSize: "1.1rem" }}
+            >
               Contacto
             </h3>
             <ul className="space-y-3 text-sm">
-              {phoneHref && (
-                <li>
-                  <a
-                    href={phoneHref}
-                    className="flex items-start gap-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <PhoneIcon />
-                    <span>{contactPhone}</span>
-                  </a>
-                </li>
-              )}
-              {waHref && (
-                <li>
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-start gap-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <WhatsAppIcon />
-                    <span>WhatsApp</span>
-                  </a>
-                </li>
-              )}
+              <li>
+                <a
+                  href={phoneHref}
+                  className="flex items-start gap-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <PhoneIcon />
+                  <span>{phone}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-start gap-2 text-[#2DB742] hover:text-[#25C039] transition-colors"
+                >
+                  <WhatsAppIcon />
+                  <span>WhatsApp</span>
+                </a>
+              </li>
               {contactEmail && (
                 <li>
                   <a
@@ -151,40 +180,45 @@ export function StorefrontFooter({
                   </a>
                 </li>
               )}
-              <li className="pt-2">
+              <li className="pt-3">
                 <Link
                   href={`${base}/presupuesto`}
-                  className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-[#E87B5A] hover:bg-[#D56E4F] rounded-lg transition-colors"
+                  className="inline-flex items-center px-5 py-2.5 text-white bg-[#42A5F5] hover:bg-[#2196F3] transition-colors rounded-none text-sm tracking-wide"
+                  style={BEBAS}
                 >
-                  Solicita presupuesto
+                  PEDIR PRESUPUESTO
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
+        {/* Bottom bar */}
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500">
           <p>
             &copy; {new Date().getFullYear()} {tenantName}. Todos los derechos
             reservados.
           </p>
           <nav className="flex flex-wrap gap-x-5 gap-y-2">
-            <Link href={`${base}/canjear`} className="hover:text-white">
-              Canjear cupon
+            <Link href={`${base}/canjear`} className="hover:text-white transition-colors">
+              Canjear cupón
             </Link>
-            <Link href={`${base}/cancelar`} className="hover:text-white">
+            <Link href={`${base}/cancelar`} className="hover:text-white transition-colors">
               Cancelar reserva
             </Link>
-            <Link href={`${base}/bono`} className="hover:text-white">
+            <Link href={`${base}/bono`} className="hover:text-white transition-colors">
               Verificar bono
             </Link>
-            <Link href={`${base}/politica-privacidad`} className="hover:text-white">
+            <Link
+              href={`${base}/politica-privacidad`}
+              className="hover:text-white transition-colors"
+            >
               Privacidad
             </Link>
-            <Link href={`${base}/terminos`} className="hover:text-white">
-              Terminos
+            <Link href={`${base}/terminos`} className="hover:text-white transition-colors">
+              Términos
             </Link>
-            <Link href={`${base}/cookies`} className="hover:text-white">
+            <Link href={`${base}/cookies`} className="hover:text-white transition-colors">
               Cookies
             </Link>
           </nav>
@@ -194,14 +228,22 @@ export function StorefrontFooter({
   );
 }
 
-function SocialIcon({ href, label, d }: { href: string; label: string; d: string }) {
+function SocialIcon({
+  href,
+  label,
+  d,
+}: {
+  href: string;
+  label: string;
+  d: string;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 hover:bg-[#E87B5A] text-white transition-colors"
+      className="flex h-9 w-9 items-center justify-center bg-white/5 hover:bg-[#42A5F5] text-white transition-colors"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
         <path d={d} />
@@ -212,7 +254,17 @@ function SocialIcon({ href, label, d }: { href: string; label: string; d: string
 
 function PhoneIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mt-0.5 shrink-0"
+    >
       <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0122 16.92z" />
     </svg>
   );
@@ -220,7 +272,13 @@ function PhoneIcon() {
 
 function WhatsAppIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="mt-0.5 shrink-0"
+    >
       <path d="M17.5 14.4c-.3-.1-1.7-.8-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.2-1.4c1.4.8 3.1 1.2 4.8 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2z" />
     </svg>
   );
@@ -228,7 +286,17 @@ function WhatsAppIcon() {
 
 function MailIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="mt-0.5 shrink-0"
+    >
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
     </svg>

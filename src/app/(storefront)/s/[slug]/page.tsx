@@ -8,6 +8,8 @@ import {
   Financing,
   ContactCTA,
 } from "./_components/home/Testimonials";
+import { Offers } from "./_components/home/Offers";
+import { WhatsAppButton } from "./_components/home/WhatsAppButton";
 
 const CONTACT_KEYS = ["contact_email", "contact_phone"];
 
@@ -47,6 +49,7 @@ export default async function StorefrontHome({
       <Hero slug={slug} />
       <TrustBar />
       <Destinations slug={slug} />
+      <Offers slug={slug} />
       <Services slug={slug} />
       <HowItWorks slug={slug} />
       <Testimonials />
@@ -56,6 +59,7 @@ export default async function StorefrontHome({
         contactPhone={contactPhone}
         contactEmail={contactEmail}
       />
+      <WhatsAppButton />
     </>
   );
 }

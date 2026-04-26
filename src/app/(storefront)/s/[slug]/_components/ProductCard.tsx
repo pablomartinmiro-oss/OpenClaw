@@ -2,6 +2,11 @@
 
 import { useCart } from "./CartContext";
 import { formatEUR } from "./utils";
+import React from "react";
+
+const BEBAS: React.CSSProperties = {
+  fontFamily: "var(--font-bebas-neue, 'Bebas Neue', cursive)",
+};
 
 interface ProductCardProps {
   id: string;
@@ -26,16 +31,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  alquiler: "from-[#3B5998] to-[#1E3A5F]",
-  locker: "from-[#5B6E8C] to-[#2C3E50]",
-  escuela: "from-[#5B8C6D] to-[#2D5C42]",
-  clase_particular: "from-[#5B8C6D] to-[#2D5C42]",
-  forfait: "from-[#0F1A2B] to-[#1A2842]",
-  menu: "from-[#D4A853] to-[#9A7A2E]",
-  snowcamp: "from-[#3B7CC4] to-[#1E4F87]",
-  apreski: "from-[#E87B5A] to-[#B5503A]",
-  taxi: "from-[#5B6E8C] to-[#2C3E50]",
-  pack: "from-[#0F1A2B] to-[#3B5998]",
+  alquiler: "from-[#001D3D] to-[#003366]",
+  locker: "from-[#2E2E32] to-[#4a4a50]",
+  escuela: "from-[#0a4a2e] to-[#1a7a50]",
+  clase_particular: "from-[#0a4a2e] to-[#1a7a50]",
+  forfait: "from-[#001D3D] to-[#42A5F5]",
+  menu: "from-[#7a4a00] to-[#d48a00]",
+  snowcamp: "from-[#003999] to-[#42A5F5]",
+  apreski: "from-[#5a0a00] to-[#cc3300]",
+  taxi: "from-[#2E2E32] to-[#4a4a50]",
+  pack: "from-[#001D3D] to-[#003399]",
 };
 
 export function ProductCard({
@@ -47,14 +52,14 @@ export function ProductCard({
   station,
 }: ProductCardProps) {
   const { addItem } = useCart();
-  const gradient = CATEGORY_GRADIENTS[category] ?? "from-[#0F1A2B] to-[#1A2842]";
+  const gradient = CATEGORY_GRADIENTS[category] ?? "from-[#001D3D] to-[#003366]";
 
   const handleAdd = () => {
     addItem({ id, type: "product", name, price });
   };
 
   return (
-    <div className="group rounded-2xl border border-[#E8E4DE] bg-white overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col">
+    <div className="group bg-white overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 flex flex-col border border-gray-100">
       <div
         className={`relative aspect-[4/3] bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}
       >
@@ -72,41 +77,45 @@ export function ProductCard({
         </div>
         <CategoryGlyph category={category} />
         {station && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full bg-white/90 backdrop-blur text-[#2D2A26]">
+          <span className="absolute bottom-3 left-3 inline-flex items-center px-2.5 py-1 text-[11px] font-semibold bg-white/90 backdrop-blur text-[#001D3D]">
             {station}
           </span>
         )}
       </div>
 
       <div className="p-4 flex flex-col flex-1">
-        <span className="inline-block self-start px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-[#E87B5A]/10 text-[#E87B5A] mb-2">
+        <span className="inline-block self-start px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-[#001D3D]/10 text-[#001D3D] mb-2">
           {CATEGORY_LABELS[category] ?? category}
         </span>
 
-        <h3 className="text-base font-bold text-[#2D2A26] line-clamp-2 mb-1">
+        <h3 className="text-base font-bold text-[#001D3D] line-clamp-2 mb-1">
           {name}
         </h3>
 
         {description && (
-          <p className="text-sm text-[#8A8580] line-clamp-2 mb-3">
+          <p className="text-sm text-[#757575] line-clamp-2 mb-3">
             {description}
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#E8E4DE]">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
           <div>
-            <div className="text-[10px] text-[#8A8580] uppercase tracking-wider">
+            <div className="text-[10px] text-[#757575] uppercase tracking-wider">
               {price > 0 ? "Desde" : ""}
             </div>
-            <div className="text-lg font-bold text-[#2D2A26]">
+            <div
+              className="text-xl text-[#F27A0B]"
+              style={BEBAS}
+            >
               {price > 0 ? formatEUR(price) : "Consultar"}
             </div>
           </div>
           <button
             onClick={handleAdd}
-            className="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-[#E87B5A] rounded-lg hover:bg-[#D56E4F] transition-colors"
+            className="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-[#42A5F5] hover:bg-[#2196F3] rounded-none transition-colors"
+            style={BEBAS}
           >
-            Anadir
+            AÑADIR
           </button>
         </div>
       </div>
