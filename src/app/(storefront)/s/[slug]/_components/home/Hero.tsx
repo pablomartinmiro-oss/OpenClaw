@@ -33,7 +33,7 @@ export function Hero({ slug }: { slug: string }) {
           className="text-5xl sm:text-7xl md:text-8xl uppercase leading-none max-w-4xl"
           style={BEBAS}
         >
-          Skicenter.{" "}
+          Skicenter.<br />
           <span className="text-[#42A5F5]">
             Todo tu viaje de esquí en un solo clic.
           </span>

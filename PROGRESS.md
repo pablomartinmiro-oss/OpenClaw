@@ -369,6 +369,14 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **`page.tsx`**: Offers + WhatsAppButton added to home section composition.
 - **Audit**: `tsc --noEmit` → 0 errors.
 
+### Phase AB: Storefront Polish — Real Logo + Images (2026-04-26) ✅
+- **Logo**: replaced mountain SVG + text in nav and footer with real `/skicenter-logo-white.png` (293×90 PNG). Nav uses `filter: brightness(0)` to appear dark on white bg; footer shows white version directly on dark bg.
+- **Nav links**: "Packs" renamed to "Inicio" (links to home `/s/[slug]`) to match skicenter.es nav (Inicio | Destinos | Servicios | Inicio | Contáctanos).
+- **Hero headline**: split "Skicenter." onto its own line with `<br />` before the blue subtitle, matching skicenter.es two-line layout.
+- **Services row**: replaced SVG icon circles with real photo thumbnails (`overflow-hidden rounded-full bg-cover`) using downloaded images (`/services-alojamiento.jpg`, `/services-escuela.jpg`, `/services-forfaits.jpg`, `/clases-1024x494.jpg`) + unsplash for packs/apreski/taquillas. Labels updated to exact skicenter.es casing: "Packs all in one", "Hotel/apt +forfaits", "escuela de esqui", "skirent service", "Forfaits", "apreski", "taquillas 1500".
+- **Offers section**: swapped unsplash placeholder images for real local photos — Baqueira offer uses `/clases-1024x494.jpg`, Sierra Nevada uses `/ALOJAMIENTO-600x289.jpg`, La Pinilla uses `/services-forfaits.jpg`.
+- **Audit**: `tsc --noEmit` → 0 errors.
+
 ### Next: TBD
 
 ## DB Migrations

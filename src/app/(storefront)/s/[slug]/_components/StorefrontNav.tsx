@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "./CartContext";
@@ -108,28 +109,15 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
-            <Link href={base} className="flex items-center gap-2.5 shrink-0">
-              <span className="flex h-9 w-9 items-center justify-center bg-[#001D3D]">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 20l4.5-7 3.5 4 5-8 5 11z" />
-                  <circle cx="17" cy="6" r="1.5" />
-                </svg>
-              </span>
-              <span
-                className="text-[#001D3D] truncate max-w-[180px] tracking-wider"
-                style={{ ...BEBAS, fontSize: "1.4rem" }}
-              >
-                {tenantName}
-              </span>
+            <Link href={base} className="flex items-center shrink-0">
+              <Image
+                src="/skicenter-logo-white.png"
+                width={120}
+                height={37}
+                alt="Skicenter"
+                style={{ filter: "brightness(0)" }}
+                priority
+              />
             </Link>
 
             {/* Desktop nav */}
@@ -177,10 +165,10 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
                 Servicios
               </Link>
               <Link
-                href={`${base}/experiencias?category=pack`}
+                href={base}
                 className="px-3 py-2 text-sm font-medium text-[#001D3D] hover:text-[#42A5F5] transition-colors"
               >
-                Packs
+                Inicio
               </Link>
               <Link
                 href={`${base}/presupuesto`}
@@ -273,11 +261,11 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
               Servicios
             </Link>
             <Link
-              href={`${base}/experiencias?category=pack`}
+              href={base}
               onClick={closeMobile}
               className="block px-3 py-2.5 text-sm font-medium text-[#001D3D] hover:bg-[#F5F7F9]"
             >
-              Packs
+              Inicio
             </Link>
             <Link
               href={`${base}/presupuesto`}

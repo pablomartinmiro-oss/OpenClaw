@@ -22,8 +22,7 @@ const OFFERS: Offer[] = [
     title: "Pack Todo Incluido 3 días",
     desc: "Hotel 4*, forfait, alquiler de material y clases en grupo incluidas.",
     price: 299,
-    image:
-      "https://images.unsplash.com/photo-1517299321609-52687d1bc55a?auto=format&fit=crop&w=800&q=80",
+    image: "/clases-1024x494.jpg",
     category: "pack",
   },
   {
@@ -31,8 +30,7 @@ const OFFERS: Offer[] = [
     title: "Hotel + Forfait 4 días",
     desc: "Alojamiento en hotel 3* con forfait de temporada incluido.",
     price: 189,
-    image:
-      "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=800&q=80",
+    image: "/ALOJAMIENTO-600x289.jpg",
     category: "forfait",
   },
   {
@@ -49,8 +47,7 @@ const OFFERS: Offer[] = [
     title: "Pack Fin de Semana",
     desc: "Escapada de 2 días con forfait y alquiler de equipo completo.",
     price: 129,
-    image:
-      "https://images.unsplash.com/photo-1454942901704-3c44c11b2ad1?auto=format&fit=crop&w=800&q=80",
+    image: "/services-forfaits.jpg",
     category: "pack",
   },
 ];

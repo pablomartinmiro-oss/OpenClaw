@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 interface StorefrontFooterProps {
@@ -50,28 +51,13 @@ export function StorefrontFooter({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <Link href={base} className="flex items-center gap-2.5 mb-4">
-              <span className="flex h-9 w-9 items-center justify-center bg-[#42A5F5]">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 20l4.5-7 3.5 4 5-8 5 11z" />
-                  <circle cx="17" cy="6" r="1.5" />
-                </svg>
-              </span>
-              <span
-                className="text-white tracking-wider"
-                style={{ ...BEBAS, fontSize: "1.4rem" }}
-              >
-                {tenantName}
-              </span>
+            <Link href={base} className="flex items-center mb-4">
+              <Image
+                src="/skicenter-logo-white.png"
+                width={140}
+                height={43}
+                alt="Skicenter"
+              />
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed mb-5">
               Tu agencia de viajes de esquí de confianza. Más de 4.000 viajeros
