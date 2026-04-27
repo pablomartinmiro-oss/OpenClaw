@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { apiError } from "@/lib/api-response";
 import { validateBody, createQuoteSchema } from "@/lib/validation";
+import { sendEmail } from "@/lib/email/resend";
+import { buildQuoteConfirmationHTML } from "@/lib/email/templates/quote-confirmation";
 
 export async function GET(request: NextRequest) {
   const [session, authError] = await requireTenant();
@@ -77,6 +79,36 @@ export async function POST(request: NextRequest) {
     });
 
     log.info({ quoteId: quote.id }, "Quote created");
+
+    // Send acknowledgement email to client (non-blocking)
+    if (data.clientEmail) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { slug: true, name: true },
+      });
+      const storefrontUrl = tenant?.slug
+        ? `${process.env.AUTH_URL ?? ""}/s/${tenant.slug}/presupuesto`
+        : undefined;
+      const quoteNumber = quote.id.slice(-8).toUpperCase();
+      const formatDate = (d: string | Date) =>
+        new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+
+      sendEmail({
+        to: data.clientEmail,
+        subject: `Tu presupuesto ha sido recibido — Skicenter`,
+        html: buildQuoteConfirmationHTML({
+          quoteNumber,
+          clientName: data.clientName,
+          destination: data.destination,
+          checkIn: formatDate(data.checkIn),
+          checkOut: formatDate(data.checkOut),
+          totalAmount: 0,
+          items: [],
+          storefrontUrl,
+        }),
+      }).catch((err) => log.error({ err, quoteId: quote.id }, "Quote confirmation email failed"));
+    }
+
     return NextResponse.json({ quote }, { status: 201 });
   } catch (error) {
     return apiError(error, {

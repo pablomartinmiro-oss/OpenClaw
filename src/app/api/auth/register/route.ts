@@ -7,6 +7,8 @@ import { rateLimit, getClientIP } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-response";
 import { validateBody, registerSchema } from "@/lib/validation";
 import { ALL_MODULE_SLUGS } from "@/lib/modules/registry";
+import { sendEmail } from "@/lib/email/resend";
+import { buildWelcomeTenantHTML } from "@/lib/email/templates/welcome-tenant";
 
 const DEFAULT_OWNER_PERMISSIONS = [
   "comms:view", "comms:send", "comms:assign",
@@ -169,6 +171,15 @@ export async function POST(request: NextRequest) {
     });
 
     log.info({ email, tenantId: result.tenant.id }, "New tenant registered");
+
+    // Send welcome email (non-blocking)
+    const dashboardUrl = process.env.AUTH_URL ?? "https://skiinet.com";
+    sendEmail({
+      to: email.toLowerCase(),
+      subject: "Bienvenido a Skiinet — Tu cuenta está lista",
+      html: buildWelcomeTenantHTML({ ownerName: name, companyName, dashboardUrl }),
+    }).catch((err) => log.error({ err, email }, "Welcome email failed"));
+
     return NextResponse.json({ success: true, redirect: "/onboarding" }, { status: 201 });
   } catch (error) {
     return apiError(error, { publicMessage: "Error al crear la cuenta", code: "REGISTER_FAILED" });

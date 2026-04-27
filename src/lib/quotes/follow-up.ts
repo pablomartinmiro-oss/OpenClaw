@@ -5,7 +5,6 @@ import {
   buildReminder1HTML,
   buildReminder2HTML,
   buildDiscountOfferHTML,
-  buildExpiryWarningHTML,
   buildExpiredHTML,
   buildCrossSellHTML,
   buildReviewRequestHTML,
@@ -14,6 +13,7 @@ import {
   buildPreTripDayOfHTML,
   SMS_MESSAGES,
 } from "@/lib/email/followup-templates";
+import { buildQuoteReminderHTML } from "@/lib/email/templates/quote-reminder";
 import { getGHLClient } from "@/lib/ghl/api";
 
 const log = logger.child({ module: "quote-followup" });
@@ -70,6 +70,8 @@ interface QuoteForReminder {
   clientPhone: string | null;
   ghlContactId: string | null;
   destination: string;
+  checkIn: Date;
+  checkOut: Date;
   totalAmount: number;
   sentAt: Date | null;
   expiresAt: Date | null;
@@ -148,6 +150,8 @@ export async function processUnpaidReminders(): Promise<{
       clientPhone: true,
       ghlContactId: true,
       destination: true,
+      checkIn: true,
+      checkOut: true,
       totalAmount: true,
       sentAt: true,
       expiresAt: true,
@@ -219,11 +223,26 @@ async function sendReminderForStep(
       smsText = SMS_MESSAGES.discount(paymentUrl);
       break;
     case "expiry_warning": {
-      const expiresAt = quote.expiresAt
-        ? new Date(quote.expiresAt).toLocaleDateString("es-ES")
+      const expiresAtStr = quote.expiresAt
+        ? new Date(quote.expiresAt).toLocaleDateString("es-ES", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
         : "";
-      html = buildExpiryWarningHTML({ ...baseParams, expiresAt });
-      subject = `⚠️ Tu presupuesto ${quoteNumber} expira en 2 días`;
+      const fmtDate = (d: Date) =>
+        d.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+      html = buildQuoteReminderHTML({
+        quoteNumber,
+        clientName: quote.clientName,
+        destination,
+        checkIn: fmtDate(quote.checkIn),
+        checkOut: fmtDate(quote.checkOut),
+        totalAmount: quote.totalAmount,
+        expiresAt: expiresAtStr,
+        paymentUrl: paymentUrl ?? "#",
+      });
+      subject = `Tu presupuesto ${quoteNumber} expira en 2 días`;
       smsText = SMS_MESSAGES.expiry_warning(quoteNumber, paymentUrl);
       break;
     }

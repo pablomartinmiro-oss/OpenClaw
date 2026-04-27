@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/db";
-import { buildNotificationEmail, buildConfirmationEmail } from "./email-templates";
+import {
+  buildContactFormNotificationHTML,
+  buildContactFormConfirmationHTML,
+} from "@/lib/email/templates/contact-form-notification";
 import { rateLimit, getClientIP } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-response";
 import { validateBody, contactFormSchema } from "@/lib/validation";
@@ -101,18 +104,19 @@ async function sendEmails(data: {
 
     // Notification to team
     await resend.emails.send({
-      from: "Skicenter Web <reservas@skicenter.es>",
+      from: "Skicenter Web <no-reply@skicenter.es>",
       to: "reservas@skicenter.es",
+      replyTo: data.email,
       subject: `[Web] Nuevo contacto: ${data.asunto || "General"} — ${data.nombre}`,
-      html: buildNotificationEmail(data),
+      html: buildContactFormNotificationHTML(data),
     });
 
     // Confirmation to client
     await resend.emails.send({
-      from: "Skicenter <reservas@skicenter.es>",
+      from: "Skicenter <no-reply@skicenter.es>",
       to: data.email,
       subject: "Hemos recibido tu mensaje — Skicenter",
-      html: buildConfirmationEmail(data.nombre),
+      html: buildContactFormConfirmationHTML({ nombre: data.nombre }),
     });
   } catch (err) {
     log.error({ err }, "Failed to send contact form emails");
