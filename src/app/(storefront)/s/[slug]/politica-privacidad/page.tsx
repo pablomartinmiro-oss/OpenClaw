@@ -16,33 +16,33 @@ export default async function PoliticaPrivacidadPage({
 
   return (
     <LegalShell
-      title="Politica de privacidad"
+      title="Política de privacidad"
       tenantName={tenant.name}
       updatedAt="abril 2026"
     >
       <p>
         En {tenant.name} respetamos tu privacidad y nos comprometemos a
-        proteger los datos personales que nos facilitas. Esta politica
-        describe como recopilamos, utilizamos y protegemos tu informacion.
+        proteger los datos personales que nos facilitas. Esta política
+        describe cómo recopilamos, utilizamos y protegemos tu información.
       </p>
 
       <h2>1. Responsable del tratamiento</h2>
       <p>
         El responsable del tratamiento de los datos es {tenant.name}. Para
-        cualquier consulta relacionada con la proteccion de datos puedes
-        contactar con nosotros a traves de los canales habilitados en la
+        cualquier consulta relacionada con la protección de datos puedes
+        contactar con nosotros a través de los canales habilitados en la
         web.
       </p>
 
       <h2>2. Datos que recopilamos</h2>
       <ul>
-        <li>Datos identificativos: nombre, email, telefono.</li>
+        <li>Datos identificativos: nombre, email, teléfono.</li>
         <li>
-          Datos de reserva: fechas, servicios contratados, metodo de pago.
+          Datos de reserva: fechas, servicios contratados, método de pago.
         </li>
         <li>
-          Datos tecnicos: direccion IP, tipo de navegador y datos de
-          navegacion (cookies).
+          Datos técnicos: dirección IP, tipo de navegador y datos de
+          navegación (cookies).
         </li>
       </ul>
 
@@ -59,42 +59,42 @@ export default async function PoliticaPrivacidadPage({
 
       <h2>4. Base legal</h2>
       <p>
-        El tratamiento se basa en la ejecucion de un contrato (reserva), en
+        El tratamiento se basa en la ejecución de un contrato (reserva), en
         el consentimiento del usuario (comunicaciones comerciales) y en el
         cumplimiento de obligaciones legales aplicables.
       </p>
 
-      <h2>5. Conservacion de datos</h2>
+      <h2>5. Conservación de datos</h2>
       <p>
         Conservamos tus datos durante el tiempo necesario para cumplir con
         la finalidad para la que fueron recogidos y, posteriormente, durante
-        los plazos legales de conservacion.
+        los plazos legales de conservación.
       </p>
 
       <h2>6. Derechos del usuario</h2>
       <p>
         Tienes derecho a acceder, rectificar, suprimir, oponerte, limitar el
         tratamiento y solicitar la portabilidad de tus datos. Para
-        ejercerlos, escribenos a la direccion de contacto que aparece en
+        ejercerlos, escríbenos a la dirección de contacto que aparece en
         nuestra web.
       </p>
 
-      <h2>7. Cesion de datos</h2>
+      <h2>7. Cesión de datos</h2>
       <p>
-        No cedemos tus datos a terceros salvo obligacion legal o cuando sea
-        necesario para la prestacion del servicio (por ejemplo, pasarelas
+        No cedemos tus datos a terceros salvo obligación legal o cuando sea
+        necesario para la prestación del servicio (por ejemplo, pasarelas
         de pago, plataformas de reserva externa).
       </p>
 
-      <h2>8. Cambios en la politica</h2>
+      <h2>8. Cambios en la política</h2>
       <p>
-        Esta politica puede actualizarse. Te recomendamos revisarla
-        periodicamente.
+        Esta política puede actualizarse. Te recomendamos revisarla
+        periódicamente.
       </p>
 
       <p className="text-xs italic text-gray-500 mt-6">
-        Documento orientativo. Para una version legalmente vinculante,
-        adapta este texto con asesoramiento juridico.
+        Documento orientativo. Para una versión legalmente vinculante,
+        adapta este texto con asesoramiento jurídico.
       </p>
     </LegalShell>
   );

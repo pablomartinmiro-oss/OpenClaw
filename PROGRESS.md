@@ -411,6 +411,21 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **No isolation bugs found** — existing API routes already enforce `tenantId` scope via `requireTenant()` + Prisma WHERE clauses. Test suite locks the contract in.
 - **Audit**: `npx tsc --noEmit` → 0 errors.
 
+### Phase AE: Storefront Copy — Accents & Typo Fixes (2026-04-27) ✅
+- **"RESERVA CONSOLO"**: already fixed in Phase AC — confirmed not present.
+- **Services.tsx**: `"escuela de esqui"` → `"Escuela de esquí"` (capital + accent)
+- **LegalShell.tsx**: `"Ultima actualizacion"` → `"Última actualización"`
+- **StorefrontNav.tsx**: cart aria-label `"articulos"` → `"artículos"`; hamburger `"Cerrar/Abrir menu"` → `"menú"`
+- **CartSummary.tsx**: empty state + item count `"articulo/articulos"` → `"artículo/artículos"`; `"esta vacio"` → `"está vacío"`
+- **checkout/_components.tsx**: `"Tu carrito esta vacio"` → `"está vacío"`
+- **carrito/page.tsx**: `"esta vacio"`, `"anade"`, `"mas"`, `"Codigo de descuento"`, `"articulos"`, `"Habitacion"` all corrected; error strings too
+- **cancelar/page.tsx**: `"Solicitar cancelacion"` → `"cancelación"`; `"Politica de cancelacion"` → `"Política de cancelación"`; `"Estacion"` → `"Estación"`; policy text accents; inline errors
+- **canjear/page.tsx**: `"Canjear cupon"` → `"cupón"`; field labels `"Codigo"`, `"Telefono"`, `"Numero"`, `"Nivel de esqui"` all corrected; error strings
+- **cookies/page.tsx**: full rewrite — all accents corrected throughout body (`"Política"`, `"Qué"`, `"pequeños"`, `"Técnicas"`, `"Analíticas"`, `"según"`, `"Gestión"`, `"configuración"`, `"técnicas"`, `"políticas"`, `"versión"`, `"jurídico"`, etc.)
+- **politica-privacidad/page.tsx**: full rewrite — `"Política de privacidad"` title + all body accents (`"política"`, `"cómo"`, `"información"`, `"protección"`, `"teléfono"`, `"método"`, `"técnicos"`, `"dirección"`, `"ejecución"`, `"conservación"`, `"dirección"`, `"periódicamente"`, etc.)
+- **terminos/page.tsx**: full rewrite — `"Términos y condiciones"` title + all body accents (`"través"`, `"están"`, `"comunicación"`, `"indicación"`, `"según"`, `"específicas"`, `"Política de cancelación"`, `"más"`, `"días"`, `"íntegro"`, `"gestión"`, `"presentación"`, `"podrá"`, `"compensación"`, `"código"`, `"montaña"`, `"suspensión"`, `"meteorológicas"`, `"legislación"`, `"española"`, `"someterán"`, `"versión"`, `"jurídico"`)
+- **Audit**: `tsc --noEmit` → 0 errors; `next build` compiled successfully (page-data step fails only due to absent local DATABASE_URL)
+
 ### Next: TBD
 
 ## DB Migrations

@@ -26,7 +26,7 @@ const SERVICES: Service[] = [
     image: "/services-alojamiento.jpg",
   },
   {
-    title: "escuela de esqui",
+    title: "Escuela de esquí",
     category: "escuela",
     image: "/services-escuela.jpg",
   },

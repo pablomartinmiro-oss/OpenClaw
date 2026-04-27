@@ -16,7 +16,7 @@ export default async function CookiesPage({
 
   return (
     <LegalShell
-      title="Politica de cookies"
+      title="Política de cookies"
       tenantName={tenant.name}
       updatedAt="abril 2026"
     >
@@ -25,9 +25,9 @@ export default async function CookiesPage({
         del sitio y mejorar la experiencia de usuario.
       </p>
 
-      <h2>1. Que son las cookies</h2>
+      <h2>1. Qué son las cookies</h2>
       <p>
-        Las cookies son pequenos archivos de texto que se almacenan en tu
+        Las cookies son pequeños archivos de texto que se almacenan en tu
         dispositivo cuando visitas una web. Permiten reconocerte en visitas
         sucesivas y guardar preferencias.
       </p>
@@ -35,24 +35,24 @@ export default async function CookiesPage({
       <h2>2. Tipos de cookies utilizadas</h2>
       <ul>
         <li>
-          <strong>Tecnicas:</strong> imprescindibles para el funcionamiento
+          <strong>Técnicas:</strong> imprescindibles para el funcionamiento
           del carrito, login y reservas. No requieren consentimiento.
         </li>
         <li>
-          <strong>Analiticas:</strong> nos permiten conocer como se utiliza
+          <strong>Analíticas:</strong> nos permiten conocer cómo se utiliza
           la web para mejorar los servicios. Se utilizan de forma agregada
-          y anonima.
+          y anónima.
         </li>
         <li>
           <strong>Publicitarias:</strong> solo si se activan, permiten
-          mostrar publicidad relevante segun los intereses del usuario.
+          mostrar publicidad relevante según los intereses del usuario.
         </li>
       </ul>
 
-      <h2>3. Gestion de cookies</h2>
+      <h2>3. Gestión de cookies</h2>
       <p>
-        Puedes configurar o rechazar las cookies desde la configuracion de
-        tu navegador. Ten en cuenta que el bloqueo de cookies tecnicas
+        Puedes configurar o rechazar las cookies desde la configuración de
+        tu navegador. Ten en cuenta que el bloqueo de cookies técnicas
         puede afectar al funcionamiento del sitio.
       </p>
 
@@ -92,20 +92,20 @@ export default async function CookiesPage({
       <h2>4. Cookies de terceros</h2>
       <p>
         Algunas funcionalidades pueden incluir cookies de terceros (mapas,
-        videos, pasarelas de pago). En cada caso se aplican las politicas
+        vídeos, pasarelas de pago). En cada caso se aplican las políticas
         del proveedor correspondiente.
       </p>
 
       <h2>5. Actualizaciones</h2>
       <p>
-        {tenant.name} puede modificar esta politica para adaptarla a
+        {tenant.name} puede modificar esta política para adaptarla a
         cambios legislativos o de servicio. Te recomendamos revisarla
-        periodicamente.
+        periódicamente.
       </p>
 
       <p className="text-xs italic text-gray-500 mt-6">
-        Documento orientativo. Para una version legalmente vinculante,
-        adapta este texto con asesoramiento juridico.
+        Documento orientativo. Para una versión legalmente vinculante,
+        adapta este texto con asesoramiento jurídico.
       </p>
     </LegalShell>
   );

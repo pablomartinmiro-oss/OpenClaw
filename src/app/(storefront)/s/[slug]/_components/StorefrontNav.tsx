@@ -181,7 +181,7 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
               <Link
                 href={`${base}/carrito`}
                 className="relative ml-1 inline-flex items-center justify-center w-10 h-10 text-[#001D3D] hover:text-[#42A5F5] transition-colors"
-                aria-label={`Carrito (${itemCount} articulos)`}
+                aria-label={`Carrito (${itemCount} artículos)`}
               >
                 <CartIcon />
                 {itemCount > 0 && (
@@ -217,7 +217,7 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className="inline-flex items-center justify-center w-10 h-10 text-[#001D3D]"
-                aria-label={mobileOpen ? "Cerrar menu" : "Abrir menu"}
+                aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
                 aria-expanded={mobileOpen}
               >
                 {mobileOpen ? <CloseIcon /> : <MenuIcon />}

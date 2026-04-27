@@ -18,7 +18,7 @@ export function LegalShell({
           {title}
         </h1>
         <p className="text-xs text-gray-500">
-          {tenantName} · Ultima actualizacion: {updatedAt}
+          {tenantName} · Última actualización: {updatedAt}
         </p>
       </div>
       <div className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 prose prose-sm max-w-none prose-headings:font-semibold prose-headings:text-gray-900 prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2 prose-p:text-gray-700 prose-p:leading-relaxed prose-li:text-gray-700">

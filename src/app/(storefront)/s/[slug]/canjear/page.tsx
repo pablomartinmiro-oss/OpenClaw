@@ -66,7 +66,7 @@ export default function CanjearPage() {
   const onValidate = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!code.trim()) return setError("Introduce el codigo del cupon");
+    if (!code.trim()) return setError("Introduce el código del cupón");
     if (!platformId) return setError("Selecciona la plataforma");
     setStep("details");
   };
@@ -100,7 +100,7 @@ export default function CanjearPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "No se pudo canjear el cupon");
+        setError(data.error ?? "No se pudo canjear el cupón");
         return;
       }
       setLocator(data.locator ?? null);
@@ -116,10 +116,10 @@ export default function CanjearPage() {
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14">
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Canjear cupon
+          Canjear cupón
         </h1>
         <p className="text-gray-500 text-sm sm:text-base">
-          Introduce el codigo de tu cupon o bono para reservar tu actividad.
+          Introduce el código de tu cupón o bono para reservar tu actividad.
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export default function CanjearPage() {
           onSubmit={onValidate}
           className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 space-y-5"
         >
-          <Field label="Codigo del cupon" required>
+          <Field label="Código del cupón" required>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -154,7 +154,7 @@ export default function CanjearPage() {
           </Field>
           {platforms.length === 0 && (
             <p className="text-xs text-gray-500">
-              Esta tienda aun no tiene plataformas configuradas. Contacta con
+              Esta tienda aún no tiene plataformas configuradas. Contacta con
               el centro.
             </p>
           )}
@@ -171,7 +171,7 @@ export default function CanjearPage() {
           className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 space-y-5"
         >
           <div className="rounded-lg bg-orange-50 border border-orange-100 px-3 py-2 text-sm text-gray-700">
-            Codigo:{" "}
+            Código:{" "}
             <span className="font-mono font-semibold text-gray-900">
               {code.toUpperCase()}
             </span>
@@ -195,7 +195,7 @@ export default function CanjearPage() {
                 maxLength={200}
               />
             </Field>
-            <Field label="Telefono">
+            <Field label="Teléfono">
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -203,7 +203,7 @@ export default function CanjearPage() {
                 maxLength={50}
               />
             </Field>
-            <Field label="Numero de personas" required>
+            <Field label="Número de personas" required>
               <input
                 type="number"
                 min={1}
@@ -235,7 +235,7 @@ export default function CanjearPage() {
                 ))}
               </select>
             </Field>
-            <Field label="Nivel de esqui">
+            <Field label="Nivel de esquí">
               <select
                 value={skiLevel}
                 onChange={(e) => setSkiLevel(e.target.value)}

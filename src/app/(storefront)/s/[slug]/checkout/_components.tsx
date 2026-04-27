@@ -67,7 +67,7 @@ export function EmptyCartScreen({ slug }: { slug: string }) {
         <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
         <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
       </svg>
-      <p className="text-lg text-gray-500 mt-4 mb-4">Tu carrito esta vacio.</p>
+      <p className="text-lg text-gray-500 mt-4 mb-4">Tu carrito está vacío.</p>
       <Link href={`/s/${slug}/experiencias`} className="inline-block px-6 py-3 text-sm font-semibold text-white bg-[#E87B5A] rounded-lg hover:bg-[#D56E4F] transition-colors">Explorar experiencias</Link>
     </div>
   );

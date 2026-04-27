@@ -52,11 +52,11 @@ export default function CancelarPage() {
       );
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message ?? data.error ?? "No se encontro la reserva");
+        setError(data.message ?? data.error ?? "No se encontró la reserva");
         return;
       }
       if (data.cancelled) {
-        setError("Esta reserva ya esta cancelada.");
+        setError("Esta reserva ya está cancelada.");
         return;
       }
       setReservation(data.reservation);
@@ -111,11 +111,11 @@ export default function CancelarPage() {
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-14">
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Solicitar cancelacion
+          Solicitar cancelación
         </h1>
         <p className="text-gray-500 text-sm sm:text-base">
           Localiza tu reserva e indicanos el motivo. Revisaremos tu solicitud
-          segun la politica de cancelacion.
+          según la política de cancelación.
         </p>
       </div>
 
@@ -174,7 +174,7 @@ export default function CancelarPage() {
               <span className="text-gray-900">{reservation.clientName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Estacion</span>
+              <span className="text-gray-500">Estación</span>
               <span className="text-gray-900">{reservation.station}</span>
             </div>
             <div className="flex justify-between">
@@ -199,12 +199,12 @@ export default function CancelarPage() {
 
           <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-gray-700">
             <p className="font-medium text-gray-900 mb-1">
-              Politica de cancelacion
+              Política de cancelación
             </p>
             <p className="text-xs leading-relaxed">
-              Las cancelaciones con mas de 7 dias de antelacion son aceptadas
+              Las cancelaciones con más de 7 días de antelación son aceptadas
               sin coste. Entre 7 y 48h se aplica un 50% de cargo. En menos de
-              48h o no presentacion no procede reembolso. Cada caso se revisa
+              48h o no presentación no procede reembolso. Cada caso se revisa
               individualmente.
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function CancelarPage() {
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               maxLength={2000}
-              placeholder="Cuentanos cualquier informacion relevante"
+              placeholder="Cuéntanos cualquier información relevante"
               className={`${inputCls} resize-none`}
             />
           </Field>
@@ -299,8 +299,8 @@ export default function CancelarPage() {
             Solicitud recibida
           </h2>
           <p className="text-sm text-gray-500">
-            Hemos recibido tu solicitud de cancelacion. Te contactaremos en
-            breve para confirmar la resolucion.
+            Hemos recibido tu solicitud de cancelación. Te contactaremos en
+            breve para confirmar la resolución.
           </p>
           <Link
             href={`/s/${slug}`}
