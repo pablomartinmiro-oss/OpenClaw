@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
 
-    const { name, email, password, companyName, inviteToken } = validated.data;
+    const { name, email, password, companyName, slug: providedSlug, inviteToken } = validated.data;
 
     const passwordHash = await hash(password, 12);
 
@@ -105,10 +105,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Este email ya está registrado" }, { status: 409 });
     }
 
-    // Generate unique slug
-    let slug = generateSlug(companyName);
+    // Use user-provided slug if valid, otherwise generate from company name
+    let slug = providedSlug ? generateSlug(providedSlug) : generateSlug(companyName);
+    if (!slug) {
+      return NextResponse.json({ error: "Slug invalido" }, { status: 400 });
+    }
     const existingTenant = await prisma.tenant.findUnique({ where: { slug } });
     if (existingTenant) {
+      if (providedSlug) {
+        return NextResponse.json({ error: "Ese identificador ya esta en uso" }, { status: 409 });
+      }
       slug = `${slug}-${Date.now().toString(36)}`;
     }
 
