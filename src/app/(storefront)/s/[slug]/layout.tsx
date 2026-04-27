@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Bebas_Neue, Raleway } from "next/font/google";
 import { StorefrontShell } from "./_components/StorefrontShell";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s — Skicenter",
+    default: "Skicenter — Tu viaje de esquí en un solo clic",
+  },
+  description:
+    "Reserva tus clases de esquí, alquiler, forfaits y hotel en las mejores estaciones de España.",
+};
 
 const CONTACT_KEYS = ["contact_email", "contact_phone"];
 

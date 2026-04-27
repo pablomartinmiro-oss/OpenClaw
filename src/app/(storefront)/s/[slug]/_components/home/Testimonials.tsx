@@ -112,8 +112,7 @@ export function Financing({ slug }: FinancingProps) {
               className="text-5xl sm:text-7xl uppercase leading-none mb-5"
               style={BEBAS}
             >
-              Reserva con{" "}
-              <span className="text-[#42A5F5]">solo el 25%</span>
+              Reserva con{" "}<span className="text-[#42A5F5]">solo el 25%</span>
             </h2>
             <p className="text-white/70 text-lg leading-relaxed mb-8">
               Asegura tu plaza ahora con un primer pago del 25% y abona el

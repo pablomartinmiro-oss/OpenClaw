@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Hero, TrustBar } from "./_components/home/Hero";
 import { Destinations } from "./_components/home/Destinations";
+import { PartnerLogos } from "./_components/home/PartnerLogos";
 import { Services, HowItWorks } from "./_components/home/Services";
 import {
   Testimonials,
@@ -10,6 +13,10 @@ import {
 } from "./_components/home/Testimonials";
 import { Offers } from "./_components/home/Offers";
 import { WhatsAppButton } from "./_components/home/WhatsAppButton";
+
+export const metadata: Metadata = {
+  title: { absolute: "Skicenter — Tu viaje de esquí en un solo clic" },
+};
 
 const CONTACT_KEYS = ["contact_email", "contact_phone"];
 
@@ -49,8 +56,18 @@ export default async function StorefrontHome({
       <Hero slug={slug} />
       <TrustBar />
       <Destinations slug={slug} />
+      <PartnerLogos />
       <Offers slug={slug} />
       <Services slug={slug} />
+      <section className="w-full">
+        <Image
+          src="/banner_nivel_skicenter.jpg"
+          alt="Niveles de esquí: principiante, intermedio, avanzado"
+          width={1536}
+          height={213}
+          className="w-full h-auto"
+        />
+      </section>
       <HowItWorks slug={slug} />
       <Testimonials />
       <Financing slug={slug} />

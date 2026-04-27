@@ -377,6 +377,14 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **Offers section**: swapped unsplash placeholder images for real local photos — Baqueira offer uses `/clases-1024x494.jpg`, Sierra Nevada uses `/ALOJAMIENTO-600x289.jpg`, La Pinilla uses `/services-forfaits.jpg`.
 - **Audit**: `tsc --noEmit` → 0 errors.
 
+### Phase AC: Storefront Polish — Nav, Typo, Logos, Banner, Metadata (2026-04-26) ✅
+- **Nav order**: Desktop and mobile nav reordered to Inicio | Destinos | Servicios | Contáctanos
+- **Typo fix**: Financing banner heading fixed — "Reserva con solo el 25%" space preserved inline
+- **Partner logos strip** (`PartnerLogos.tsx`): horizontal strip between Destinations and Offers with Astún + Candanchú image logos + Baqueira/Sierra Nevada/Formigal/Alto Campoo/La Pinilla text placeholders (Bebas Neue), grayscale hover effect
+- **Ski level banner**: full-width `banner_nivel_skicenter.jpg` section between Services and HowItWorks
+- **Page metadata**: storefront layout exports title template `%s — Skicenter`; home page uses absolute title "Skicenter — Tu viaje de esquí en un solo clic"; experiencias/presupuesto each have nested `layout.tsx` exporting their page title
+- **tsc --noEmit**: 0 errors
+
 ### Next: TBD
 
 ## DB Migrations

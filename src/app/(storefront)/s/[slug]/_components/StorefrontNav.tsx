@@ -122,6 +122,12 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-0.5">
+              <Link
+                href={base}
+                className="px-3 py-2 text-sm font-medium text-[#001D3D] hover:text-[#42A5F5] transition-colors"
+              >
+                Inicio
+              </Link>
               {/* Destinos dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -163,12 +169,6 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
                 className="px-3 py-2 text-sm font-medium text-[#001D3D] hover:text-[#42A5F5] transition-colors"
               >
                 Servicios
-              </Link>
-              <Link
-                href={base}
-                className="px-3 py-2 text-sm font-medium text-[#001D3D] hover:text-[#42A5F5] transition-colors"
-              >
-                Inicio
               </Link>
               <Link
                 href={`${base}/presupuesto`}
@@ -239,6 +239,14 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
             className="md:hidden fixed left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-xl px-4 py-4 overflow-y-auto max-h-[calc(100vh-100px)]"
             style={{ top: "100px" }}
           >
+            <Link
+              href={base}
+              onClick={closeMobile}
+              className="block px-3 py-2.5 text-sm font-medium text-[#001D3D] hover:bg-[#F5F7F9]"
+            >
+              Inicio
+            </Link>
+            <div className="my-2 border-t border-gray-100" />
             <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-[#757575]">
               Destinos
             </p>
@@ -259,13 +267,6 @@ export function StorefrontNav({ tenantName, slug }: StorefrontNavProps) {
               className="block px-3 py-2.5 text-sm font-medium text-[#001D3D] hover:bg-[#F5F7F9]"
             >
               Servicios
-            </Link>
-            <Link
-              href={base}
-              onClick={closeMobile}
-              className="block px-3 py-2.5 text-sm font-medium text-[#001D3D] hover:bg-[#F5F7F9]"
-            >
-              Inicio
             </Link>
             <Link
               href={`${base}/presupuesto`}
