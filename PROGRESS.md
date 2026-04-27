@@ -385,6 +385,32 @@ A fully functional multi-tenant CRM dashboard for Skicenter ski travel agencies,
 - **Page metadata**: storefront layout exports title template `%s — Skicenter`; home page uses absolute title "Skicenter — Tu viaje de esquí en un solo clic"; experiencias/presupuesto each have nested `layout.tsx` exporting their page title
 - **tsc --noEmit**: 0 errors
 
+### Phase AD: Multi-Tenant Isolation Proof (2026-04-26) ✅
+- **Goal**: prove the platform works as a multi-tenant SaaS by adding a second tenant and verifying complete data isolation.
+- **Second tenant** (`prisma/seed.ts` → `seedSierraSkiTenant()`): "Sierra Ski School", slug `sierra-ski`, owner `sierra@test.com` / `test1234`. Idempotent (all `upsert` / `findFirst+create`).
+- **Modules enabled**: core (always on) + catalog, booking, storefront, rental, finance.
+- **Sample data** (tenant-scoped, never bleeds into Skicenter):
+  - 2 categories (esqui, alquiler)
+  - 7 products with `sierra-` slug prefix (clases grupo/particular, alquiler esqui/snow, forfait 1d/3d, locker)
+  - 3 site settings (contact_email, contact_phone, site_title)
+  - 1 sample quote (`test-cliente@sierraski.test`, status: borrador, 380€)
+  - 1 sample reservation (`test-reserva@sierraski.test`, status: confirmada, 135€)
+- **Isolation test suite** (`__tests__/lib/multi-tenant-isolation.test.ts`): 12 cases proving tenant A and tenant B cannot see/mutate each other's data:
+  1. Products GET — tenant A query never includes tenant B id (and vice versa)
+  2. Reservations GET — strict `tenantId` scope (no `OR` / no `null`)
+  3. Reservations POST — session `tenantId` always wins over body injection attempt
+  4. Reservation [id] PATCH — cross-tenant access returns 404, no `update` called
+  5. Quotes GET — strict `tenantId` scope
+  6. Quotes POST — session `tenantId` stamped on create (rejects body injection)
+  7. Storefront `/s/skicenter/products` — only tenant A products
+  8. Storefront `/s/sierra-ski/products` — only tenant B products
+  9. Storefront cross-tenant slug — tenant B's slug cannot resolve tenant A's product (404)
+  10. Storefront unknown slug — 404, no product query issued
+  11. Module configs — query scoped per tenant id (tenant A and B return different sets)
+- **Tests live at `__tests__/lib/`** (root) not `src/__tests__/` because vitest config only picks up `__tests__/**/*.test.ts` (see `vitest.config.ts`).
+- **No isolation bugs found** — existing API routes already enforce `tenantId` scope via `requireTenant()` + Prisma WHERE clauses. Test suite locks the contract in.
+- **Audit**: `npx tsc --noEmit` → 0 errors.
+
 ### Next: TBD
 
 ## DB Migrations

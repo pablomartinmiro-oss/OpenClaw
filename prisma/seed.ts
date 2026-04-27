@@ -930,6 +930,174 @@ async function seedDemoContent(tenantId: string) {
   console.log("Seeded 2 static pages with blocks");
 }
 
+async function seedSierraSkiTenant() {
+  // Second tenant for proving multi-tenant isolation. Idempotent — safe to re-run.
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: "sierra-ski" },
+    update: { isDemo: false, dataMode: "mock" },
+    create: {
+      name: "Sierra Ski School",
+      slug: "sierra-ski",
+      onboardingComplete: true,
+      isDemo: false,
+      dataMode: "mock",
+    },
+  });
+
+  const ownerRole = await prisma.role.upsert({
+    where: { name_tenantId: { name: "Owner / Manager", tenantId: tenant.id } },
+    update: {},
+    create: {
+      name: "Owner / Manager",
+      tenantId: tenant.id,
+      isSystem: true,
+      permissions: DEFAULT_ROLES["Owner / Manager"],
+    },
+  });
+
+  const pw = await hash("test1234", 12);
+  await prisma.user.upsert({
+    where: { email_tenantId: { email: "sierra@test.com", tenantId: tenant.id } },
+    update: {},
+    create: {
+      email: "sierra@test.com",
+      name: "Sierra Owner",
+      passwordHash: pw,
+      tenantId: tenant.id,
+      roleId: ownerRole.id,
+    },
+  });
+
+  // Modules: core (always on) + catalog, booking, storefront, rental, finance
+  const enabledModules = ["catalog", "booking", "storefront", "rental", "finance"];
+  for (const mod of enabledModules) {
+    await prisma.moduleConfig.upsert({
+      where: { tenantId_module: { tenantId: tenant.id, module: mod } },
+      update: { isEnabled: true },
+      create: { tenantId: tenant.id, module: mod, isEnabled: true },
+    });
+  }
+
+  // Tenant-specific site settings
+  const siteSettings = [
+    { key: "contact_email", value: { value: "info@sierraski.test" } },
+    { key: "contact_phone", value: { value: "+34 958 000 111" } },
+    { key: "site_title", value: { value: "Sierra Ski School" } },
+  ];
+  for (const s of siteSettings) {
+    await prisma.siteSetting.upsert({
+      where: { tenantId_key: { tenantId: tenant.id, key: s.key } },
+      update: { value: s.value },
+      create: { tenantId: tenant.id, key: s.key, value: s.value },
+    });
+  }
+
+  // 2 categories
+  const categories = [
+    { slug: "esqui", name: "Esquí" },
+    { slug: "alquiler", name: "Alquiler" },
+  ];
+  for (let i = 0; i < categories.length; i++) {
+    await prisma.category.upsert({
+      where: { tenantId_slug: { tenantId: tenant.id, slug: categories[i].slug } },
+      update: {},
+      create: {
+        tenantId: tenant.id,
+        name: categories[i].name,
+        slug: categories[i].slug,
+        sortOrder: i,
+      },
+    });
+  }
+
+  // 7 tenant-scoped products (skicenter's are global; these are sierra-ski only)
+  const sierraProducts = [
+    { slug: "sierra-clase-grupo", name: "Clase de Esquí Grupo (Sierra)", category: "escuela", station: "sierra_nevada", priceType: "per_session", price: 45, productType: "actividad" },
+    { slug: "sierra-clase-particular", name: "Clase Particular 1h (Sierra)", category: "clase_particular", station: "sierra_nevada", priceType: "per_person_per_hour", price: 60, productType: "actividad" },
+    { slug: "sierra-alquiler-esqui-adulto", name: "Alquiler Esquí Adulto (Sierra)", category: "alquiler", station: "sierra_nevada", priceType: "per_day", price: 28, productType: "alquiler" },
+    { slug: "sierra-alquiler-snow-adulto", name: "Alquiler Snow Adulto (Sierra)", category: "alquiler", station: "sierra_nevada", priceType: "per_day", price: 30, productType: "alquiler" },
+    { slug: "sierra-forfait-1d", name: "Forfait Sierra Nevada 1 Día", category: "forfait", station: "sierra_nevada", priceType: "per_day", price: 56, productType: "experiencia" },
+    { slug: "sierra-forfait-3d", name: "Forfait Sierra Nevada 3 Días", category: "forfait", station: "sierra_nevada", priceType: "per_day", price: 162, productType: "experiencia" },
+    { slug: "sierra-locker", name: "Taquilla Diaria (Sierra)", category: "locker", station: "sierra_nevada", priceType: "per_day", price: 6, productType: "otro" },
+  ];
+  for (const p of sierraProducts) {
+    const existing = await prisma.product.findFirst({
+      where: { tenantId: tenant.id, slug: p.slug },
+    });
+    if (!existing) {
+      await prisma.product.create({
+        data: {
+          tenantId: tenant.id,
+          slug: p.slug,
+          name: p.name,
+          category: p.category,
+          station: p.station,
+          priceType: p.priceType,
+          price: p.price,
+          productType: p.productType,
+          isActive: true,
+          isPublished: true,
+        },
+      });
+    }
+  }
+
+  // Sample quote (idempotent via clientEmail uniqueness check)
+  const sampleQuote = await prisma.quote.findFirst({
+    where: { tenantId: tenant.id, clientEmail: "test-cliente@sierraski.test" },
+  });
+  if (!sampleQuote) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    await prisma.quote.create({
+      data: {
+        tenantId: tenant.id,
+        clientName: "Cliente Sierra",
+        clientEmail: "test-cliente@sierraski.test",
+        clientPhone: "+34 600 111 222",
+        destination: "sierra_nevada",
+        checkIn: new Date(today.getTime() + 14 * 86400000),
+        checkOut: new Date(today.getTime() + 17 * 86400000),
+        adults: 2,
+        children: 0,
+        wantsForfait: true,
+        wantsClases: true,
+        status: "borrador",
+        totalAmount: 380,
+        expiresAt: new Date(today.getTime() + 14 * 86400000),
+      },
+    });
+  }
+
+  // Sample reservation
+  const sampleRes = await prisma.reservation.findFirst({
+    where: { tenantId: tenant.id, clientEmail: "test-reserva@sierraski.test" },
+  });
+  if (!sampleRes) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    await prisma.reservation.create({
+      data: {
+        tenantId: tenant.id,
+        clientName: "Reserva Sierra",
+        clientEmail: "test-reserva@sierraski.test",
+        clientPhone: "+34 600 333 444",
+        source: "web",
+        station: "sierra_nevada",
+        activityDate: new Date(today.getTime() + 7 * 86400000),
+        schedule: "10:00-13:00",
+        totalPrice: 135,
+        status: "confirmada",
+        services: [{ type: "clase_grupo", quantity: 3 }],
+      },
+    });
+  }
+
+  console.log(
+    `Seeded sierra-ski tenant: id=${tenant.id}, owner=sierra@test.com, products=${sierraProducts.length}`,
+  );
+}
+
 async function main() {
   // ==================== DEMO TENANT ====================
   const demoTenant = await prisma.tenant.upsert({
@@ -1030,6 +1198,9 @@ async function main() {
   await seedCmsEnhancement(demoTenant.id);
 
   console.log("Demo tenant seed complete");
+
+  // ==================== SECOND TENANT (multi-tenant isolation proof) ====================
+  await seedSierraSkiTenant();
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
