@@ -9,6 +9,7 @@ const BEBAS: React.CSSProperties = {
 };
 
 interface Destination {
+  slug: string;
   name: string;
   region: string;
   fromPrice: number;
@@ -17,6 +18,7 @@ interface Destination {
 
 const DESTINATIONS: Destination[] = [
   {
+    slug: "baqueira-beret",
     name: "Baqueira Beret",
     region: "Pirineo de Lleida",
     fromPrice: 189,
@@ -24,6 +26,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1517299321609-52687d1bc55a?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "sierra-nevada",
     name: "Sierra Nevada",
     region: "Granada",
     fromPrice: 149,
@@ -31,6 +34,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "formigal",
     name: "Formigal",
     region: "Pirineo de Huesca",
     fromPrice: 169,
@@ -38,6 +42,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1486648791255-7b327fa1c1d4?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "alto-campoo",
     name: "Alto Campoo",
     region: "Cantabria",
     fromPrice: 129,
@@ -45,6 +50,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1548777123-e216912df7d8?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "candanchu",
     name: "Candanchú",
     region: "Pirineo de Huesca",
     fromPrice: 139,
@@ -52,6 +58,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1502301197179-65228ab57f78?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "astun",
     name: "Astún",
     region: "Pirineo de Huesca",
     fromPrice: 139,
@@ -59,6 +66,7 @@ const DESTINATIONS: Destination[] = [
       "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=80",
   },
   {
+    slug: "la-pinilla",
     name: "La Pinilla",
     region: "Segovia",
     fromPrice: 89,
@@ -140,7 +148,7 @@ export function Destinations({ slug }: { slug: string }) {
           {DESTINATIONS.map((d) => (
             <Link
               key={d.name}
-              href={`/s/${slug}/experiencias?station=${encodeURIComponent(d.name)}`}
+              href={`/s/${slug}/destinos/${d.slug}`}
               className="group relative overflow-hidden bg-[#001D3D] shrink-0 block"
               style={{ width: `${CARD_WIDTH}px`, height: "400px" }}
             >
@@ -167,7 +175,7 @@ export function Destinations({ slug }: { slug: string }) {
                   {d.name}
                 </h3>
                 <span className="inline-flex items-center text-sm font-medium text-[#42A5F5] group-hover:text-white transition-colors">
-                  Ver experiencias
+                  Ver destino
                   <svg
                     className="ml-1.5 w-4 h-4 transition-transform group-hover:translate-x-1"
                     viewBox="0 0 24 24"
